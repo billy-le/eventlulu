@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "sqlite"
+    url      = env("DATABASE_URL")
+}
+
+model ProposalForm {
+    id                         String   @id @default(cuid())
+    dateReceived               DateTime @default(now())
+    lastDateSent               DateTime @updatedAt
+    updatedAt                  DateTime @updatedAt
+    banquetSalesAccountManager String
+    isCorporateEvent           Boolean
+}
+
+model Contact {
+    id           String @id @default(cuid())
+    accountNmae  String
+    address      String
+    phoneNumber  String
+    mobileNumber String
+    email        String
+    firstName    String
+    lastName     String
+    fascimile    String
+}
+
+model EventType {
+    id   String @id
+    name String
+}
+
+model EventDetails {
+    id           String   @id
+    date         DateTime
+    optionalDate DateTime
+    time         DateTime
+    pax          Int
+    setup        String
+    mealReq      String
+    functionRoom String
+    remarks      String
+}
+
+model RoomDetails {
+    id            String   @id
+    numberOfRooms Int
+    roomType      String
+    arrivalDate   DateTime
+    departureDate DateTime
+}
+
+model OtherDetails {
+    id                       String   @id
+    estimatedBudget          Int
+    banquets                 Int
+    rooms                    Int
+    otherHotelsConsideration String
+    rateGiven                Int
+    venueDecisionDate        DateTime
+}
+
+model ProposalActivity {
+    id             String   @id
+    date           DateTime
+    updatedBy      String
+    clientFeedback String
+    nextTraceDate  String
+}
