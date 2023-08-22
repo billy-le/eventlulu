@@ -1,13 +1,57 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
     provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "sqlite"
+    provider = "postgres"
     url      = env("DATABASE_URL")
+}
+
+model Account {
+    id                String  @id @default(cuid())
+    userId            String
+    type              String
+    provider          String
+    providerAccountId String
+    refresh_token     String?
+    access_token      String?
+    expires_at        Int?
+    token_type        String?
+    scope             String?
+    id_token          String?
+    session_state     String?
+    user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([provider, providerAccountId])
+}
+
+model Session {
+    id           String   @id @default(cuid())
+    sessionToken String   @unique
+    userId       String
+    expires      DateTime
+    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+    id            String    @id @default(cuid())
+    name          String
+    password      String
+    email         String?   @unique
+    emailVerified DateTime?
+    image         String?
+    createDate    DateTime  @default(now())
+    role          Role
+    accounts      Account[]
+    sessions      Session[]
+}
+
+model VerificationToken {
+    identifier String
+    token      String   @unique
+    expires    DateTime
+
+    @@unique([identifier, token])
 }
 
 model ProposalForm {
@@ -16,19 +60,17 @@ model ProposalForm {
     lastDateSent               DateTime @updatedAt
     updatedAt                  DateTime @updatedAt
     banquetSalesAccountManager String
-    isCorporateEvent           Boolean
 }
 
 model Contact {
     id           String @id @default(cuid())
-    accountNmae  String
+    firstName    String
+    lastName     String
+    email        String @unique
+    companyName  String
     address      String
     phoneNumber  String
     mobileNumber String
-    email        String
-    firstName    String
-    lastName     String
-    fascimile    String
 }
 
 model EventType {
@@ -37,39 +79,50 @@ model EventType {
 }
 
 model EventDetails {
-    id           String   @id
+    id           String    @id
+    isCorporate  Boolean   @default(false)
+    isLiveIn     Boolean   @default(false)
     date         DateTime
-    optionalDate DateTime
-    time         DateTime
+    optionalDate DateTime?
+    time         DateTime?
     pax          Int
-    setup        String
-    mealReq      String
-    functionRoom String
-    remarks      String
+    setup        String?
+    mealReq      String?
+    functionRoom String?
+    remarks      String?
 }
 
 model RoomDetails {
-    id            String   @id
-    numberOfRooms Int
-    roomType      String
-    arrivalDate   DateTime
-    departureDate DateTime
+    id            String    @id
+    numberOfRooms Int?
+    type          String?
+    arrivalDate   DateTime?
+    departureDate DateTime?
 }
 
 model OtherDetails {
-    id                       String   @id
-    estimatedBudget          Int
-    banquets                 Int
-    rooms                    Int
-    otherHotelsConsideration String
-    rateGiven                Int
-    venueDecisionDate        DateTime
+    id                       String    @id
+    banquetsBudget           Int?
+    roomsBudget              Int?
+    otherHotelsConsideration String?
+    rateGiven                Int?
+    venueDecisionDate        DateTime?
 }
 
 model ProposalActivity {
-    id             String   @id
-    date           DateTime
-    updatedBy      String
-    clientFeedback String
-    nextTraceDate  String
+    id             String    @id
+    date           DateTime?
+    updatedBy      String?
+    clientFeedback String?
+    nextTraceDate  String?
+}
+
+model Organization {
+    id   String @id @default(cuid())
+    name String @unique
+}
+
+enum Role {
+    User
+    Admin
 }

@@ -1,13 +1,10 @@
 "use client";
 import Head from "next/head";
-import Link from "next/link";
-import { api } from "~/utils/api";
 import { useForm, useWatch, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -20,7 +17,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -29,6 +25,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DatePicker } from "src/ui/DatePicker";
 import * as z from "zod";
+import { useSession } from "next-auth/react";
+import { SignOut } from "~/ui/SignOut";
 
 const leadTypeOptions = [
   "phone-in",
@@ -113,6 +111,7 @@ const formSchema = z.object({
 });
 
 export default function Home() {
+  const { data: session, status } = useSession();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -145,6 +144,15 @@ export default function Home() {
     console.log(values);
   }
 
+  if (status !== "loading" && !session) {
+    window.location.replace("/login");
+    return;
+  }
+
+  if (!session) {
+    return null;
+  }
+
   return (
     <>
       <Head>
@@ -153,6 +161,7 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="min-h-screen bg-gray-100 py-10">
+        <SignOut />
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
