@@ -14,7 +14,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
+import { useRouter } from "next/router";
+import { useEffect } from "react";
 import * as z from "zod";
 
 const loginSchema = z.object({
@@ -23,6 +25,15 @@ const loginSchema = z.object({
 });
 
 export default function Login() {
+  const router = useRouter();
+  const { status } = useSession();
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.push("/");
+    }
+  }, [status]);
+
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
   });
@@ -31,7 +42,11 @@ export default function Login() {
     signIn("credentials", {
       email: values.email,
       password: values.password,
-      callbackUrl: "/",
+      redirect: false,
+    }).then((res) => {
+      if (res?.ok) {
+        router.push("/");
+      }
     });
   }
   return (

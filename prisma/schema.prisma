@@ -34,16 +34,17 @@ model Session {
 }
 
 model User {
-    id            String    @id @default(cuid())
-    name          String
-    password      String
-    email         String?   @unique
-    emailVerified DateTime?
-    image         String?
-    createDate    DateTime  @default(now())
-    role          Role
-    accounts      Account[]
-    sessions      Session[]
+    id               String             @id @default(cuid())
+    createDate       DateTime           @default(now())
+    name             String
+    email            String             @unique
+    password         String
+    phoneNumber      String?
+    role             Role
+    accounts         Account[]
+    sessions         Session[]
+    LeadForm         LeadForm[]
+    LeadFormActivity LeadFormActivity[]
 }
 
 model VerificationToken {
@@ -54,75 +55,135 @@ model VerificationToken {
     @@unique([identifier, token])
 }
 
-model ProposalForm {
-    id                         String   @id @default(cuid())
-    dateReceived               DateTime @default(now())
-    lastDateSent               DateTime @updatedAt
-    updatedAt                  DateTime @updatedAt
-    banquetSalesAccountManager String
-}
-
-model Contact {
-    id           String @id @default(cuid())
-    firstName    String
-    lastName     String
-    email        String @unique
-    companyName  String
-    address      String
-    phoneNumber  String
-    mobileNumber String
+model LeadForm {
+    id                  String             @id @default(cuid())
+    createDate          DateTime           @default(now())
+    updateDate          DateTime           @updatedAt
+    dateReceived        DateTime
+    lastDateSent        DateTime?
+    isEventConfirmed    Boolean            @default(false)
+    isCorporate         Boolean            @default(false)
+    isLiveIn            Boolean            @default(false)
+    salesAccountManager User               @relation(fields: [userId], references: [id])
+    company             Organization?      @relation(fields: [organizationId], references: [id])
+    contact             Contact?           @relation(fields: [contactId], references: [id])
+    eventType           EventType?         @relation(fields: [eventTypeId], references: [id])
+    eventDetails        EventDetails[]
+    roomDetails         RoomDetails?       @relation(fields: [roomDetailsId], references: [id])
+    otherDetails        OtherDetails?      @relation(fields: [otherDetailsId], references: [id])
+    activity            LeadFormActivity[]
+    userId              String
+    organizationId      String?
+    eventTypeId         String?
+    roomDetailsId       String?
+    otherDetailsId      String?
+    contactId           String?
 }
 
 model EventType {
-    id   String @id
-    name String
+    id       String     @id @default(cuid())
+    name     String
+    LeadForm LeadForm[]
 }
 
 model EventDetails {
-    id           String    @id
-    isCorporate  Boolean   @default(false)
-    isLiveIn     Boolean   @default(false)
-    date         DateTime
-    optionalDate DateTime?
-    time         DateTime?
-    pax          Int
-    setup        String?
-    mealReq      String?
-    functionRoom String?
-    remarks      String?
+    id             String        @id @default(cuid())
+    createDate     DateTime      @default(now())
+    updateDate     DateTime      @updatedAt
+    date           DateTime
+    optionalDate   DateTime?
+    startTime      DateTime?
+    endTime        DateTime?
+    pax            Int?
+    remarks        String?
+    roomSetup      RoomSetup?    @relation(fields: [roomSetupId], references: [id])
+    mealReq        MealReq?      @relation(fields: [mealReqId], references: [id])
+    functionRoom   FunctionRoom? @relation(fields: [functionRoomId], references: [id])
+    LeadForm       LeadForm?     @relation(fields: [leadFormId], references: [id])
+    leadFormId     String?
+    roomSetupId    String?
+    mealReqId      String?
+    functionRoomId String?
+}
+
+model FunctionRoom {
+    id           String         @id @default(cuid())
+    name         String         @unique
+    EventDetails EventDetails[]
+}
+
+model RoomSetup {
+    id           String         @id @default(cuid())
+    name         String         @unique
+    EventDetails EventDetails[]
+}
+
+model MealReq {
+    id           String         @id @default(cuid())
+    name         String         @unique
+    EventDetails EventDetails[]
 }
 
 model RoomDetails {
-    id            String    @id
+    id            String     @id @default(cuid())
     numberOfRooms Int?
     type          String?
     arrivalDate   DateTime?
     departureDate DateTime?
+    LeadForm      LeadForm[]
 }
 
 model OtherDetails {
-    id                       String    @id
+    id                       String         @id @default(cuid())
     banquetsBudget           Int?
     roomsBudget              Int?
-    otherHotelsConsideration String?
-    rateGiven                Int?
+    otherHotelsConsideration Organization[]
+    rate                     Int?
+    rateType                 RateType?      @relation(fields: [rateTypeId], references: [id])
     venueDecisionDate        DateTime?
+    LeadForm                 LeadForm[]
+    rateTypeId               String?
 }
 
-model ProposalActivity {
-    id             String    @id
+model RateType {
+    id           String         @id @default(cuid())
+    name         String         @unique
+    OtherDetails OtherDetails[]
+}
+
+model LeadFormActivity {
+    id             String    @id @default(cuid())
+    updateDate     DateTime  @updatedAt
     date           DateTime?
-    updatedBy      String?
+    updatedBy      User?     @relation(fields: [userId], references: [id])
     clientFeedback String?
     nextTraceDate  String?
+    userId         String?
+    LeadForm       LeadForm? @relation(fields: [leadFormId], references: [id])
+    leadFormId     String?
 }
 
 model Organization {
-    id   String @id @default(cuid())
-    name String @unique
+    id             String        @id @default(cuid())
+    name           String        @unique
+    phoneNumber    String?
+    address        String?
+    OtherDetails   OtherDetails? @relation(fields: [otherDetailsId], references: [id])
+    otherDetailsId String?
+    LeadForm       LeadForm[]
+}
+
+model Contact {
+    id          String     @id @default(cuid())
+    firstName   String
+    email       String
+    lastName    String?
+    phoneNumber String?
+    LeadForm    LeadForm[]
 }
 
 enum Role {
-    User
-    Admin
+    user
+    admin
+    salesManager
 }

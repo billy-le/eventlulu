@@ -1,0 +1,7 @@
+AM Snack
+Set Lunch
+Buffet Lunch
+PM Snack
+Set Dinner
+Buffet Dinner
+Cocktails
