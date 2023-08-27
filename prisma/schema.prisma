@@ -56,33 +56,50 @@ model VerificationToken {
 }
 
 model LeadForm {
-    id                  String             @id @default(cuid())
-    createDate          DateTime           @default(now())
-    updateDate          DateTime           @updatedAt
-    dateReceived        DateTime
-    lastDateSent        DateTime?
-    isEventConfirmed    Boolean            @default(false)
-    isCorporate         Boolean            @default(false)
-    isLiveIn            Boolean            @default(false)
-    salesAccountManager User               @relation(fields: [userId], references: [id])
-    company             Organization?      @relation(fields: [organizationId], references: [id])
-    contact             Contact?           @relation(fields: [contactId], references: [id])
-    eventType           EventType?         @relation(fields: [eventTypeId], references: [id])
-    eventDetails        EventDetails[]
-    roomDetails         RoomDetails?       @relation(fields: [roomDetailsId], references: [id])
-    otherDetails        OtherDetails?      @relation(fields: [otherDetailsId], references: [id])
-    activity            LeadFormActivity[]
-    userId              String
-    organizationId      String?
-    eventTypeId         String?
-    roomDetailsId       String?
-    otherDetailsId      String?
-    contactId           String?
+    id                       String             @id @default(cuid())
+    createDate               DateTime           @default(now())
+    updateDate               DateTime           @updatedAt
+    leadType                 LeadType           @relation(fields: [leadTypeId], references: [id])
+    dateReceived             DateTime
+    lastDateSent             DateTime?
+    isEventConfirmed         Boolean            @default(false)
+    isCorporate              Boolean            @default(false)
+    isLiveIn                 Boolean            @default(false)
+    salesAccountManager      User               @relation(fields: [salesAccountManagerId], references: [id])
+    onSiteDate               DateTime?
+    onSiteDateOptional       DateTime?
+    company                  Organization?      @relation(fields: [organizationId], references: [id])
+    contact                  Contact?           @relation(fields: [contactId], references: [id])
+    eventType                EventType?         @relation(fields: [eventTypeId], references: [id])
+    eventTypeOther           String?
+    eventDetails             EventDetails[]
+    roomDetails              RoomDetails?       @relation(fields: [roomDetailsId], references: [id])
+    activities               LeadFormActivity[]
+    banquetsBudget           Int?
+    roomsBudget              Int?
+    otherHotelsConsideration String?
+    rate                     Int?
+    rateType                 RateType?          @relation(fields: [rateTypeId], references: [id])
+    venueDecisionDate        DateTime?
+    salesAccountManagerId    String
+    eventTypeId              String?
+    roomDetailsId            String?
+    contactId                String?
+    leadTypeId               String
+    rateTypeId               String?
+    organizationId           String?
+}
+
+model LeadType {
+    id       String     @id @default(cuid())
+    name     String     @unique
+    LeadForm LeadForm[]
 }
 
 model EventType {
     id       String     @id @default(cuid())
     name     String
+    activity String     @unique
     LeadForm LeadForm[]
 }
 
@@ -133,22 +150,10 @@ model RoomDetails {
     LeadForm      LeadForm[]
 }
 
-model OtherDetails {
-    id                       String         @id @default(cuid())
-    banquetsBudget           Int?
-    roomsBudget              Int?
-    otherHotelsConsideration Organization[]
-    rate                     Int?
-    rateType                 RateType?      @relation(fields: [rateTypeId], references: [id])
-    venueDecisionDate        DateTime?
-    LeadForm                 LeadForm[]
-    rateTypeId               String?
-}
-
 model RateType {
-    id           String         @id @default(cuid())
-    name         String         @unique
-    OtherDetails OtherDetails[]
+    id       String     @id @default(cuid())
+    name     String     @unique
+    LeadForm LeadForm[]
 }
 
 model LeadFormActivity {
@@ -157,20 +162,18 @@ model LeadFormActivity {
     date           DateTime?
     updatedBy      User?     @relation(fields: [userId], references: [id])
     clientFeedback String?
-    nextTraceDate  String?
+    nextTraceDate  DateTime?
     userId         String?
     LeadForm       LeadForm? @relation(fields: [leadFormId], references: [id])
     leadFormId     String?
 }
 
 model Organization {
-    id             String        @id @default(cuid())
-    name           String        @unique
-    phoneNumber    String?
-    address        String?
-    OtherDetails   OtherDetails? @relation(fields: [otherDetailsId], references: [id])
-    otherDetailsId String?
-    LeadForm       LeadForm[]
+    id          String     @id @default(cuid())
+    name        String     @unique
+    phoneNumber String?
+    address     String?
+    LeadForm    LeadForm[]
 }
 
 model Contact {

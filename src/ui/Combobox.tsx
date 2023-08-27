@@ -56,7 +56,7 @@ export function Combobox({
                 key={item.id}
                 onSelect={(value) => {
                   const selectedItem = items.find(
-                    (item) => item.name === value
+                    (item) => item.name.toLowerCase() === value
                   )!;
                   onChange(selectedItem);
                 }}

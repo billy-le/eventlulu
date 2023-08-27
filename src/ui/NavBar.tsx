@@ -16,8 +16,8 @@ export function NavBar() {
               EventLulu
             </Link>
           </div>
-          <div className="flex-grow items-center lg:flex">
-            <ul className="ml-auto flex list-none flex-col items-center text-xs font-bold uppercase leading-snug text-white lg:flex-row">
+          <div className="flex-grow">
+            <ul className="flex items-center justify-end text-xs font-bold uppercase leading-snug text-white">
               <li>
                 <Link className="px-3 py-2 hover:opacity-75" href="/dashboard">
                   Dashboard

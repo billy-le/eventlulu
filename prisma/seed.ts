@@ -1,22 +1,45 @@
 import { PrismaClient } from "@prisma/client";
 import fs from "fs";
-import path, { relative } from "path";
+import path from "path";
+import {
+  functionRooms,
+  mealReqs,
+  rateTypes,
+  roomSetups,
+  eventTypes,
+  leadTypes,
+} from "./seed-data/data";
 
 const prisma = new PrismaClient();
 
-function parseText(relativePath: string) {
-  return fs
-    .readFileSync(path.resolve(__dirname + relativePath))
-    .toString()
-    .split("\n")
-    .filter((x) => x);
-}
-
 async function main() {
-  const functionRooms = parseText("/seed-data/function_rooms.txt");
-  const mealReqs = parseText("/seed-data/meal_req.txt");
-  const roomSetups = parseText("/seed-data/room_setups.txt");
-  const rateTypes = parseText("/seed-data/rate_types.txt");
+  const _eventTypes = Object.entries(eventTypes);
+
+  for (const [eventType, types] of _eventTypes) {
+    for (const type of types) {
+      await prisma.eventType.upsert({
+        where: {
+          name: eventType,
+          activity: type,
+        },
+        update: {},
+        create: {
+          name: eventType,
+          activity: type,
+        },
+      });
+    }
+  }
+
+  for (const type of leadTypes) {
+    await prisma.leadType.upsert({
+      where: { name: type },
+      update: {},
+      create: {
+        name: type,
+      },
+    });
+  }
 
   for (const room of functionRooms) {
     await prisma.functionRoom.upsert({
