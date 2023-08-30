@@ -34,17 +34,18 @@ model Session {
 }
 
 model User {
-    id               String             @id @default(cuid())
-    createDate       DateTime           @default(now())
-    name             String
-    email            String             @unique
-    password         String
-    phoneNumber      String?
-    role             Role
-    accounts         Account[]
-    sessions         Session[]
-    LeadForm         LeadForm[]
-    LeadFormActivity LeadFormActivity[]
+    id                  String             @id @default(cuid())
+    createDate          DateTime           @default(now())
+    name                String
+    email               String             @unique
+    password            String
+    phoneNumber         String?
+    role                Role
+    accounts            Account[]
+    sessions            Session[]
+    LeadFormActivity    LeadFormActivity[]
+    salesAccountManager LeadForm[]         @relation(name: "salesAccountManager")
+    updatedBy           LeadForm[]         @relation(name: "updatedBy")
 }
 
 model VerificationToken {
@@ -59,16 +60,20 @@ model LeadForm {
     id                       String             @id @default(cuid())
     createDate               DateTime           @default(now())
     updateDate               DateTime           @updatedAt
+    updatedBy                User?              @relation(name: "updatedBy", fields: [updatedById], references: [id])
     leadType                 LeadType           @relation(fields: [leadTypeId], references: [id])
     dateReceived             DateTime
     lastDateSent             DateTime?
     isEventConfirmed         Boolean            @default(false)
     isCorporate              Boolean            @default(false)
     isLiveIn                 Boolean            @default(false)
-    salesAccountManager      User               @relation(fields: [salesAccountManagerId], references: [id])
+    salesAccountManager      User               @relation(fields: [salesAccountManagerId], references: [id], name: "salesAccountManager")
     onSiteDate               DateTime?
     onSiteDateOptional       DateTime?
-    company                  Organization?      @relation(fields: [organizationId], references: [id])
+    startDate                DateTime
+    endDate                  DateTime
+    eventLengthInDays        Int
+    company                  Organization?      @relation(name: "company", fields: [companyId], references: [id])
     contact                  Contact?           @relation(fields: [contactId], references: [id])
     eventType                EventType?         @relation(fields: [eventTypeId], references: [id])
     eventTypeOther           String?
@@ -77,7 +82,7 @@ model LeadForm {
     activities               LeadFormActivity[]
     banquetsBudget           Int?
     roomsBudget              Int?
-    otherHotelsConsideration String?
+    otherHotelConsiderations Organization[]     @relation(name: "otherHotelConsiderations")
     rate                     Int?
     rateType                 RateType?          @relation(fields: [rateTypeId], references: [id])
     venueDecisionDate        DateTime?
@@ -87,7 +92,8 @@ model LeadForm {
     contactId                String?
     leadTypeId               String
     rateTypeId               String?
-    organizationId           String?
+    companyId                String?
+    updatedById              String?
 }
 
 model LeadType {
@@ -105,12 +111,9 @@ model EventType {
 
 model EventDetails {
     id             String        @id @default(cuid())
-    createDate     DateTime      @default(now())
-    updateDate     DateTime      @updatedAt
     date           DateTime
-    optionalDate   DateTime?
-    startTime      DateTime?
-    endTime        DateTime?
+    startTime      String?
+    endTime        String?
     pax            Int?
     remarks        String?
     roomSetup      RoomSetup?    @relation(fields: [roomSetupId], references: [id])
@@ -143,7 +146,7 @@ model MealReq {
 
 model RoomDetails {
     id            String     @id @default(cuid())
-    numberOfRooms Int?
+    total         Int?
     type          String?
     arrivalDate   DateTime?
     departureDate DateTime?
@@ -159,27 +162,29 @@ model RateType {
 model LeadFormActivity {
     id             String    @id @default(cuid())
     updateDate     DateTime  @updatedAt
-    date           DateTime?
-    updatedBy      User?     @relation(fields: [userId], references: [id])
+    date           DateTime
+    updatedBy      User      @relation(fields: [updatedById], references: [id])
     clientFeedback String?
     nextTraceDate  DateTime?
-    userId         String?
+    updatedById    String
     LeadForm       LeadForm? @relation(fields: [leadFormId], references: [id])
     leadFormId     String?
 }
 
 model Organization {
-    id          String     @id @default(cuid())
-    name        String     @unique
-    phoneNumber String?
-    address     String?
-    LeadForm    LeadForm[]
+    id                       String     @id @default(cuid())
+    name                     String     @unique
+    phoneNumber              String?
+    address1                 String?
+    address2                 String?
+    company                  LeadForm[] @relation(name: "company")
+    otherHotelConsiderations LeadForm[] @relation(name: "otherHotelConsiderations")
 }
 
 model Contact {
     id          String     @id @default(cuid())
     firstName   String
-    email       String
+    email       String     @unique
     lastName    String?
     phoneNumber String?
     LeadForm    LeadForm[]

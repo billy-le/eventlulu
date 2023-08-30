@@ -1,7 +1,9 @@
 "use client";
 
 import { api } from "~/utils/api";
+import * as datefns from "date-fns";
 
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { DefaultLayout } from "~/layouts/default";
 import { DataTable } from "~/ui/DataTable";
@@ -13,35 +15,72 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Plus } from "lucide-react";
 
-export default function Home() {
+export default function HomePage() {
   const { data: leads } = api.leads.getLeads.useQuery();
 
   return (
     <DefaultLayout>
+      <Link href="/leads/create">
+        <Button className="mb-4" type="button">
+          <Plus size="18" className="mr-2" />
+          New Lead
+        </Button>
+      </Link>
       <DataTable
         columns={[
           {
-            accessorKey: "createDate",
             header: "Event Date",
             cell: ({ row }) => {
               const lead = row.original;
-              return <></>;
+
+              return (
+                <>
+                  <div>{datefns.format(lead.startDate, "MMM d, yyyy")}</div>
+                </>
+              );
             },
           },
           {
-            accessorKey: "contact",
             header: "Contact",
             cell: ({ row }) => {
               const lead = row.original;
-
-              return <></>;
+              return (
+                <>
+                  <div>{lead.contact?.firstName}</div>
+                  <div>{lead.contact?.email}</div>
+                  <div>{lead.contact?.phoneNumber}</div>
+                </>
+              );
             },
           },
           {
-            accessorKey: "amount",
-            header: "Amount",
+            header: "Is Confirmed?",
+            cell: ({ row }) => {
+              const lead = row.original;
+
+              return (
+                <>
+                  <div>{lead.isEventConfirmed ? "Yes" : "No"}</div>
+                </>
+              );
+            },
+          },
+          {
+            header: "Last Proposal Sent Date",
+            cell: ({ row }) => {
+              const lead = row.original;
+              return (
+                <>
+                  <div>
+                    {lead.lastDateSent
+                      ? datefns.format(lead.lastDateSent, "MMM d, yyyy")
+                      : "Not yet sent"}
+                  </div>
+                </>
+              );
+            },
           },
           {
             id: "actions",

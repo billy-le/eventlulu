@@ -27,13 +27,14 @@ import * as z from "zod";
 import { useSession } from "next-auth/react";
 import { DefaultLayout } from "~/layouts/default";
 import { api } from "~/utils/api";
-import { DataTable } from "~/ui/DataTable";
-import { useRouter } from "next/router";
 import { Combobox } from "~/ui/Combobox";
+import * as datefns from "date-fns";
+import { Trash } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
 const nameId = z.object({
   id: z.string(),
-  name: z.string().optional(),
+  name: z.string(),
 });
 
 const formSchema = z.object({
@@ -47,34 +48,33 @@ const formSchema = z.object({
   siteInspectionDateOptional: z.date().optional(),
   company: z.string().optional(),
   address: z.string().optional(),
-  contact: z
-    .object({
-      firstName: z.string().optional(),
-      lastName: z.string().optional(),
-      email: z.string().email().optional(),
-      phoneNumber: z.string().optional(),
-      mobileNumber: z.string().optional(),
-    })
-    .optional(),
+  startDate: z.date(),
+  eventLengthInDays: z.number().int(),
+  endDate: z.date().optional(),
+  contact: z.object({
+    email: z.string().email(),
+    firstName: z.string(),
+    lastName: z.string().optional(),
+    phoneNumber: z.string().optional(),
+    mobileNumber: z.string().optional(),
+  }),
   eventType: nameId.optional(),
   eventTypeOther: z.string().optional(),
-  eventDetails: z
-    .array(
-      z.object({
-        date: z.date().optional(),
-        optionalDate: z.date().optional(),
-        time: z.date().optional(),
-        pax: z.number().positive().optional(),
-        setup: nameId.optional(),
-        mealReq: nameId.optional(),
-        functionRoom: nameId.optional(),
-        remarks: z.string().optional(),
-      })
-    )
-    .optional(),
+  eventDetails: z.array(
+    z.object({
+      date: z.date(),
+      startTime: z.string().optional(),
+      endTime: z.string().optional(),
+      pax: z.number().positive().optional(),
+      setup: nameId.optional(),
+      mealReq: nameId.optional(),
+      functionRoom: nameId.optional(),
+      remarks: z.string().optional(),
+    })
+  ),
   roomDetails: z
     .object({
-      numberOfRooms: z.number().int().positive(),
+      total: z.number().int().positive(),
       roomType: z.string(),
       arrivalDate: z.date(),
       departureDate: z.date(),
@@ -89,11 +89,11 @@ const formSchema = z.object({
       rateType: nameId.optional(),
     })
     .optional(),
-  activity: z
+  activities: z
     .array(
       z.object({
         date: z.date(),
-        updatedBy: z.string().optional(),
+        updatedBy: z.string(),
         clientFeedback: z.string().optional(),
         nextTraceDate: z.date().optional(),
       })
@@ -101,9 +101,8 @@ const formSchema = z.object({
     .optional(),
 });
 
-export default function Home() {
-  const router = useRouter();
-  const { data: session, status } = useSession();
+export default function CreateLeadPage() {
+  const { data: session } = useSession();
   const { data: leadFormData } = api.leads.getLeadFormData.useQuery();
 
   const createLead = api.leads.createLead.useMutation({
@@ -117,24 +116,20 @@ export default function Home() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      dateReceived: new Date(),
-      salesManager: undefined,
+      eventDetails: [],
     },
   });
 
   const formValues = useWatch<z.infer<typeof formSchema>>(form);
 
-  const eventDetails = useFieldArray({
-    name: "eventDetails",
+  const activities = useFieldArray({
+    name: "activities",
     control: form.control,
   });
-  const activity = useFieldArray({ name: "activity", control: form.control });
-  // 2. Define a submit handler.
+
   function onSubmit(values: z.infer<typeof formSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log({ formValues: values });
     createLead.mutate({
+      dateReceived: values.dateReceived,
       userId: session!.user.id,
       leadTypeId: values.leadType.id,
       salesManagerId: values.salesManager.id,
@@ -144,15 +139,26 @@ export default function Home() {
       eventTypeOther: values.eventTypeOther,
       siteInspectionDate: values.siteInspectionDate,
       siteInspectionDateOptional: values.siteInspectionDateOptional,
-      ...(values.contact && {
-        contact: {
-          email: values.contact?.email,
-          firstName: values.contact?.firstName,
-          lastName: values.contact?.lastName,
-          mobileNumber: values.contact?.mobileNumber,
-          phoneNumber: values.contact?.phoneNumber,
-        },
-      }),
+      startDate: values.startDate,
+      endDate: values.endDate!,
+      eventLengthInDays: values.eventLengthInDays,
+      contact: {
+        email: values.contact.email,
+        firstName: values.contact.firstName,
+        lastName: values.contact?.lastName,
+        mobileNumber: values.contact?.mobileNumber,
+        phoneNumber: values.contact?.phoneNumber,
+      },
+      eventDetails: values.eventDetails?.map((event) => ({
+        date: event.date,
+        functionRoomId: event.functionRoom?.id,
+        mealReqId: event.mealReq?.id,
+        pax: event.pax,
+        remarks: event.remarks,
+        roomSetupId: event.setup?.id,
+        startTime: event.startTime,
+        endTime: event.endTime,
+      })),
       ...(values.budget && {
         budget: {
           rateTypeId: values.budget?.rateType?.id,
@@ -163,24 +169,12 @@ export default function Home() {
       }),
       ...(values.company && {
         company: {
-          address: values.address,
           name: values.company,
+          address: values.address,
         },
       }),
-      ...(values.eventDetails && {
-        eventDetails: values.eventDetails.map((date) => ({
-          date: date.date,
-          functionRoomId: date.functionRoom?.id,
-          mealReqId: date.mealReq?.id,
-          optionalDate: date.optionalDate,
-          pax: date.pax,
-          remarks: date.remarks,
-          roomSetupId: date.setup?.id,
-          time: date.time,
-        })),
-      }),
-      ...(values.activity && {
-        activities: values.activity.map((activity) => ({
+      ...(values.activities && {
+        activities: values.activities.map((activity) => ({
           updatedById: session!.user.id,
           clientFeedback: activity.clientFeedback,
           date: activity.date,
@@ -211,7 +205,7 @@ export default function Home() {
             </TabsList>
             <TabsContent value="lead">
               <div className="grid grid-cols-2 gap-4 rounded border p-4">
-                <div>
+                <FormItem>
                   <FormLabel>Date Received:</FormLabel>
                   <FormControl>
                     <DatePicker
@@ -223,8 +217,8 @@ export default function Home() {
                       }}
                     />
                   </FormControl>
-                </div>
-                <div>
+                </FormItem>
+                <FormItem>
                   <FormLabel>Date Proposal Was Sent:</FormLabel>
                   <FormControl>
                     <DatePicker
@@ -236,7 +230,7 @@ export default function Home() {
                       }}
                     />
                   </FormControl>
-                </div>
+                </FormItem>
                 <FormField
                   control={form.control}
                   name="leadType"
@@ -297,7 +291,7 @@ export default function Home() {
                     )}
                   />
                 </div>
-                <div>
+                <FormItem>
                   <FormLabel>Site Inspection Date:</FormLabel>
                   <FormControl>
                     <DatePicker
@@ -309,8 +303,8 @@ export default function Home() {
                       }}
                     />
                   </FormControl>
-                </div>
-                <div>
+                </FormItem>
+                <FormItem>
                   <FormLabel>Optional Date:</FormLabel>
                   <FormControl>
                     <DatePicker
@@ -322,7 +316,7 @@ export default function Home() {
                       }}
                     />
                   </FormControl>
-                </div>
+                </FormItem>
               </div>
             </TabsContent>
             <TabsContent value="event-details">
@@ -369,7 +363,7 @@ export default function Home() {
                   <div className="col-span-2 grid grid-cols-2 gap-4 rounded-md border bg-slate-200 p-4">
                     <FormField
                       control={form.control}
-                      name="roomDetails.numberOfRooms"
+                      name="roomDetails.total"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Number of Rooms</FormLabel>
@@ -377,7 +371,7 @@ export default function Home() {
                             <Input
                               type="number"
                               {...field}
-                              {...form.register("roomDetails.numberOfRooms", {
+                              {...form.register("roomDetails.total", {
                                 valueAsNumber: true,
                               })}
                             />
@@ -454,7 +448,16 @@ export default function Home() {
                             const eventType = leadFormData?.eventTypes.find(
                               ({ id }) => id === value
                             );
-                            field.onChange(eventType);
+
+                            if (value !== "other") {
+                              form.setValue("eventTypeOther", "");
+                            }
+
+                            field.onChange(
+                              value === "other"
+                                ? { id: null, name: "other" }
+                                : eventType
+                            );
                           }}
                           defaultValue={field.value?.name}
                           className="flex flex-wrap gap-8"
@@ -470,7 +473,7 @@ export default function Home() {
                                     <FormControl>
                                       <RadioGroupItem value={eventType.id} />
                                     </FormControl>
-                                    <FormLabel className="font-normal capitalize">
+                                    <FormLabel className="capitalize">
                                       {eventType.activity}
                                     </FormLabel>
                                   </FormItem>
@@ -487,18 +490,16 @@ export default function Home() {
                                     <FormControl>
                                       <RadioGroupItem value={eventType.id} />
                                     </FormControl>
-                                    <FormLabel className="font-normal capitalize">
+                                    <FormLabel className="capitalize">
                                       {eventType.activity}
                                     </FormLabel>
                                   </FormItem>
                                 ))}
                           <FormItem className="flex items-center space-x-3 space-y-0">
                             <FormControl>
-                              <RadioGroupItem value="Other" />
+                              <RadioGroupItem value="other" />
                             </FormControl>
-                            <FormLabel className="font-normal capitalize">
-                              Other
-                            </FormLabel>
+                            <FormLabel>Other</FormLabel>
                           </FormItem>
                         </RadioGroup>
                       </FormControl>
@@ -525,7 +526,7 @@ export default function Home() {
               </div>
             </TabsContent>
             <TabsContent value="contact">
-              <div className="rounded border p-4">
+              <div className="space-y-4 rounded border p-4">
                 <FormField
                   control={form.control}
                   name="contact.firstName"
@@ -559,7 +560,7 @@ export default function Home() {
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input type="email" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -626,157 +627,240 @@ export default function Home() {
               </div>
             </TabsContent>
             <TabsContent value="dates">
-              <div className="rounded border p-4">
-                {eventDetails.fields.length > 0 && (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>
-                          Date{" "}
-                          <span className="text-xs text-gray-500">
-                            (include rehearsals, if any)
-                          </span>
-                        </TableHead>
-                        <TableHead>Optional Date/s</TableHead>
-                        <TableHead>Time</TableHead>
-                        <TableHead># of Pax</TableHead>
-                        <TableHead>Set-Up</TableHead>
-                        <TableHead>
-                          Meal Req{" "}
-                          <span className="text-xs text-gray-500">
-                            (include dietary restrictions, if any)
-                          </span>
-                        </TableHead>
-                        <TableHead>Function Room</TableHead>
-                        <TableHead>Remarks</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {eventDetails.fields.map((event, index) => (
-                        <TableRow key={event.id}>
-                          <TableCell className="font-medium">
+              <div className="space-y-4 rounded border p-4">
+                <div className="grid grid-cols-4 gap-4">
+                  <FormItem>
+                    <FormLabel>Event Start Date:</FormLabel>
+                    <FormControl>
+                      <DatePicker
+                        date={formValues.startDate}
+                        onChange={(date) => {
+                          if (date) {
+                            form.setValue(
+                              "startDate",
+                              datefns.startOfDay(date)
+                            );
+                          }
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                  <FormField
+                    control={form.control}
+                    name="eventLengthInDays"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Event Length in Days?</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            disabled={!formValues.startDate}
+                            min="1"
+                            step="1"
+                            {...field}
+                            {...form.register("eventLengthInDays", {
+                              valueAsNumber: true,
+                              onChange: (e) => {
+                                const count = !!e.target.value
+                                  ? parseInt(e.target.value, 10)
+                                  : 0;
+                                if (count) {
+                                  let events = [];
+                                  for (let i = 0; i < count; i++) {
+                                    const date = datefns.addDays(
+                                      formValues.startDate!,
+                                      i
+                                    );
+                                    events.push({
+                                      date,
+                                      startTime: "",
+                                      endTime: "",
+                                      pax: 0,
+                                      setup: undefined,
+                                      mealReq: undefined,
+                                      functionRoom: undefined,
+                                      remarks: "",
+                                    });
+                                    form.setValue("eventDetails", events);
+                                  }
+                                  const endDate = datefns.endOfDay(
+                                    datefns.addDays(
+                                      formValues.startDate!,
+                                      count - 1
+                                    )
+                                  );
+                                  form.setValue("endDate", endDate);
+                                } else {
+                                  form.setValue("eventDetails", []);
+                                  form.setValue("endDate", undefined);
+                                }
+                              },
+                            })}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  {formValues.endDate && (
+                    <FormItem>
+                      <FormLabel>End Date:</FormLabel>
+                      <FormControl>
+                        <p>
+                          {datefns.format(formValues.endDate, "MMMM d, yyyy")}
+                        </p>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                </div>
+
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>
+                        Date{" "}
+                        <span className="text-xs text-gray-400">
+                          (include rehearsals, if any)
+                        </span>
+                      </TableHead>
+                      <TableHead>
+                        Time
+                        <br></br>
+                        <div className="flex justify-between gap-4 text-xs text-gray-400">
+                          <span className="w-full">Start</span>
+                          <span className="w-full">End</span>
+                        </div>
+                      </TableHead>
+                      <TableHead># of Pax</TableHead>
+                      <TableHead>Set-Up</TableHead>
+                      <TableHead>
+                        Meal Req{" "}
+                        <span className="text-xs text-gray-400">
+                          (include dietary restrictions, if any)
+                        </span>
+                      </TableHead>
+                      <TableHead>Function Room</TableHead>
+                      <TableHead>Remarks</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {Array(
+                      Number.isInteger(formValues.eventLengthInDays)
+                        ? formValues.eventLengthInDays
+                        : 0
+                    )
+                      .fill(null)
+                      .map((_, index) => (
+                        <TableRow
+                          key={index}
+                          className={index % 2 === 0 ? "bg-gray-100" : ""}
+                        >
+                          <TableCell className="align-top">
                             <DatePicker
-                              date={event.date}
+                              className="w-[200px]"
+                              date={formValues.eventDetails?.[index]?.date}
                               onChange={(date) => {
                                 if (date) {
-                                  eventDetails.update(index, {
-                                    ...event,
-                                    date,
-                                  });
+                                  form.setValue(
+                                    `eventDetails.${index}.date`,
+                                    date
+                                  );
                                 }
                               }}
                             />
                           </TableCell>
-                          <TableCell>
-                            <DatePicker
-                              date={event.optionalDate}
-                              onChange={(date) => {
-                                if (date) {
-                                  eventDetails.update(index, {
-                                    ...event,
-                                    optionalDate: date,
-                                  });
-                                }
-                              }}
-                            />
-                          </TableCell>
-                          <TableCell>
+
+                          <TableCell className="flex gap-4">
                             <Input
                               type="time"
-                              {...form.register(`eventDetails.${index}.time`)}
+                              autoFocus={false}
+                              {...form.register(
+                                `eventDetails.${index}.startTime`
+                              )}
+                            />
+                            <Input
+                              type="time"
+                              autoFocus={false}
+                              {...form.register(
+                                `eventDetails.${index}.endTime`
+                              )}
                             />
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="align-top">
                             <Input
                               type="number"
-                              className="w-[200px]"
+                              className="w-20"
                               {...form.register(`eventDetails.${index}.pax`, {
                                 valueAsNumber: true,
                               })}
                             />
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="align-top">
                             <Combobox
+                              contentClassName="capitalize"
+                              triggerClassName="capitalize"
                               items={leadFormData?.roomSetups ?? []}
-                              selectedItem={leadFormData?.roomSetups?.find(
-                                (setup) =>
-                                  setup.name ===
-                                  eventDetails.fields[index]?.setup?.name
-                              )}
+                              selectedItem={
+                                formValues.eventDetails?.[index]?.setup
+                              }
                               onChange={(selectedItem) => {
-                                eventDetails.update(index, {
-                                  ...event,
-                                  setup: selectedItem,
-                                });
+                                form.setValue(
+                                  `eventDetails.${index}.setup`,
+                                  selectedItem
+                                );
                               }}
                               placeholder="Select One"
                             />
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="align-top">
                             <Combobox
+                              contentClassName="capitalize"
+                              triggerClassName="capitalize"
                               items={leadFormData?.mealReqs ?? []}
-                              selectedItem={leadFormData?.mealReqs?.find(
-                                (mealReq) =>
-                                  mealReq.name ===
-                                  eventDetails.fields[index]?.mealReq?.name
-                              )}
+                              selectedItem={
+                                formValues.eventDetails?.[index]?.mealReq
+                              }
                               onChange={(selectedItem) => {
-                                eventDetails.update(index, {
-                                  ...event,
-                                  mealReq: selectedItem,
-                                });
+                                form.setValue(
+                                  `eventDetails.${index}.mealReq`,
+                                  selectedItem
+                                );
                               }}
                               placeholder="Select One"
                             />
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="align-top">
                             <Combobox
+                              contentClassName="capitalize"
+                              triggerClassName="capitalize"
                               items={leadFormData?.functionRooms ?? []}
-                              selectedItem={leadFormData?.functionRooms?.find(
-                                (functionRoom) =>
-                                  functionRoom.name ===
-                                  eventDetails.fields[index]?.functionRoom?.name
-                              )}
+                              selectedItem={
+                                formValues.eventDetails?.[index]?.functionRoom
+                              }
                               onChange={(selectedItem) => {
-                                eventDetails.update(index, {
-                                  ...event,
-                                  functionRoom: selectedItem,
-                                });
+                                form.setValue(
+                                  `eventDetails.${index}.functionRoom`,
+                                  selectedItem
+                                );
                               }}
                               placeholder="Select One"
                             />
                           </TableCell>
-                          <TableCell>
-                            <Input
+                          <TableCell className="align-top">
+                            <Textarea
                               {...form.register(
                                 `eventDetails.${index}.remarks`
                               )}
+                              rows={2}
+                              className="w-[200px]"
                             />
                           </TableCell>
                         </TableRow>
                       ))}
-                    </TableBody>
-                  </Table>
-                )}
-                <FormControl>
-                  <Button
-                    type="button"
-                    onClick={() => {
-                      eventDetails.append({
-                        date: new Date(),
-                        functionRoom: undefined,
-                        mealReq: undefined,
-                        optionalDate: undefined,
-                        pax: 0,
-                        remarks: "",
-                        setup: undefined,
-                        time: new Date(),
-                      });
-                    }}
-                  >
-                    Add Date
-                  </Button>
-                </FormControl>
+                  </TableBody>
+                </Table>
               </div>
             </TabsContent>
             <TabsContent value="budget">
@@ -853,75 +937,102 @@ export default function Home() {
                       </FormItem>
                     )}
                   />
+                  <FormItem>
+                    <FormLabel>Rate Type</FormLabel>
+                    <Combobox
+                      contentClassName="capitalize w-full"
+                      triggerClassName="capitalize w-full"
+                      items={leadFormData?.rateTypes ?? []}
+                      selectedItem={formValues.budget?.rateType}
+                      onChange={(selectedRateType) => {
+                        form.setValue("budget.rateType", selectedRateType);
+                      }}
+                      placeholder="Select One"
+                    />
+                  </FormItem>
                 </div>
               </div>
             </TabsContent>
             <TabsContent value="activity">
               <div className="rounded border p-4">
-                {activity.fields.length > 0 && (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Date of Activity</TableHead>
-                        <TableHead>Updated By</TableHead>
-                        <TableHead>Latest Feedback Given By Client</TableHead>
-                        <TableHead>Next Trace Date</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {activity.fields.map((activity, index) => (
-                        <TableRow key={activity.id}>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date of Activity</TableHead>
+                      <TableHead>Updated By</TableHead>
+                      <TableHead>Latest Feedback Given By Client</TableHead>
+                      <TableHead>Next Trace Date</TableHead>
+                      <TableHead></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {activities.fields.map((_, index) => {
+                      return (
+                        <TableRow key={index}>
                           <TableCell className="font-medium">
                             <DatePicker
-                              date={activity.date}
-                              onChange={(date) => {
-                                if (date) {
-                                  form.setValue(`activity.${index}.date`, date);
-                                }
-                              }}
-                            />
-                          </TableCell>
-                          <TableCell>Arna Monica Le</TableCell>
-                          <TableCell>
-                            <Input
-                              {...form.register(
-                                `activity.${index}.clientFeedback`
-                              )}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <DatePicker
-                              date={activity.nextTraceDate}
+                              date={formValues.activities?.[index]?.date}
                               onChange={(date) => {
                                 if (date) {
                                   form.setValue(
-                                    `activity.${index}.nextTraceDate`,
+                                    `activities.${index}.date`,
                                     date
                                   );
                                 }
                               }}
                             />
                           </TableCell>
+                          <TableCell>{session?.user?.name}</TableCell>
+                          <TableCell>
+                            <Input
+                              {...form.register(
+                                `activities.${index}.clientFeedback`
+                              )}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <DatePicker
+                              date={
+                                formValues.activities?.[index]?.nextTraceDate
+                              }
+                              onChange={(date) => {
+                                if (date) {
+                                  form.setValue(
+                                    `activities.${index}.nextTraceDate`,
+                                    date
+                                  );
+                                }
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              type="button"
+                              onClick={() => {
+                                activities.remove(index);
+                              }}
+                            >
+                              <Trash />
+                            </Button>
+                          </TableCell>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-                <FormControl>
-                  <Button
-                    type="button"
-                    onClick={() => {
-                      activity.append({
-                        date: new Date(),
-                        clientFeedback: "",
-                        nextTraceDate: undefined,
-                        updatedBy: "",
-                      });
-                    }}
-                  >
-                    Add Activity
-                  </Button>
-                </FormControl>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+                <Button
+                  type="button"
+                  onClick={() => {
+                    activities.append({
+                      date: new Date(),
+                      updatedBy: session!.user.name!,
+                      clientFeedback: "",
+                      nextTraceDate: undefined,
+                    });
+                  }}
+                >
+                  Add
+                </Button>
               </div>
             </TabsContent>
             <TabsContent value="review">

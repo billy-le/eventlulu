@@ -24,7 +24,7 @@ const loginSchema = z.object({
   password: z.string(),
 });
 
-export default function Login() {
+export default function LoginPage() {
   const router = useRouter();
   const { status } = useSession();
 
@@ -69,7 +69,7 @@ export default function Login() {
                 <FormItem>
                   <FormLabel className="text-slate-100">Email</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input type="email" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -82,7 +82,7 @@ export default function Login() {
                 <FormItem>
                   <FormLabel className="text-slate-100">Password</FormLabel>
                   <FormControl>
-                    <Input {...field} type="password" />
+                    <Input type="password" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

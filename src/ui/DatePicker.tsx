@@ -16,9 +16,11 @@ import {
 export function DatePicker({
   date,
   onChange,
+  className,
 }: {
   date: Date | undefined;
   onChange: (date: Date | undefined) => void;
+  className?: string;
 }) {
   return (
     <Popover>
@@ -27,7 +29,8 @@ export function DatePicker({
           variant={"outline"}
           className={cn(
             "flex w-full justify-start text-left font-normal",
-            !date && "text-muted-foreground"
+            !date && "text-muted-foreground",
+            className
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
@@ -45,3 +48,7 @@ export function DatePicker({
     </Popover>
   );
 }
+
+DatePicker.defaultProps = {
+  className: "",
+};

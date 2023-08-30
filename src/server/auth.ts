@@ -6,9 +6,7 @@ import {
   type DefaultSession,
 } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { env } from "~/env.mjs";
 import { prisma } from "~/server/db";
-
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
  * object and keep type safety.
@@ -40,7 +38,8 @@ export const authOptions: NextAuthOptions = {
     signIn: "/login",
   },
   session: {
-    strategy: "jwt", // Seconds - How long until an idle session expires and is no longer valid.
+    strategy: "jwt",
+    // Seconds - How long until an idle session expires and is no longer valid.
     maxAge: 30 * 24 * 60 * 60, // 30 days
     // Note: This option is ignored if using JSON Web Tokens
     updateAge: 24 * 60 * 60, // 24 hours
@@ -70,10 +69,8 @@ export const authOptions: NextAuthOptions = {
             password: credentials?.password,
           },
         });
-        if (user) {
-          return user;
-        }
-        return null;
+        if (!user) return null;
+        return user;
       },
       type: "credentials",
     }),
@@ -88,12 +85,21 @@ export const authOptions: NextAuthOptions = {
      */
   ],
   callbacks: {
-    session({ session, token }) {
+    async session({ session }) {
+      // Send properties to the client, like an access_token and user id from a provider.
+      let user;
+      if (session.user.email) {
+        user = await prisma.user.findUnique({
+          where: {
+            email: session.user.email,
+          },
+        });
+      }
       return {
         ...session,
         user: {
           ...session.user,
-          id: token.sub,
+          id: user?.id,
         },
       };
     },

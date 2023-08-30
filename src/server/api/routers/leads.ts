@@ -4,7 +4,6 @@ import {
   protectedProcedure,
   publicProcedure,
 } from "~/server/api/trpc";
-import { prisma } from "~/server/db";
 
 export const leadsRouter = createTRPCRouter({
   getLeads: protectedProcedure.query(({ ctx }) => {
@@ -12,6 +11,17 @@ export const leadsRouter = createTRPCRouter({
       include: {
         contact: true,
         eventDetails: true,
+        activities: true,
+        company: true,
+        eventType: true,
+        roomDetails: true,
+        rateType: true,
+        salesAccountManager: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
       },
     });
   }),
@@ -55,27 +65,28 @@ export const leadsRouter = createTRPCRouter({
         isLiveIn: z.boolean().optional(),
         eventTypeId: z.string().optional(),
         eventTypeOther: z.string().optional(),
-        contact: z
-          .object({
-            firstName: z.string().optional(),
-            lastName: z.string().optional(),
-            email: z.string().optional(),
-            phoneNumber: z.string().optional(),
-            mobileNumber: z.string().optional(),
-          })
-          .optional(),
+        startDate: z.date(),
+        endDate: z.date(),
+        eventLengthInDays: z.number().int().positive(),
+        contact: z.object({
+          firstName: z.string(),
+          lastName: z.string().optional(),
+          email: z.string(),
+          phoneNumber: z.string().optional(),
+          mobileNumber: z.string().optional(),
+        }),
         company: z
           .object({
-            name: z.string().optional(),
+            name: z.string(),
             address: z.string().optional(),
           })
           .optional(),
         eventDetails: z
           .array(
             z.object({
-              date: z.date().optional(),
-              optionalDate: z.date().optional(),
-              time: z.date().optional(),
+              date: z.date(),
+              startTime: z.string().optional(),
+              endTime: z.string().optional(),
               pax: z.number().int().positive().optional(),
               roomSetupId: z.string().optional(),
               mealReqId: z.string().optional(),
@@ -96,7 +107,7 @@ export const leadsRouter = createTRPCRouter({
         activities: z
           .array(
             z.object({
-              date: z.date().optional(),
+              date: z.date(),
               updatedById: z.string(),
               clientFeedback: z.string().optional(),
               nextTraceDate: z.date().optional(),
@@ -107,13 +118,56 @@ export const leadsRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
+        let company = null;
+        let contact = null;
+        if (input.company) {
+          company = await ctx.prisma.organization.findUnique({
+            where: {
+              name: input.company.name,
+            },
+          });
+          if (!company) {
+            company = await ctx.prisma.organization.create({
+              data: {
+                name: input.company.name,
+                address1: input.company.address,
+              },
+            });
+          }
+        }
+        if (input.contact) {
+          contact = await ctx.prisma.contact.findUnique({
+            where: {
+              email: input.contact.email,
+            },
+          });
+          if (!contact) {
+            contact = await ctx.prisma.contact.create({
+              data: {
+                email: input.contact.email,
+                firstName: input.contact.firstName,
+                lastName: input.contact.lastName,
+                phoneNumber: input.contact.phoneNumber,
+              },
+            });
+          }
+        }
         const lead = await ctx.prisma.leadForm.create({
           data: {
-            dateReceived: new Date(),
+            dateReceived: input.dateReceived ?? new Date(),
             leadTypeId: input.leadTypeId,
             salesAccountManagerId: input.salesManagerId,
             isCorporate: input.isCorporate,
             isLiveIn: input.isLiveIn,
+            startDate: input.startDate,
+            endDate: input.endDate,
+            eventLengthInDays: input.eventLengthInDays,
+            ...(company && {
+              companyId: company.id,
+            }),
+            ...(contact && {
+              contactId: contact.id,
+            }),
             ...(input.eventTypeId && {
               eventTypeId: input.eventTypeId,
             }),
@@ -131,15 +185,14 @@ export const leadsRouter = createTRPCRouter({
                 createMany: {
                   skipDuplicates: true,
                   data: input.eventDetails.map((detail) => ({
-                    date: detail.date || new Date(),
-                    optionalDate: detail.optionalDate,
+                    date: detail.date,
+                    startTime: detail.startTime,
+                    endTime: detail.endTime,
                     functionRoomId: detail.functionRoomId,
                     mealReqId: detail.mealReqId,
                     pax: detail.pax,
                     roomSetupId: detail.roomSetupId,
                     remarks: detail.remarks,
-                    startTime: undefined,
-                    endTime: undefined,
                   })),
                 },
               },
@@ -150,14 +203,14 @@ export const leadsRouter = createTRPCRouter({
               rate: input.budget.rate,
               rateTypeId: input.budget.rateTypeId,
             }),
-            ...(input.activities && {
+            ...((input.activities?.length ?? 0) > 0 && {
               activities: {
                 createMany: {
-                  data: input.activities.map((activity) => ({
+                  data: input.activities!.map((activity) => ({
                     date: activity.date,
                     clientFeedback: activity.clientFeedback,
                     nextTraceDate: activity.nextTraceDate,
-                    userId: input.userId,
+                    updatedById: activity.updatedById,
                   })),
                 },
               },

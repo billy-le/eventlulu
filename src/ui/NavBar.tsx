@@ -24,12 +24,12 @@ export function NavBar() {
                 </Link>
               </li>
               <li>
-                <Link className="px-3 py-2 hover:opacity-75" href="#profile">
+                <Link className="px-3 py-2 hover:opacity-75" href="/profile">
                   Profile
                 </Link>
               </li>
               <li>
-                <Link className="px-3 py-2 hover:opacity-75" href="#settings">
+                <Link className="px-3 py-2 hover:opacity-75" href="/settings">
                   Settings
                 </Link>
               </li>
