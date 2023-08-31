@@ -1,6 +1,14 @@
 "use client";
+import * as z from "zod";
+import * as datefns from "date-fns";
+import { api } from "~/utils/api";
+
 import { useForm, useWatch, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/router";
+import { useSession } from "next-auth/react";
+import { useEffect } from "react";
+
 import {
   Form,
   FormControl,
@@ -23,12 +31,8 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DatePicker } from "src/ui/DatePicker";
-import * as z from "zod";
-import { useSession } from "next-auth/react";
 import { DefaultLayout } from "~/layouts/default";
-import { api } from "~/utils/api";
 import { Combobox } from "~/ui/Combobox";
-import * as datefns from "date-fns";
 import { Trash } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -45,7 +49,6 @@ const formSchema = z.object({
   leadType: nameId,
   salesManager: nameId,
   siteInspectionDate: z.date().optional(),
-  siteInspectionDateOptional: z.date().optional(),
   company: z.string().optional(),
   address: z.string().optional(),
   startDate: z.date(),
@@ -102,7 +105,18 @@ const formSchema = z.object({
 });
 
 export default function CreateLeadPage() {
+  const router = useRouter();
+  const leadId = router.query["leadId"];
   const { data: session } = useSession();
+  const { data: leadData = [], status: leadDataStatus } =
+    api.leads.getLeads.useQuery(
+      {
+        leadId: leadId as string,
+      },
+      {
+        refetchOnWindowFocus: false,
+      }
+    );
   const { data: leadFormData } = api.leads.getLeadFormData.useQuery();
 
   const createLead = api.leads.createLead.useMutation({
@@ -138,7 +152,6 @@ export default function CreateLeadPage() {
       eventTypeId: values.eventType?.id,
       eventTypeOther: values.eventTypeOther,
       siteInspectionDate: values.siteInspectionDate,
-      siteInspectionDateOptional: values.siteInspectionDateOptional,
       startDate: values.startDate,
       endDate: values.endDate!,
       eventLengthInDays: values.eventLengthInDays,
@@ -299,19 +312,6 @@ export default function CreateLeadPage() {
                       onChange={(date) => {
                         if (date) {
                           form.setValue("siteInspectionDate", date);
-                        }
-                      }}
-                    />
-                  </FormControl>
-                </FormItem>
-                <FormItem>
-                  <FormLabel>Optional Date:</FormLabel>
-                  <FormControl>
-                    <DatePicker
-                      date={formValues.siteInspectionDateOptional}
-                      onChange={(date) => {
-                        if (date) {
-                          form.setValue("siteInspectionDateOptional", date);
                         }
                       }}
                     />

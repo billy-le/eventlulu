@@ -46,6 +46,7 @@
     "zod": "^3.22.1"
   },
   "devDependencies": {
+    "@faker-js/faker": "^8.0.2",
     "@types/eslint": "^8.37.0",
     "@types/node": "^18.17.5",
     "@types/prettier": "^2.7.2",

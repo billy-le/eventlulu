@@ -1,30 +1,45 @@
 import { z } from "zod";
-import {
-  createTRPCRouter,
-  protectedProcedure,
-  publicProcedure,
-} from "~/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
 export const leadsRouter = createTRPCRouter({
-  getLeads: protectedProcedure.query(({ ctx }) => {
-    return ctx.prisma.leadForm.findMany({
-      include: {
-        contact: true,
-        eventDetails: true,
-        activities: true,
-        company: true,
-        eventType: true,
-        roomDetails: true,
-        rateType: true,
-        salesAccountManager: {
-          select: {
-            name: true,
-            email: true,
+  getLeads: protectedProcedure
+    .input(
+      z
+        .object({
+          leadId: z.string().nullable(),
+        })
+        .optional()
+    )
+    .query(({ ctx, input }) => {
+      return ctx.prisma.leadForm.findMany({
+        ...(input?.leadId && {
+          where: {
+            id: input.leadId,
+          },
+        }),
+        include: {
+          contact: true,
+          eventDetails: {
+            include: {
+              functionRoom: true,
+              mealReq: true,
+              roomSetup: true,
+            },
+          },
+          activities: true,
+          company: true,
+          eventType: true,
+          rateType: true,
+          leadType: true,
+          salesAccountManager: {
+            select: {
+              name: true,
+              email: true,
+            },
           },
         },
-      },
-    });
-  }),
+      });
+    }),
   getLeadFormData: protectedProcedure.query(async ({ ctx }) => {
     try {
       const salesManagers = await ctx.prisma.user.findMany({

@@ -95,6 +95,9 @@ export default function HomePage() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                    <DropdownMenuItem>
+                      <Link href={`/leads/${row.original.id}`}>Edit</Link>
+                    </DropdownMenuItem>
                     <DropdownMenuItem>Mark as Sent</DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem>Generate Proposal PDF</DropdownMenuItem>
