@@ -33,6 +33,7 @@ export const leadsRouter = createTRPCRouter({
           leadType: true,
           salesAccountManager: {
             select: {
+              id: true,
               name: true,
               email: true,
             },
@@ -40,42 +41,16 @@ export const leadsRouter = createTRPCRouter({
         },
       });
     }),
-  getLeadFormData: protectedProcedure.query(async ({ ctx }) => {
-    try {
-      const salesManagers = await ctx.prisma.user.findMany({
-        where: {
-          role: "salesManager",
-        },
-      });
-      const functionRooms = await ctx.prisma.functionRoom.findMany();
-      const mealReqs = await ctx.prisma.mealReq.findMany();
-      const roomSetups = await ctx.prisma.roomSetup.findMany();
-      const rateTypes = await ctx.prisma.rateType.findMany();
-      const eventTypes = await ctx.prisma.eventType.findMany();
-      const leadTypes = await ctx.prisma.leadType.findMany();
-
-      return {
-        salesManagers,
-        functionRooms,
-        mealReqs,
-        roomSetups,
-        rateTypes,
-        eventTypes,
-        leadTypes,
-      };
-    } catch (err) {
-      console.log(err);
-    }
-  }),
-  createLead: protectedProcedure
+  mutateLead: protectedProcedure
     .input(
       z.object({
+        id: z.string().optional(),
         userId: z.string(),
         salesManagerId: z.string(),
         leadTypeId: z.string(),
         dateReceived: z.date().optional(),
-        siteInspectionDate: z.date().optional(),
-        siteInspectionDateOptional: z.date().optional(),
+        lastDateSent: z.date().optional(),
+        onSiteDate: z.date().optional(),
         isCorporate: z.boolean().optional(),
         isLiveIn: z.boolean().optional(),
         eventTypeId: z.string().optional(),
@@ -83,6 +58,11 @@ export const leadsRouter = createTRPCRouter({
         startDate: z.date(),
         endDate: z.date(),
         eventLengthInDays: z.number().int().positive(),
+        banquetsBudget: z.number().int().positive().optional(),
+        roomsBudget: z.number().int().positive().optional(),
+        rate: z.number().int().positive(),
+        rateTypeId: z.string().optional(),
+        otherHotelConsiderations: z.string().optional(),
         contact: z.object({
           firstName: z.string(),
           lastName: z.string().optional(),
@@ -93,7 +73,8 @@ export const leadsRouter = createTRPCRouter({
         company: z
           .object({
             name: z.string(),
-            address: z.string().optional(),
+            address1: z.string().optional(),
+            address2: z.string().optional(),
           })
           .optional(),
         eventDetails: z
@@ -109,15 +90,6 @@ export const leadsRouter = createTRPCRouter({
               remarks: z.string().optional(),
             })
           )
-          .optional(),
-        budget: z
-          .object({
-            banquet: z.number().int().positive().optional(),
-            rooms: z.number().int().positive().optional(),
-            rate: z.number().int().positive(),
-            rateTypeId: z.string().optional(),
-            otherHotelsBeingConsidered: z.array(z.string()).optional(),
-          })
           .optional(),
         activities: z
           .array(
@@ -145,7 +117,8 @@ export const leadsRouter = createTRPCRouter({
             company = await ctx.prisma.organization.create({
               data: {
                 name: input.company.name,
-                address1: input.company.address,
+                address1: input.company.address1,
+                address2: input.company.address2,
               },
             });
           }
@@ -167,75 +140,130 @@ export const leadsRouter = createTRPCRouter({
             });
           }
         }
-        const lead = await ctx.prisma.leadForm.create({
-          data: {
-            dateReceived: input.dateReceived ?? new Date(),
-            leadTypeId: input.leadTypeId,
-            salesAccountManagerId: input.salesManagerId,
-            isCorporate: input.isCorporate,
-            isLiveIn: input.isLiveIn,
-            startDate: input.startDate,
-            endDate: input.endDate,
-            eventLengthInDays: input.eventLengthInDays,
-            ...(company && {
-              companyId: company.id,
-            }),
-            ...(contact && {
-              contactId: contact.id,
-            }),
-            ...(input.eventTypeId && {
-              eventTypeId: input.eventTypeId,
-            }),
-            ...(input.eventTypeOther && {
-              eventTypeOther: input.eventTypeOther,
-            }),
-            ...(input.siteInspectionDate && {
-              onSiteDate: input.siteInspectionDate,
-            }),
-            ...(input.siteInspectionDateOptional && {
-              onSiteDateOptional: input.siteInspectionDateOptional,
-            }),
-            ...(input.eventDetails && {
-              eventDetails: {
-                createMany: {
-                  skipDuplicates: true,
-                  data: input.eventDetails.map((detail) => ({
-                    date: detail.date,
-                    startTime: detail.startTime,
-                    endTime: detail.endTime,
-                    functionRoomId: detail.functionRoomId,
-                    mealReqId: detail.mealReqId,
-                    pax: detail.pax,
-                    roomSetupId: detail.roomSetupId,
-                    remarks: detail.remarks,
-                  })),
-                },
-              },
-            }),
-            ...(input.budget && {
-              banquetsBudget: input.budget.banquet,
-              roomsBudget: input.budget.rooms,
-              rate: input.budget.rate,
-              rateTypeId: input.budget.rateTypeId,
-            }),
-            ...((input.activities?.length ?? 0) > 0 && {
-              activities: {
-                createMany: {
-                  data: input.activities!.map((activity) => ({
-                    date: activity.date,
-                    clientFeedback: activity.clientFeedback,
-                    nextTraceDate: activity.nextTraceDate,
-                    updatedById: activity.updatedById,
-                  })),
-                },
-              },
-            }),
-          },
-        });
 
-        return lead;
+        if (input.id) {
+          return await ctx.prisma.leadForm.update({
+            where: {
+              id: input.id,
+            },
+            data: {},
+          });
+        } else {
+          return await ctx.prisma.leadForm.create({
+            data: {
+              dateReceived: input.dateReceived ?? new Date(),
+              lastDateSent: input.lastDateSent,
+              leadTypeId: input.leadTypeId,
+              salesAccountManagerId: input.salesManagerId,
+              isCorporate: input.isCorporate,
+              isLiveIn: input.isLiveIn,
+              startDate: input.startDate,
+              endDate: input.endDate,
+              eventLengthInDays: input.eventLengthInDays,
+              banquetsBudget: input.banquetsBudget,
+              roomsBudget: input.roomsBudget,
+              rate: input.rate,
+              rateTypeId: input.rateTypeId,
+              ...(company && {
+                companyId: company.id,
+              }),
+              ...(contact && {
+                contactId: contact.id,
+              }),
+              ...(input.eventTypeId && {
+                eventTypeId: input.eventTypeId,
+              }),
+              ...(input.eventTypeOther && {
+                eventTypeOther: input.eventTypeOther,
+              }),
+              ...(input.onSiteDate && {
+                onSiteDate: input.onSiteDate,
+              }),
+              ...(input.eventDetails && {
+                eventDetails: {
+                  createMany: {
+                    skipDuplicates: true,
+                    data: input.eventDetails.map((detail) => ({
+                      date: detail.date,
+                      startTime: detail.startTime,
+                      endTime: detail.endTime,
+                      functionRoomId: detail.functionRoomId,
+                      mealReqId: detail.mealReqId,
+                      pax: detail.pax,
+                      roomSetupId: detail.roomSetupId,
+                      remarks: detail.remarks,
+                    })),
+                  },
+                },
+              }),
+              ...((input.activities?.length ?? 0) > 0 && {
+                activities: {
+                  createMany: {
+                    data: input.activities!.map((activity) => ({
+                      date: activity.date,
+                      clientFeedback: activity.clientFeedback,
+                      nextTraceDate: activity.nextTraceDate,
+                      updatedById: activity.updatedById,
+                    })),
+                  },
+                },
+              }),
+            },
+          });
+        }
       } catch (err) {
         console.log(err);
       }
     }),
+  delete: protectedProcedure
+    .input(z.string())
+    .mutation(async ({ ctx, input: id }) => {
+      try {
+        return await ctx.prisma.leadForm.delete({
+          where: {
+            id,
+            eventDetails: {
+              every: {
+                leadFormId: id,
+              },
+            },
+            activities: {
+              every: {
+                leadFormId: id,
+              },
+            },
+          },
+        });
+      } catch (err) {
+        console.log(err);
+      }
+    }),
+
+  getLeadFormData: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const salesManagers = await ctx.prisma.user.findMany({
+        where: {
+          role: "salesManager",
+        },
+      });
+      const functionRooms = await ctx.prisma.functionRoom.findMany();
+      const mealReqs = await ctx.prisma.mealReq.findMany();
+      const roomSetups = await ctx.prisma.roomSetup.findMany();
+      const rateTypes = await ctx.prisma.rateType.findMany();
+      const eventTypes = await ctx.prisma.eventType.findMany();
+      const leadTypes = await ctx.prisma.leadType.findMany();
+
+      return {
+        salesManagers,
+        functionRooms,
+        mealReqs,
+        roomSetups,
+        rateTypes,
+        eventTypes,
+        leadTypes,
+      };
+    } catch (err) {
+      console.log(err);
+    }
+  }),
 });

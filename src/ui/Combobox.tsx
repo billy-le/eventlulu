@@ -30,7 +30,7 @@ export function Combobox({
 }: {
   placeholder: string;
   items: { id: string; name: string }[];
-  selectedItem?: { id: string; name: string };
+  selectedItem?: { id?: string | undefined; name?: string | undefined };
   onChange: (item: { id: string; name: string }) => void;
   emptyDisplay?: string;
   triggerClassName?: string;

@@ -23,11 +23,26 @@ const {
   lorem,
 } = faker;
 const prisma = new PrismaClient();
+let seedCount = 0;
+
+if (process.argv[2]) {
+  const count = parseInt(process.argv[2], 10);
+  if (Number.isInteger(count) && Math.sign(count) === 1) {
+    seedCount = count;
+  }
+}
 
 async function main() {
-  const corporateEvents: { id: string; name: string; activity: string }[] = [];
-  const socialFunctionEvents: { id: string; name: string; activity: string }[] =
-    [];
+  const corporateEvents: Array<{
+    id: string;
+    name: string;
+    activity: string;
+  } | null> = [null];
+  const socialFunctionEvents: Array<{
+    id: string;
+    name: string;
+    activity: string;
+  } | null> = [null];
 
   const _eventTypes = Object.entries(eventTypes);
 
@@ -131,7 +146,7 @@ async function main() {
 
   const now = new Date();
 
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < seedCount; i++) {
     const isCorporate = datatype.boolean();
     const isLiveIn = datatype.boolean();
     const eventLengthInDays = number.int({ min: 1, max: 5 });
@@ -164,6 +179,10 @@ async function main() {
       });
     }
 
+    const eventType = isCorporate
+      ? helpers.arrayElement(corporateEvents)
+      : helpers.arrayElement(socialFunctionEvents);
+
     try {
       await prisma.leadForm.create({
         data: {
@@ -180,9 +199,8 @@ async function main() {
           companyId: company?.id ?? null,
           salesAccountManagerId: user.id,
           leadTypeId: helpers.arrayElement(leadTypesArray).id,
-          eventTypeId: isCorporate
-            ? helpers.arrayElement(corporateEvents).id
-            : helpers.arrayElement(socialFunctionEvents).id,
+          eventTypeId: eventType?.id,
+          eventTypeOther: !eventType ? word.verb() : null,
           lastDateSent: helpers.maybe(() => date.recent({ refDate: now }), {
             probability: 0.5,
           }),
@@ -200,12 +218,21 @@ async function main() {
           roomTotal: isLiveIn ? number.int({ max: 200 }) : null,
           roomArrivalDate: isLiveIn ? startDate : null,
           roomDepartureDate: isLiveIn ? endDate : null,
+          otherHotelConsiderations: helpers.maybe(
+            () => {
+              return Array(number.int({ min: 1, max: 4 }))
+                .fill(null)
+                .map((_) => `${word.noun()} hotel`)
+                .join(", ");
+            },
+            { probability: 0.3 }
+          ),
           activities: {
             createMany: {
               data: Array(number.int({ max: 4 }))
                 .fill(null)
-                .map((_) => ({
-                  date: date.recent({ refDate: now }),
+                .map((_, index) => ({
+                  date: datefns.addDays(startDate, index),
                   updatedById: user.id,
                   clientFeedback: lorem.sentences(),
                   nextTraceDate: helpers.maybe(

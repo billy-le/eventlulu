@@ -69,7 +69,6 @@ model LeadForm {
     isLiveIn                 Boolean            @default(false)
     salesAccountManager      User               @relation(fields: [salesAccountManagerId], references: [id], name: "salesAccountManager")
     onSiteDate               DateTime?
-    onSiteDateOptional       DateTime?
     startDate                DateTime
     endDate                  DateTime
     eventLengthInDays        Int
@@ -85,7 +84,7 @@ model LeadForm {
     activities               LeadFormActivity[]
     banquetsBudget           Int?
     roomsBudget              Int?
-    otherHotelConsiderations Organization[]     @relation(name: "otherHotelConsiderations")
+    otherHotelConsiderations String?
     rate                     Int?
     rateType                 RateType?          @relation(fields: [rateTypeId], references: [id])
     venueDecisionDate        DateTime?
@@ -165,13 +164,12 @@ model LeadFormActivity {
 }
 
 model Organization {
-    id                       String     @id @default(cuid())
-    name                     String     @unique
-    phoneNumber              String?
-    address1                 String?
-    address2                 String?
-    company                  LeadForm[] @relation(name: "company")
-    otherHotelConsiderations LeadForm[] @relation(name: "otherHotelConsiderations")
+    id          String     @id @default(cuid())
+    name        String     @unique
+    phoneNumber String?
+    address1    String?
+    address2    String?
+    company     LeadForm[] @relation(name: "company")
 }
 
 model Contact {

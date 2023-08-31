@@ -45,12 +45,10 @@ const formSchema = z.object({
   isCorporate: z.boolean().default(false),
   isLiveIn: z.boolean().default(false),
   dateReceived: z.date(),
-  dateSent: z.date().optional(),
+  lastDateSent: z.date().optional(),
   leadType: nameId,
-  salesManager: nameId,
-  siteInspectionDate: z.date().optional(),
-  company: z.string().optional(),
-  address: z.string().optional(),
+  salesAccountManager: nameId,
+  onSiteDate: z.date().optional(),
   startDate: z.date(),
   eventLengthInDays: z.number().int(),
   endDate: z.date().optional(),
@@ -61,6 +59,11 @@ const formSchema = z.object({
     phoneNumber: z.string().optional(),
     mobileNumber: z.string().optional(),
   }),
+  company: z.object({
+    name: z.string(),
+    address1: z.string().optional(),
+    address2: z.string().optional(),
+  }),
   eventType: nameId.optional(),
   eventTypeOther: z.string().optional(),
   eventDetails: z.array(
@@ -69,29 +72,21 @@ const formSchema = z.object({
       startTime: z.string().optional(),
       endTime: z.string().optional(),
       pax: z.number().positive().optional(),
-      setup: nameId.optional(),
+      roomSetup: nameId.optional(),
       mealReq: nameId.optional(),
       functionRoom: nameId.optional(),
       remarks: z.string().optional(),
     })
   ),
-  roomDetails: z
-    .object({
-      total: z.number().int().positive(),
-      roomType: z.string(),
-      arrivalDate: z.date(),
-      departureDate: z.date(),
-    })
-    .optional(),
-  budget: z
-    .object({
-      banquets: z.number().positive().optional(),
-      rooms: z.number().positive().optional(),
-      otherHotelsConsidered: z.string().optional(),
-      rate: z.number().positive().optional(),
-      rateType: nameId.optional(),
-    })
-    .optional(),
+  roomTotal: z.number().int().positive().optional(),
+  roomType: z.string().optional(),
+  roomArrivalDate: z.date().optional(),
+  roomDepartureDate: z.date().optional(),
+  banquetsBudget: z.number().positive().optional(),
+  roomsBudget: z.number().positive().optional(),
+  otherHotelConsiderations: z.string().optional(),
+  rate: z.number().positive().optional(),
+  rateType: nameId.optional(),
   activities: z
     .array(
       z.object({
@@ -104,7 +99,7 @@ const formSchema = z.object({
     .optional(),
 });
 
-export default function CreateLeadPage() {
+export default function LeadPage() {
   const router = useRouter();
   const leadId = router.query["leadId"];
   const { data: session } = useSession();
@@ -119,7 +114,22 @@ export default function CreateLeadPage() {
     );
   const { data: leadFormData } = api.leads.getLeadFormData.useQuery();
 
-  const createLead = api.leads.createLead.useMutation({
+  useEffect(() => {
+    if (leadData.length) {
+      const lead = leadData[0]!;
+      form.reset({
+        ...lead,
+        eventType: lead?.eventTypeId
+          ? leadFormData?.eventTypes.find((a) => a.id === lead.eventTypeId)
+          : {
+              id: "other",
+              name: "other",
+            },
+      });
+    }
+  }, [leadData, leadFormData]);
+
+  const mutateLead = api.leads.mutateLead.useMutation({
     onSuccess: (e) => {
       console.log(e);
     },
@@ -131,6 +141,7 @@ export default function CreateLeadPage() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       eventDetails: [],
+      activities: [],
     },
   });
 
@@ -142,16 +153,18 @@ export default function CreateLeadPage() {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    createLead.mutate({
+    mutateLead.mutate({
       dateReceived: values.dateReceived,
+      lastDateSent: values.lastDateSent,
       userId: session!.user.id,
       leadTypeId: values.leadType.id,
-      salesManagerId: values.salesManager.id,
+      salesManagerId: values.salesAccountManager.id,
       isCorporate: values.isCorporate,
       isLiveIn: values.isLiveIn,
-      eventTypeId: values.eventType?.id,
+      eventTypeId:
+        values.eventType?.id === "other" ? undefined : values.eventType?.id,
       eventTypeOther: values.eventTypeOther,
-      siteInspectionDate: values.siteInspectionDate,
+      onSiteDate: values.onSiteDate,
       startDate: values.startDate,
       endDate: values.endDate!,
       eventLengthInDays: values.eventLengthInDays,
@@ -162,38 +175,33 @@ export default function CreateLeadPage() {
         mobileNumber: values.contact?.mobileNumber,
         phoneNumber: values.contact?.phoneNumber,
       },
+      rateTypeId: values.rateType?.id,
+      rate: values.rate ?? 0,
+      banquetsBudget: values.banquetsBudget,
+      roomsBudget: values.roomsBudget,
+      ...(values.company.name && {
+        company: {
+          name: values.company.name,
+          address1: values.company.address1,
+          address2: values.company.address2,
+        },
+      }),
       eventDetails: values.eventDetails?.map((event) => ({
         date: event.date,
         functionRoomId: event.functionRoom?.id,
         mealReqId: event.mealReq?.id,
         pax: event.pax,
         remarks: event.remarks,
-        roomSetupId: event.setup?.id,
+        roomSetupId: event.roomSetup?.id,
         startTime: event.startTime,
         endTime: event.endTime,
       })),
-      ...(values.budget && {
-        budget: {
-          rateTypeId: values.budget?.rateType?.id,
-          rate: values.budget?.rate ?? 0,
-          banquet: values.budget?.banquets,
-          rooms: values.budget?.rooms,
-        },
-      }),
-      ...(values.company && {
-        company: {
-          name: values.company,
-          address: values.address,
-        },
-      }),
-      ...(values.activities && {
-        activities: values.activities.map((activity) => ({
-          updatedById: session!.user.id,
-          clientFeedback: activity.clientFeedback,
-          date: activity.date,
-          nextTraceDate: activity.nextTraceDate,
-        })),
-      }),
+      activities: values.activities?.map((activity) => ({
+        updatedById: session!.user.id,
+        clientFeedback: activity.clientFeedback,
+        date: activity.date,
+        nextTraceDate: activity.nextTraceDate,
+      })),
     });
   }
 
@@ -209,11 +217,11 @@ export default function CreateLeadPage() {
           <Tabs defaultValue="lead">
             <TabsList>
               <TabsTrigger value="lead">Lead</TabsTrigger>
-              <TabsTrigger value="event-details">Event Details</TabsTrigger>
+              <TabsTrigger value="event-type">Event Type</TabsTrigger>
               <TabsTrigger value="contact">Contact</TabsTrigger>
               <TabsTrigger value="dates">Dates</TabsTrigger>
               <TabsTrigger value="budget">Budget</TabsTrigger>
-              <TabsTrigger value="activity">Activity</TabsTrigger>
+              <TabsTrigger value="event-details">Event Details</TabsTrigger>
               <TabsTrigger value="review">Review</TabsTrigger>
             </TabsList>
             <TabsContent value="lead">
@@ -235,10 +243,10 @@ export default function CreateLeadPage() {
                   <FormLabel>Date Proposal Was Sent:</FormLabel>
                   <FormControl>
                     <DatePicker
-                      date={formValues.dateSent}
+                      date={formValues.lastDateSent}
                       onChange={(date) => {
                         if (date) {
-                          form.setValue("dateSent", date);
+                          form.setValue("lastDateSent", date);
                         }
                       }}
                     />
@@ -259,6 +267,7 @@ export default function CreateLeadPage() {
                             field.onChange(leadType);
                           }}
                           className="flex gap-8"
+                          value={formValues.leadType?.id}
                         >
                           {leadFormData?.leadTypes?.map((type) => (
                             <FormItem
@@ -282,19 +291,19 @@ export default function CreateLeadPage() {
                 <div className="col-span-2">
                   <FormField
                     control={form.control}
-                    name="salesManager"
+                    name="salesAccountManager"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Sales Manager</FormLabel>
                         <FormControl>
                           <Combobox
                             items={leadFormData?.salesManagers ?? []}
-                            selectedItem={{
-                              id: field.value?.id,
-                              name: field.value?.name || "",
-                            }}
+                            selectedItem={formValues.salesAccountManager}
                             onChange={(selectedItem) => {
-                              form.setValue("salesManager", selectedItem);
+                              form.setValue(
+                                "salesAccountManager",
+                                selectedItem
+                              );
                             }}
                             placeholder="Select One"
                           />
@@ -308,10 +317,10 @@ export default function CreateLeadPage() {
                   <FormLabel>Site Inspection Date:</FormLabel>
                   <FormControl>
                     <DatePicker
-                      date={formValues.siteInspectionDate}
+                      date={formValues.onSiteDate}
                       onChange={(date) => {
                         if (date) {
-                          form.setValue("siteInspectionDate", date);
+                          form.setValue("onSiteDate", date);
                         }
                       }}
                     />
@@ -319,7 +328,7 @@ export default function CreateLeadPage() {
                 </FormItem>
               </div>
             </TabsContent>
-            <TabsContent value="event-details">
+            <TabsContent value="event-type">
               <div className="grid grid-cols-2 gap-4 rounded border p-4">
                 <div className="col-span-2 flex gap-8">
                   <FormField
@@ -363,7 +372,7 @@ export default function CreateLeadPage() {
                   <div className="col-span-2 grid grid-cols-2 gap-4 rounded-md border bg-slate-200 p-4">
                     <FormField
                       control={form.control}
-                      name="roomDetails.total"
+                      name="roomTotal"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Number of Rooms</FormLabel>
@@ -371,7 +380,7 @@ export default function CreateLeadPage() {
                             <Input
                               type="number"
                               {...field}
-                              {...form.register("roomDetails.total", {
+                              {...form.register("roomTotal", {
                                 valueAsNumber: true,
                               })}
                             />
@@ -382,7 +391,7 @@ export default function CreateLeadPage() {
                     />
                     <FormField
                       control={form.control}
-                      name="roomDetails.roomType"
+                      name="roomType"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Room Type</FormLabel>
@@ -395,7 +404,7 @@ export default function CreateLeadPage() {
                     />
                     <FormField
                       control={form.control}
-                      name="roomDetails.arrivalDate"
+                      name="roomArrivalDate"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Arrival Date</FormLabel>
@@ -415,7 +424,7 @@ export default function CreateLeadPage() {
                     />
                     <FormField
                       control={form.control}
-                      name="roomDetails.departureDate"
+                      name="roomDepartureDate"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Departure Date</FormLabel>
@@ -455,11 +464,11 @@ export default function CreateLeadPage() {
 
                             field.onChange(
                               value === "other"
-                                ? { id: null, name: "other" }
+                                ? { id: "other", name: "other" }
                                 : eventType
                             );
                           }}
-                          defaultValue={field.value?.name}
+                          value={field.value?.id}
                           className="flex flex-wrap gap-8"
                         >
                           {formValues.isCorporate
@@ -527,45 +536,48 @@ export default function CreateLeadPage() {
             </TabsContent>
             <TabsContent value="contact">
               <div className="space-y-4 rounded border p-4">
-                <FormField
-                  control={form.control}
-                  name="contact.firstName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>First Name</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="contact.lastName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Last Name</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="contact.email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input type="email" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="flex gap-4">
+                  <FormField
+                    control={form.control}
+                    name="contact.firstName"
+                    render={({ field }) => (
+                      <FormItem className="w-full">
+                        <FormLabel>First Name</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="contact.lastName"
+                    render={({ field }) => (
+                      <FormItem className="w-full">
+                        <FormLabel>Last Name</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="contact.email"
+                    render={({ field }) => (
+                      <FormItem className="w-full">
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input type="email" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
                 <div className="flex items-center justify-between gap-4">
                   <FormField
                     control={form.control}
@@ -598,7 +610,7 @@ export default function CreateLeadPage() {
                   <>
                     <FormField
                       control={form.control}
-                      name="company"
+                      name="company.name"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Company Name</FormLabel>
@@ -611,7 +623,7 @@ export default function CreateLeadPage() {
                     />
                     <FormField
                       control={form.control}
-                      name="address"
+                      name="company.address1"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Company Address</FormLabel>
@@ -626,7 +638,7 @@ export default function CreateLeadPage() {
                 )}
               </div>
             </TabsContent>
-            <TabsContent value="dates">
+            <TabsContent value="event-details">
               <div className="space-y-4 rounded border p-4">
                 <div className="grid grid-cols-4 gap-4">
                   <FormItem>
@@ -677,7 +689,7 @@ export default function CreateLeadPage() {
                                       startTime: "",
                                       endTime: "",
                                       pax: 0,
-                                      setup: undefined,
+                                      roomSetup: undefined,
                                       mealReq: undefined,
                                       functionRoom: undefined,
                                       remarks: "",
@@ -759,7 +771,7 @@ export default function CreateLeadPage() {
                         >
                           <TableCell className="align-top">
                             <DatePicker
-                              className="w-[200px]"
+                              className="w-[240px]"
                               date={formValues.eventDetails?.[index]?.date}
                               onChange={(date) => {
                                 if (date) {
@@ -803,11 +815,11 @@ export default function CreateLeadPage() {
                               triggerClassName="capitalize"
                               items={leadFormData?.roomSetups ?? []}
                               selectedItem={
-                                formValues.eventDetails?.[index]?.setup
+                                formValues.eventDetails?.[index]?.roomSetup
                               }
                               onChange={(selectedItem) => {
                                 form.setValue(
-                                  `eventDetails.${index}.setup`,
+                                  `eventDetails.${index}.roomSetup`,
                                   selectedItem
                                 );
                               }}
@@ -869,7 +881,7 @@ export default function CreateLeadPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="budget.banquets"
+                    name="banquetsBudget"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Banquet</FormLabel>
@@ -877,7 +889,7 @@ export default function CreateLeadPage() {
                           <Input
                             type="number"
                             {...field}
-                            {...form.register("budget.banquets", {
+                            {...form.register("banquetsBudget", {
                               valueAsNumber: true,
                             })}
                           />
@@ -888,7 +900,7 @@ export default function CreateLeadPage() {
                   />
                   <FormField
                     control={form.control}
-                    name="budget.rooms"
+                    name="roomsBudget"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Rooms</FormLabel>
@@ -896,7 +908,7 @@ export default function CreateLeadPage() {
                           <Input
                             type="number"
                             {...field}
-                            {...form.register("budget.rooms", {
+                            {...form.register("roomsBudget", {
                               valueAsNumber: true,
                             })}
                           />
@@ -905,22 +917,10 @@ export default function CreateLeadPage() {
                       </FormItem>
                     )}
                   />
+
                   <FormField
                     control={form.control}
-                    name="budget.otherHotelsConsidered"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Other Hotels Being Considered</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="budget.rate"
+                    name="rate"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Rate Given</FormLabel>
@@ -928,7 +928,7 @@ export default function CreateLeadPage() {
                           <Input
                             type="number"
                             {...field}
-                            {...form.register("budget.rate", {
+                            {...form.register("rate", {
                               valueAsNumber: true,
                             })}
                           />
@@ -943,13 +943,27 @@ export default function CreateLeadPage() {
                       contentClassName="capitalize w-full"
                       triggerClassName="capitalize w-full"
                       items={leadFormData?.rateTypes ?? []}
-                      selectedItem={formValues.budget?.rateType}
+                      selectedItem={formValues.rateType}
                       onChange={(selectedRateType) => {
-                        form.setValue("budget.rateType", selectedRateType);
+                        form.setValue("rateType", selectedRateType);
                       }}
                       placeholder="Select One"
                     />
                   </FormItem>
+
+                  <FormField
+                    control={form.control}
+                    name="otherHotelConsiderations"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Other Hotels Being Considered</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
               </div>
             </TabsContent>
