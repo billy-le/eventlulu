@@ -39,7 +39,6 @@ import {
   User2,
   ArrowDown,
   ArrowUp,
-  ArrowUpDown,
 } from "lucide-react";
 import { eventTypes } from "prisma/seed-data/data";
 

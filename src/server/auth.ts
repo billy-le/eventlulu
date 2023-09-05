@@ -7,6 +7,9 @@ import {
 } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "~/server/db";
+import { compare } from "bcrypt";
+import { env } from "~/env.mjs";
+
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
  * object and keep type safety.
@@ -17,6 +20,7 @@ declare module "next-auth" {
   interface Session extends DefaultSession {
     user: DefaultSession["user"] & {
       id: string;
+      default?: true;
       // ...other properties
       // role: UserRole;
     };
@@ -44,7 +48,7 @@ export const authOptions: NextAuthOptions = {
     // Note: This option is ignored if using JSON Web Tokens
     updateAge: 24 * 60 * 60, // 24 hours
   },
-  debug: process.env.NODE_ENV === "development",
+  debug: env.NODE_ENV === "development",
   adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
@@ -63,14 +67,25 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials, req) {
+        if (!credentials?.password) return null;
+        if (!credentials?.email) return null;
+
         const user = await prisma.user.findUnique({
           where: {
-            email: credentials?.email,
-            password: credentials?.password,
+            email: credentials.email,
           },
         });
+
         if (!user) return null;
-        return user;
+        if (user.password === env.DEFAULT_PASSWORD) {
+          return user;
+        }
+        const match = await compare(credentials.password, user.password);
+
+        if (match) {
+          return user;
+        }
+        return null;
       },
       type: "credentials",
     }),
@@ -85,6 +100,12 @@ export const authOptions: NextAuthOptions = {
      */
   ],
   callbacks: {
+    async jwt({ trigger, token, session, user, account, profile }) {
+      if (trigger === "update" && session.name) {
+        token.name = session.name;
+      }
+      return token;
+    },
     async session({ session }) {
       // Send properties to the client, like an access_token and user id from a provider.
       let user;
@@ -100,6 +121,9 @@ export const authOptions: NextAuthOptions = {
         user: {
           ...session.user,
           id: user?.id,
+          ...(env.DEFAULT_PASSWORD === user?.password && {
+            default: true,
+          }),
         },
       };
     },

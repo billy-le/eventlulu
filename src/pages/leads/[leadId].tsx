@@ -50,7 +50,7 @@ const formSchema = z.object({
   salesAccountManager: nameId,
   onSiteDate: z.date().nullish().optional(),
   startDate: z.date(),
-  eventLengthInDays: z.number().int(),
+  eventLengthInDays: z.number().int().positive(),
   endDate: z.date().nullish().optional(),
   contact: z.object({
     email: z.string().email(),
@@ -59,11 +59,13 @@ const formSchema = z.object({
     phoneNumber: z.string().nullish().optional(),
     mobileNumber: z.string().nullish().optional(),
   }),
-  company: z.object({
-    name: z.string(),
-    address1: z.string().nullish().optional(),
-    address2: z.string().nullish().optional(),
-  }),
+  company: z
+    .object({
+      name: z.string(),
+      address1: z.string().nullish().optional(),
+      address2: z.string().nullish().optional(),
+    })
+    .optional(),
   eventType: nameId.nullish().optional(),
   eventTypeOther: z.string().nullish().optional(),
   eventDetails: z.array(
@@ -84,10 +86,9 @@ const formSchema = z.object({
   roomType: z.string().nullish().optional(),
   roomArrivalDate: z.date().nullish().optional(),
   roomDepartureDate: z.date().nullish().optional(),
-  banquetsBudget: z.number().min(0).nullish().optional(),
-  roomsBudget: z.number().min(0).nullish().optional(),
+  banquetsBudget: z.number().int().nullish().optional(),
+  roomsBudget: z.number().int().nullish().optional(),
   otherHotelConsiderations: z.string().nullish().optional(),
-
   activities: z
     .array(
       z.object({
@@ -102,7 +103,6 @@ const formSchema = z.object({
 });
 
 function normalize(values: z.infer<typeof formSchema>) {
-  console.log({ values });
   return {
     dateReceived: values.dateReceived,
     lastDateSent: values.lastDateSent ?? undefined,
@@ -126,7 +126,7 @@ function normalize(values: z.infer<typeof formSchema>) {
     },
     banquetsBudget: values.banquetsBudget ?? undefined,
     roomsBudget: values.roomsBudget ?? undefined,
-    ...(values.company.name && {
+    ...(values.company?.name && {
       company: {
         name: values.company.name ?? undefined,
         address1: values.company.address1 ?? undefined,
@@ -194,8 +194,11 @@ export default function LeadPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      dateReceived: new Date(),
       eventDetails: [],
       activities: [],
+      banquetsBudget: 0,
+      roomsBudget: 0,
     },
   });
 
@@ -232,19 +235,23 @@ export default function LeadPage() {
             </TabsList>
             <TabsContent value="lead">
               <div className="grid grid-cols-2 gap-4 rounded border p-4">
-                <FormItem>
-                  <FormLabel>Date Received:</FormLabel>
-                  <FormControl>
-                    <DatePicker
-                      date={formValues.dateReceived}
-                      onChange={(date) => {
-                        if (date) {
-                          form.setValue("dateReceived", date);
-                        }
-                      }}
-                    />
-                  </FormControl>
-                </FormItem>
+                <FormField
+                  control={form.control}
+                  name="dateReceived"
+                  render={(field) => (
+                    <FormItem>
+                      <FormLabel>Date Received:</FormLabel>
+                      <FormControl>
+                        <DatePicker
+                          date={field.field.value}
+                          onChange={field.field.onChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <FormItem>
                   <FormLabel>Date Proposal Was Sent:</FormLabel>
                   <FormControl>
@@ -684,7 +691,9 @@ export default function LeadPage() {
                                   ? parseInt(e.target.value, 10)
                                   : 0;
                                 if (count) {
-                                  let events = [];
+                                  let events: z.infer<
+                                    typeof formSchema
+                                  >["eventDetails"] = [];
                                   for (let i = 0; i < count; i++) {
                                     const date = datefns.addDays(
                                       formValues.startDate!,
@@ -699,6 +708,8 @@ export default function LeadPage() {
                                       mealReqs: [],
                                       functionRoom: undefined,
                                       remarks: "",
+                                      rate: 0,
+                                      rateType: undefined,
                                     });
                                     form.setValue("eventDetails", events);
                                   }

@@ -18,21 +18,21 @@ export function NavBar() {
           </div>
           <div className="flex-grow">
             <ul className="flex items-center justify-end text-xs font-bold uppercase leading-snug text-white">
-              <li>
+              {/* <li>
                 <Link className="px-3 py-2 hover:opacity-75" href="/dashboard">
                   Dashboard
                 </Link>
-              </li>
+              </li> */}
               <li>
                 <Link className="px-3 py-2 hover:opacity-75" href="/profile">
                   Profile
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link className="px-3 py-2 hover:opacity-75" href="/settings">
                   Settings
                 </Link>
-              </li>
+              </li> */}
               <li>
                 <Button
                   className={cn(

@@ -5,6 +5,7 @@ import { functionRoomsRouter } from "~/server/api/routers/functionRooms";
 import { mealReqsRouter } from "~/server/api/routers/mealReqs";
 import { roomSetupsRouter } from "~/server/api/routers/roomSetups";
 import { leadsRouter } from "~/server/api/routers/leads";
+import { usersRouter } from "~/server/api/routers/users";
 
 /**
  * This is the primary router for your server.
@@ -17,6 +18,7 @@ export const appRouter = createTRPCRouter({
   functionRooms: functionRoomsRouter,
   mealReqs: mealReqsRouter,
   roomSetups: roomSetupsRouter,
+  users: usersRouter,
 });
 
 // export type definition of API

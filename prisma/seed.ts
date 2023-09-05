@@ -23,6 +23,12 @@ const {
   lorem,
 } = faker;
 const prisma = new PrismaClient();
+
+if (!process.env.DEFAULT_PASSWORD) {
+  console.log("DEFAULT_PASSWORD env variable must be set in .env file");
+  process.exit();
+}
+
 let seedCount = 0;
 
 if (process.argv[2]) {
@@ -138,7 +144,7 @@ async function main() {
     create: {
       email: "user@example.com",
       name: "user",
-      password: "123",
+      password: process.env.DEFAULT_PASSWORD!,
       role: "salesManager",
       phoneNumber: "123-123-1234",
     },

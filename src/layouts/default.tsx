@@ -1,6 +1,7 @@
 import Head from "next/head";
 import React from "react";
 import { NavBar } from "~/ui/NavBar";
+import { Toaster } from "@/components/ui/toaster";
 
 export function DefaultLayout({
   title,
@@ -21,6 +22,7 @@ export function DefaultLayout({
         <NavBar />
         <div className="container py-8">{children}</div>
       </main>
+      <Toaster />
     </>
   );
 }
