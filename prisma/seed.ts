@@ -1,5 +1,5 @@
 import * as datefns from "date-fns";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, EventStatus } from "@prisma/client";
 import {
   functionRooms,
   mealReqs,
@@ -184,6 +184,26 @@ async function main() {
       : helpers.arrayElement(socialFunctionEvents);
 
     try {
+      let eventDetails = [];
+      for (const _ of Array(eventLengthInDays)) {
+        const detail = await prisma.eventDetails.create({
+          data: {
+            date: datefns.addDays(startDate, 1),
+            pax: number.int({ max: 200 }),
+            roomSetupId: helpers.arrayElement(roomSetupsArray).id,
+            functionRoomId: helpers.arrayElement(functionRoomsArray).id,
+            remarks: lorem.sentence(),
+            rate: number.int({ max: 500_000 }),
+            rateTypeId: helpers.arrayElement(rateTypesArray).id,
+            mealReqs: {
+              connect: helpers.arrayElements(mealReqsArray, { min: 1, max: 3 }),
+            },
+          },
+        });
+
+        eventDetails.push(detail);
+      }
+
       await prisma.leadForm.create({
         data: {
           dateReceived: date.past({ refDate: now, years: 0.2 }),
@@ -192,7 +212,7 @@ async function main() {
           eventLengthInDays,
           startDate,
           endDate,
-          isEventConfirmed: datatype.boolean(),
+          status: helpers.arrayElement(Object.values(EventStatus)),
           roomsBudget: isLiveIn ? number.int({ max: 50_000 }) : 0,
           banquetsBudget: number.int({ max: 50_000 }),
           contactId: contact.id,
@@ -212,8 +232,6 @@ async function main() {
               }),
             { probability: 0.7 }
           ),
-          rate: number.int({ max: 500_000 }),
-          rateTypeId: helpers.arrayElement(rateTypesArray).id,
           roomType: isLiveIn ? word.adjective() : null,
           roomTotal: isLiveIn ? number.int({ max: 200 }) : null,
           roomArrivalDate: isLiveIn ? startDate : null,
@@ -249,18 +267,7 @@ async function main() {
             },
           },
           eventDetails: {
-            createMany: {
-              data: Array(eventLengthInDays)
-                .fill(null)
-                .map((_, index) => ({
-                  date: datefns.addDays(startDate, index),
-                  pax: number.int({ max: 200 }),
-                  roomSetupId: helpers.arrayElement(roomSetupsArray).id,
-                  functionRoomId: helpers.arrayElement(functionRoomsArray).id,
-                  mealReqId: helpers.arrayElement(mealReqsArray).id,
-                  remarks: lorem.sentence(),
-                })),
-            },
+            connect: eventDetails,
           },
         },
       });

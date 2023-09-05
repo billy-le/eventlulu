@@ -64,7 +64,7 @@ model LeadForm {
     leadType                 LeadType           @relation(fields: [leadTypeId], references: [id])
     dateReceived             DateTime
     lastDateSent             DateTime?
-    isEventConfirmed         Boolean            @default(false)
+    status                   EventStatus        @default(tentative)
     isCorporate              Boolean            @default(false)
     isLiveIn                 Boolean            @default(false)
     salesAccountManager      User               @relation(fields: [salesAccountManagerId], references: [id], name: "salesAccountManager")
@@ -85,8 +85,6 @@ model LeadForm {
     banquetsBudget           Int?
     roomsBudget              Int?
     otherHotelConsiderations String?
-    rate                     Int?
-    rateType                 RateType?          @relation(fields: [rateTypeId], references: [id])
     venueDecisionDate        DateTime?
     salesAccountManagerId    String
     eventTypeId              String?
@@ -95,6 +93,12 @@ model LeadForm {
     rateTypeId               String?
     companyId                String?
     updatedById              String?
+}
+
+enum EventStatus {
+    tentative
+    lost
+    confirmed
 }
 
 model LeadType {
@@ -118,13 +122,15 @@ model EventDetails {
     pax            Int?
     remarks        String?
     roomSetup      RoomSetup?    @relation(fields: [roomSetupId], references: [id])
-    mealReq        MealReq?      @relation(fields: [mealReqId], references: [id])
+    mealReqs       MealReq[]
     functionRoom   FunctionRoom? @relation(fields: [functionRoomId], references: [id])
+    rate           Int?
+    rateType       RateType?     @relation(fields: [rateTypeId], references: [id])
     LeadForm       LeadForm?     @relation(fields: [leadFormId], references: [id])
     leadFormId     String?
     roomSetupId    String?
-    mealReqId      String?
     functionRoomId String?
+    rateTypeId     String?
 }
 
 model FunctionRoom {
@@ -146,9 +152,9 @@ model MealReq {
 }
 
 model RateType {
-    id       String     @id @default(cuid())
-    name     String     @unique
-    LeadForm LeadForm[]
+    id           String         @id @default(cuid())
+    name         String         @unique
+    EventDetails EventDetails[]
 }
 
 model LeadFormActivity {

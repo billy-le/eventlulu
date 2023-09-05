@@ -45,73 +45,127 @@ const formSchema = z.object({
   isCorporate: z.boolean().default(false),
   isLiveIn: z.boolean().default(false),
   dateReceived: z.date(),
-  lastDateSent: z.date().optional(),
+  lastDateSent: z.date().nullish().optional(),
   leadType: nameId,
   salesAccountManager: nameId,
-  onSiteDate: z.date().optional(),
+  onSiteDate: z.date().nullish().optional(),
   startDate: z.date(),
   eventLengthInDays: z.number().int(),
-  endDate: z.date().optional(),
+  endDate: z.date().nullish().optional(),
   contact: z.object({
     email: z.string().email(),
     firstName: z.string(),
-    lastName: z.string().optional(),
-    phoneNumber: z.string().optional(),
-    mobileNumber: z.string().optional(),
+    lastName: z.string().nullish().optional(),
+    phoneNumber: z.string().nullish().optional(),
+    mobileNumber: z.string().nullish().optional(),
   }),
   company: z.object({
     name: z.string(),
-    address1: z.string().optional(),
-    address2: z.string().optional(),
+    address1: z.string().nullish().optional(),
+    address2: z.string().nullish().optional(),
   }),
-  eventType: nameId.optional(),
-  eventTypeOther: z.string().optional(),
+  eventType: nameId.nullish().optional(),
+  eventTypeOther: z.string().nullish().optional(),
   eventDetails: z.array(
     z.object({
       date: z.date(),
-      startTime: z.string().optional(),
-      endTime: z.string().optional(),
-      pax: z.number().positive().optional(),
-      roomSetup: nameId.optional(),
-      mealReq: nameId.optional(),
-      functionRoom: nameId.optional(),
-      remarks: z.string().optional(),
+      startTime: z.string().nullish().optional(),
+      endTime: z.string().nullish().optional(),
+      pax: z.number().positive().nullish().optional(),
+      roomSetup: nameId.nullish().optional(),
+      mealReqs: z.array(nameId.optional()).optional(),
+      functionRoom: nameId.nullish().optional(),
+      rate: z.number().positive().nullish().optional(),
+      rateType: nameId.nullish().optional(),
+      remarks: z.string().nullish().optional(),
     })
   ),
-  roomTotal: z.number().int().positive().optional(),
-  roomType: z.string().optional(),
-  roomArrivalDate: z.date().optional(),
-  roomDepartureDate: z.date().optional(),
-  banquetsBudget: z.number().positive().optional(),
-  roomsBudget: z.number().positive().optional(),
-  otherHotelConsiderations: z.string().optional(),
-  rate: z.number().positive().optional(),
-  rateType: nameId.optional(),
+  roomTotal: z.number().int().positive().nullish().optional(),
+  roomType: z.string().nullish().optional(),
+  roomArrivalDate: z.date().nullish().optional(),
+  roomDepartureDate: z.date().nullish().optional(),
+  banquetsBudget: z.number().min(0).nullish().optional(),
+  roomsBudget: z.number().min(0).nullish().optional(),
+  otherHotelConsiderations: z.string().nullish().optional(),
+
   activities: z
     .array(
       z.object({
         date: z.date(),
-        updatedBy: z.string(),
-        clientFeedback: z.string().optional(),
-        nextTraceDate: z.date().optional(),
+        updatedBy: z.object({ id: z.string(), name: z.string() }),
+        clientFeedback: z.string().nullish().optional(),
+        nextTraceDate: z.date().nullish().optional(),
       })
     )
+    .nullish()
     .optional(),
 });
+
+function normalize(values: z.infer<typeof formSchema>) {
+  console.log({ values });
+  return {
+    dateReceived: values.dateReceived,
+    lastDateSent: values.lastDateSent ?? undefined,
+    leadTypeId: values.leadType.id,
+    salesManagerId: values.salesAccountManager.id,
+    isCorporate: values.isCorporate,
+    isLiveIn: values.isLiveIn,
+    eventTypeId:
+      values.eventType?.id === "other" ? undefined : values.eventType?.id,
+    eventTypeOther: values.eventTypeOther ?? undefined,
+    onSiteDate: values.onSiteDate ?? undefined,
+    startDate: values.startDate,
+    endDate: values.endDate!,
+    eventLengthInDays: values.eventLengthInDays,
+    contact: {
+      email: values.contact.email,
+      firstName: values.contact.firstName,
+      lastName: values.contact?.lastName ?? undefined,
+      mobileNumber: values.contact?.mobileNumber ?? undefined,
+      phoneNumber: values.contact?.phoneNumber ?? undefined,
+    },
+    banquetsBudget: values.banquetsBudget ?? undefined,
+    roomsBudget: values.roomsBudget ?? undefined,
+    ...(values.company.name && {
+      company: {
+        name: values.company.name ?? undefined,
+        address1: values.company.address1 ?? undefined,
+        address2: values.company.address2 ?? undefined,
+      },
+    }),
+    eventDetails: values.eventDetails?.map((event) => ({
+      date: event.date,
+      functionRoomId: event.functionRoom?.id,
+      pax: event.pax ?? undefined,
+      remarks: event.remarks ?? undefined,
+      roomSetupId: event.roomSetup?.id,
+      startTime: event.startTime ?? undefined,
+      endTime: event.endTime ?? undefined,
+      rateTypeId: event.rateType?.id,
+      rate: event.rate ?? undefined,
+      mealReqs: event.mealReqs,
+    })),
+    activities: values.activities?.map((activity) => ({
+      updatedBy: activity.updatedBy,
+      clientFeedback: activity.clientFeedback ?? undefined,
+      date: activity.date,
+      nextTraceDate: activity.nextTraceDate ?? undefined,
+    })),
+  };
+}
 
 export default function LeadPage() {
   const router = useRouter();
   const leadId = router.query["leadId"];
   const { data: session } = useSession();
-  const { data: leadData = [], status: leadDataStatus } =
-    api.leads.getLeads.useQuery(
-      {
-        leadId: leadId as string,
-      },
-      {
-        refetchOnWindowFocus: false,
-      }
-    );
+  const { data: leadData = [] } = api.leads.getLeads.useQuery(
+    {
+      leadId: leadId as string,
+    },
+    {
+      refetchOnWindowFocus: false,
+    }
+  );
   const { data: leadFormData } = api.leads.getLeadFormData.useQuery();
 
   useEffect(() => {
@@ -153,56 +207,8 @@ export default function LeadPage() {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    mutateLead.mutate({
-      dateReceived: values.dateReceived,
-      lastDateSent: values.lastDateSent,
-      userId: session!.user.id,
-      leadTypeId: values.leadType.id,
-      salesManagerId: values.salesAccountManager.id,
-      isCorporate: values.isCorporate,
-      isLiveIn: values.isLiveIn,
-      eventTypeId:
-        values.eventType?.id === "other" ? undefined : values.eventType?.id,
-      eventTypeOther: values.eventTypeOther,
-      onSiteDate: values.onSiteDate,
-      startDate: values.startDate,
-      endDate: values.endDate!,
-      eventLengthInDays: values.eventLengthInDays,
-      contact: {
-        email: values.contact.email,
-        firstName: values.contact.firstName,
-        lastName: values.contact?.lastName,
-        mobileNumber: values.contact?.mobileNumber,
-        phoneNumber: values.contact?.phoneNumber,
-      },
-      rateTypeId: values.rateType?.id,
-      rate: values.rate ?? 0,
-      banquetsBudget: values.banquetsBudget,
-      roomsBudget: values.roomsBudget,
-      ...(values.company.name && {
-        company: {
-          name: values.company.name,
-          address1: values.company.address1,
-          address2: values.company.address2,
-        },
-      }),
-      eventDetails: values.eventDetails?.map((event) => ({
-        date: event.date,
-        functionRoomId: event.functionRoom?.id,
-        mealReqId: event.mealReq?.id,
-        pax: event.pax,
-        remarks: event.remarks,
-        roomSetupId: event.roomSetup?.id,
-        startTime: event.startTime,
-        endTime: event.endTime,
-      })),
-      activities: values.activities?.map((activity) => ({
-        updatedById: session!.user.id,
-        clientFeedback: activity.clientFeedback,
-        date: activity.date,
-        nextTraceDate: activity.nextTraceDate,
-      })),
-    });
+    const leadData = normalize(values);
+    mutateLead.mutate(leadData);
   }
 
   return (
@@ -210,7 +216,7 @@ export default function LeadPage() {
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit, (e) => {
-            console.log(e);
+            console.log({ error: e, formValues });
           })}
           className="space-y-8"
         >
@@ -219,9 +225,9 @@ export default function LeadPage() {
               <TabsTrigger value="lead">Lead</TabsTrigger>
               <TabsTrigger value="event-type">Event Type</TabsTrigger>
               <TabsTrigger value="contact">Contact</TabsTrigger>
-              <TabsTrigger value="dates">Dates</TabsTrigger>
-              <TabsTrigger value="budget">Budget</TabsTrigger>
               <TabsTrigger value="event-details">Event Details</TabsTrigger>
+              <TabsTrigger value="budget">Budget</TabsTrigger>
+              <TabsTrigger value="activity">Activity</TabsTrigger>
               <TabsTrigger value="review">Review</TabsTrigger>
             </TabsList>
             <TabsContent value="lead">
@@ -690,7 +696,7 @@ export default function LeadPage() {
                                       endTime: "",
                                       pax: 0,
                                       roomSetup: undefined,
-                                      mealReq: undefined,
+                                      mealReqs: [],
                                       functionRoom: undefined,
                                       remarks: "",
                                     });
@@ -737,23 +743,16 @@ export default function LeadPage() {
                           (include rehearsals, if any)
                         </span>
                       </TableHead>
-                      <TableHead>
-                        Time
-                        <br></br>
-                        <div className="flex justify-between gap-4 text-xs text-gray-400">
-                          <span className="w-full">Start</span>
-                          <span className="w-full">End</span>
-                        </div>
-                      </TableHead>
+
                       <TableHead># of Pax</TableHead>
-                      <TableHead>Set-Up</TableHead>
+                      <TableHead>Function Room / Set-Up</TableHead>
                       <TableHead>
                         Meal Req{" "}
                         <span className="text-xs text-gray-400">
                           (include dietary restrictions, if any)
                         </span>
                       </TableHead>
-                      <TableHead>Function Room</TableHead>
+                      <TableHead>Rate / Rate Type</TableHead>
                       <TableHead>Remarks</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -769,7 +768,7 @@ export default function LeadPage() {
                           key={index}
                           className={index % 2 === 0 ? "bg-gray-100" : ""}
                         >
-                          <TableCell className="align-top">
+                          <TableCell className="space-y-2 align-top">
                             <DatePicker
                               className="w-[240px]"
                               date={formValues.eventDetails?.[index]?.date}
@@ -782,23 +781,28 @@ export default function LeadPage() {
                                 }
                               }}
                             />
-                          </TableCell>
-
-                          <TableCell className="flex gap-4">
-                            <Input
-                              type="time"
-                              autoFocus={false}
-                              {...form.register(
-                                `eventDetails.${index}.startTime`
-                              )}
-                            />
-                            <Input
-                              type="time"
-                              autoFocus={false}
-                              {...form.register(
-                                `eventDetails.${index}.endTime`
-                              )}
-                            />
+                            <div className="flex gap-4">
+                              <div className="flex-grow space-y-1">
+                                <FormLabel>Start Time</FormLabel>
+                                <Input
+                                  type="time"
+                                  autoFocus={false}
+                                  {...form.register(
+                                    `eventDetails.${index}.startTime`
+                                  )}
+                                />
+                              </div>
+                              <div className="flex-grow space-y-1">
+                                <FormLabel>End Time</FormLabel>
+                                <Input
+                                  type="time"
+                                  autoFocus={false}
+                                  {...form.register(
+                                    `eventDetails.${index}.endTime`
+                                  )}
+                                />
+                              </div>
+                            </div>
                           </TableCell>
                           <TableCell className="align-top">
                             <Input
@@ -809,41 +813,7 @@ export default function LeadPage() {
                               })}
                             />
                           </TableCell>
-                          <TableCell className="align-top">
-                            <Combobox
-                              contentClassName="capitalize"
-                              triggerClassName="capitalize"
-                              items={leadFormData?.roomSetups ?? []}
-                              selectedItem={
-                                formValues.eventDetails?.[index]?.roomSetup
-                              }
-                              onChange={(selectedItem) => {
-                                form.setValue(
-                                  `eventDetails.${index}.roomSetup`,
-                                  selectedItem
-                                );
-                              }}
-                              placeholder="Select One"
-                            />
-                          </TableCell>
-                          <TableCell className="align-top">
-                            <Combobox
-                              contentClassName="capitalize"
-                              triggerClassName="capitalize"
-                              items={leadFormData?.mealReqs ?? []}
-                              selectedItem={
-                                formValues.eventDetails?.[index]?.mealReq
-                              }
-                              onChange={(selectedItem) => {
-                                form.setValue(
-                                  `eventDetails.${index}.mealReq`,
-                                  selectedItem
-                                );
-                              }}
-                              placeholder="Select One"
-                            />
-                          </TableCell>
-                          <TableCell className="align-top">
+                          <TableCell className="space-y-2 align-top">
                             <Combobox
                               contentClassName="capitalize"
                               triggerClassName="capitalize"
@@ -857,7 +827,89 @@ export default function LeadPage() {
                                   selectedItem
                                 );
                               }}
-                              placeholder="Select One"
+                              placeholder="Select Venue"
+                            />
+                            <Combobox
+                              contentClassName="capitalize"
+                              triggerClassName="capitalize"
+                              items={leadFormData?.roomSetups ?? []}
+                              selectedItem={
+                                formValues.eventDetails?.[index]?.roomSetup
+                              }
+                              onChange={(selectedItem) => {
+                                form.setValue(
+                                  `eventDetails.${index}.roomSetup`,
+                                  selectedItem
+                                );
+                              }}
+                              placeholder="Select Setup"
+                            />
+                          </TableCell>
+                          <TableCell className="space-y-1 align-top">
+                            {leadFormData?.mealReqs?.map((mealReq) => (
+                              <FormItem
+                                key={mealReq.id}
+                                className="flex flex-row items-start space-x-3 space-y-0"
+                              >
+                                <FormControl>
+                                  <Checkbox
+                                    checked={formValues.eventDetails?.[
+                                      index
+                                    ]?.mealReqs?.some(
+                                      (req) => req?.id === mealReq.id
+                                    )}
+                                    onCheckedChange={(checked) => {
+                                      const value = checked.valueOf();
+                                      const mealReqs = form.getValues(
+                                        `eventDetails.${index}.mealReqs`
+                                      );
+                                      if (value) {
+                                        mealReqs?.push(mealReq);
+                                        form.setValue(
+                                          `eventDetails.${index}.mealReqs`,
+                                          mealReqs
+                                        );
+                                      } else {
+                                        const bas = mealReqs?.filter(
+                                          (z) => z?.id !== mealReq.id
+                                        );
+                                        form.setValue(
+                                          `eventDetails.${index}.mealReqs`,
+                                          bas
+                                        );
+                                      }
+                                    }}
+                                  />
+                                </FormControl>
+                                <div className="space-y-1 leading-none">
+                                  <FormLabel className="capitalize">
+                                    {mealReq.name}
+                                  </FormLabel>
+                                </div>
+                              </FormItem>
+                            ))}
+                          </TableCell>
+                          <TableCell className="space-y-2 align-top">
+                            <Input
+                              type="number"
+                              {...form.register(`eventDetails.${index}.rate`, {
+                                valueAsNumber: true,
+                              })}
+                            />
+                            <Combobox
+                              contentClassName="capitalize"
+                              triggerClassName="capitalize"
+                              items={leadFormData?.rateTypes ?? []}
+                              selectedItem={
+                                formValues.eventDetails?.[index]?.rateType
+                              }
+                              onChange={(selectedItem) => {
+                                form.setValue(
+                                  `eventDetails.${index}.rateType`,
+                                  selectedItem
+                                );
+                              }}
+                              placeholder="Select Rate"
                             />
                           </TableCell>
                           <TableCell className="align-top">
@@ -920,39 +972,6 @@ export default function LeadPage() {
 
                   <FormField
                     control={form.control}
-                    name="rate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Rate Given</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            {...field}
-                            {...form.register("rate", {
-                              valueAsNumber: true,
-                            })}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormItem>
-                    <FormLabel>Rate Type</FormLabel>
-                    <Combobox
-                      contentClassName="capitalize w-full"
-                      triggerClassName="capitalize w-full"
-                      items={leadFormData?.rateTypes ?? []}
-                      selectedItem={formValues.rateType}
-                      onChange={(selectedRateType) => {
-                        form.setValue("rateType", selectedRateType);
-                      }}
-                      placeholder="Select One"
-                    />
-                  </FormItem>
-
-                  <FormField
-                    control={form.control}
                     name="otherHotelConsiderations"
                     render={({ field }) => (
                       <FormItem>
@@ -996,7 +1015,9 @@ export default function LeadPage() {
                               }}
                             />
                           </TableCell>
-                          <TableCell>{session?.user?.name}</TableCell>
+                          <TableCell>
+                            {formValues.activities?.[index]?.updatedBy?.name}
+                          </TableCell>
                           <TableCell>
                             <Input
                               {...form.register(
@@ -1039,7 +1060,7 @@ export default function LeadPage() {
                   onClick={() => {
                     activities.append({
                       date: new Date(),
-                      updatedBy: session!.user.name!,
+                      updatedBy: session!.user,
                       clientFeedback: "",
                       nextTraceDate: undefined,
                     });
@@ -1051,26 +1072,6 @@ export default function LeadPage() {
             </TabsContent>
             <TabsContent value="review">
               <div className="rounded border p-4">
-                <div>
-                  <ul>
-                    <li>
-                      <span className="underline"></span>
-                      <div>
-                        {formValues.leadType &&
-                          `Lead Type: ${formValues.leadType}`}
-                      </div>
-                    </li>
-                    <li></li>
-                    <li></li>
-                    <li></li>
-                    <li></li>
-                    <li></li>
-                    <li></li>
-                    <li></li>
-                    <li></li>
-                    <li></li>
-                  </ul>
-                </div>
                 <FormItem>
                   <FormControl>
                     <Button type="submit">Save</Button>

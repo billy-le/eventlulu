@@ -34,8 +34,20 @@ import {
   HeartHandshake,
   Utensils,
   Calendar,
+  Phone,
+  Mail,
+  User2,
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
 } from "lucide-react";
 import { eventTypes } from "prisma/seed-data/data";
+
+const statusColors = {
+  tentative: "bg-yellow-400/20 text-yellow-500",
+  lost: "bg-red-400/20 text-red-500",
+  confirmed: "bg-green-400/20 text-green-500",
+};
 
 const eventIcons: Record<
   | (typeof eventTypes.corporate)[number]
@@ -70,25 +82,54 @@ export default function HomePage() {
       <DataTable
         columns={[
           {
-            header: "Event Start Date",
+            accessorKey: "startDate",
+            header: ({ column }) => {
+              const isAscending = column.getIsSorted() === "asc";
+              return (
+                <Button
+                  variant="ghost"
+                  onClick={() => column.toggleSorting(isAscending)}
+                  className="space-x-2"
+                >
+                  <span>Event Date</span>
+                  {isAscending ? (
+                    <ArrowDown size="20" />
+                  ) : (
+                    <ArrowUp size="20" />
+                  )}
+                </Button>
+              );
+            },
             cell: ({ row }) => {
               const lead = row.original;
 
               return (
                 <>
-                  <div>{datefns.format(lead.startDate, "MMM d, yyyy")}</div>
-                  <div className="text-xs text-gray-400">
-                    For {lead.eventLengthInDays} Days
-                  </div>
-                  <div className="text-xs text-gray-400">
-                    Ending {datefns.format(lead.endDate, "MMM d, yyyy")}
-                  </div>
+                  {datefns.format(lead.startDate, "MMM d, yyyy")} -{" "}
+                  {datefns.format(lead.endDate, "MMM d, yyyy")}
                 </>
               );
             },
           },
           {
-            header: "Event Type",
+            accessorKey: "eventType.activity",
+            header: ({ column }) => {
+              const isAscending = column.getIsSorted() === "asc";
+              return (
+                <Button
+                  variant="ghost"
+                  onClick={() => column.toggleSorting(isAscending)}
+                  className="space-x-2"
+                >
+                  <span>Event Type</span>
+                  {isAscending ? (
+                    <ArrowDown size="20" />
+                  ) : (
+                    <ArrowUp size="20" />
+                  )}
+                </Button>
+              );
+            },
             cell: ({ row }) => {
               const lead = row.original;
               const Component =
@@ -104,10 +145,14 @@ export default function HomePage() {
                     <Component size="24" className="text-blue-400" />
                     <div>
                       <div className="capitalize">
-                        {lead.eventType?.name ?? "Other"}
+                        {lead.eventType?.activity ?? lead.eventTypeOther}
                       </div>
                       <div className="text-xs capitalize text-gray-400">
-                        {lead.eventType?.activity ?? lead.eventTypeOther}
+                        {lead.eventType?.name === "corporate"
+                          ? lead.company?.name ?? ""
+                          : lead.eventType?.name === "social function"
+                          ? ""
+                          : "Other"}
                       </div>
                     </div>
                   </div>
@@ -116,36 +161,98 @@ export default function HomePage() {
             },
           },
           {
-            header: "Contact",
+            accessorKey: "contact.firstName",
+            header: ({ column }) => {
+              const isAscending = column.getIsSorted() === "asc";
+              return (
+                <Button
+                  variant="ghost"
+                  onClick={() => column.toggleSorting(isAscending)}
+                  className="space-x-2"
+                >
+                  <span>Contact</span>
+                  {isAscending ? (
+                    <ArrowDown size="20" />
+                  ) : (
+                    <ArrowUp size="20" />
+                  )}
+                </Button>
+              );
+            },
             cell: ({ row }) => {
               const lead = row.original;
               return (
-                <>
-                  <div className="text-lg">{lead.contact?.firstName}</div>
-                  <div className="text-xs text-gray-400">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-3">
+                    <User2 size="14" className="text-blue-400" />
+                    {lead.contact?.firstName} {lead.contact?.lastName}
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-gray-400">
+                    <Mail size="14" className="text-purple-400" />{" "}
                     {lead.contact?.email}
                   </div>
-                  <div className="text-xs text-gray-400">
+                  <div className="flex items-center gap-3 text-xs text-gray-400">
+                    <Phone size="14" className="text-emerald-400" />{" "}
                     {lead.contact?.phoneNumber}
                   </div>
-                </>
+                </div>
               );
             },
           },
           {
-            header: "Is Confirmed?",
+            accessorKey: "status",
+            header: ({ column }) => {
+              const isAscending = column.getIsSorted() === "asc";
+              return (
+                <Button
+                  variant="ghost"
+                  onClick={() => column.toggleSorting(isAscending)}
+                  className="space-x-2"
+                >
+                  <span>Status</span>
+                  {isAscending ? (
+                    <ArrowDown size="20" />
+                  ) : (
+                    <ArrowUp size="20" />
+                  )}
+                </Button>
+              );
+            },
             cell: ({ row }) => {
               const lead = row.original;
 
               return (
                 <>
-                  <div>{lead.isEventConfirmed ? "Yes" : "No"}</div>
+                  <div
+                    className={`rounded ${
+                      statusColors[lead.status]
+                    } w-fit px-2 py-1 text-center text-xs uppercase`}
+                  >
+                    {lead.status}
+                  </div>
                 </>
               );
             },
           },
           {
-            header: "Last Proposal Sent Date",
+            accessorKey: "lastDateSent",
+            header: ({ column }) => {
+              const isAscending = column.getIsSorted() === "asc";
+              return (
+                <Button
+                  variant="ghost"
+                  onClick={() => column.toggleSorting(isAscending)}
+                  className="space-x-2"
+                >
+                  <span>Last Proposal Sent Date</span>
+                  {isAscending ? (
+                    <ArrowDown size="20" />
+                  ) : (
+                    <ArrowUp size="20" />
+                  )}
+                </Button>
+              );
+            },
             cell: ({ row }) => {
               const lead = row.original;
               return (
@@ -205,7 +312,11 @@ export default function HomePage() {
                       </div>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem>Generate Proposal PDF</DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Link href={`/proposals/${lead.id}`}>
+                        Generate Proposal
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuItem>Generate Lead Form PDF</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
