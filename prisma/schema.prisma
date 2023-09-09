@@ -73,7 +73,7 @@ model LeadForm {
     endDate                  DateTime
     eventLengthInDays        Int
     company                  Organization?      @relation(name: "company", fields: [companyId], references: [id])
-    contact                  Contact?           @relation(fields: [contactId], references: [id])
+    contact                  Contact            @relation(fields: [contactId], references: [id])
     eventType                EventType?         @relation(fields: [eventTypeId], references: [id])
     eventTypeOther           String?
     roomTotal                Int?
@@ -88,7 +88,7 @@ model LeadForm {
     venueDecisionDate        DateTime?
     salesAccountManagerId    String
     eventTypeId              String?
-    contactId                String?
+    contactId                String
     leadTypeId               String
     rateTypeId               String?
     companyId                String?
@@ -182,6 +182,7 @@ model Contact {
     id          String     @id @default(cuid())
     firstName   String
     email       String     @unique
+    title       String?
     lastName    String?
     phoneNumber String?
     LeadForm    LeadForm[]

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { hash } from "bcrypt";
 import { env } from "~/env.mjs";
 
-const saltRounds = 12;
+const saltRounds = parseInt(env.SALT_ROUNDS, 10);
 
 export const usersRouter = createTRPCRouter({
   updateUser: protectedProcedure

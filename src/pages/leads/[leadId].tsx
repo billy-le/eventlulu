@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
+import { useToast } from "@/components/ui/use-toast";
 
 import {
   Form,
@@ -45,73 +46,74 @@ const formSchema = z.object({
   isCorporate: z.boolean().default(false),
   isLiveIn: z.boolean().default(false),
   dateReceived: z.date(),
-  lastDateSent: z.date().nullish().optional(),
+  lastDateSent: z.date().optional(),
   leadType: nameId,
   salesAccountManager: nameId,
-  onSiteDate: z.date().nullish().optional(),
+  onSiteDate: z.date().optional(),
   startDate: z.date(),
   eventLengthInDays: z.number().int().positive(),
-  endDate: z.date().nullish().optional(),
+  endDate: z.date().optional(),
   contact: z.object({
     email: z.string().email(),
+    title: z.string().optional(),
     firstName: z.string(),
-    lastName: z.string().nullish().optional(),
-    phoneNumber: z.string().nullish().optional(),
-    mobileNumber: z.string().nullish().optional(),
+    lastName: z.string().optional(),
+    phoneNumber: z.string().optional(),
+    mobileNumber: z.string().optional(),
   }),
   company: z
     .object({
       name: z.string(),
-      address1: z.string().nullish().optional(),
-      address2: z.string().nullish().optional(),
+      address1: z.string().optional(),
+      address2: z.string().optional(),
     })
     .optional(),
-  eventType: nameId.nullish().optional(),
-  eventTypeOther: z.string().nullish().optional(),
+  eventType: nameId.optional(),
+  eventTypeOther: z.string().optional(),
   eventDetails: z.array(
     z.object({
       date: z.date(),
-      startTime: z.string().nullish().optional(),
-      endTime: z.string().nullish().optional(),
-      pax: z.number().positive().nullish().optional(),
-      roomSetup: nameId.nullish().optional(),
+      startTime: z.string().optional(),
+      endTime: z.string().optional(),
+      pax: z.number().positive().optional(),
+      roomSetup: nameId.optional(),
       mealReqs: z.array(nameId.optional()).optional(),
-      functionRoom: nameId.nullish().optional(),
-      rate: z.number().positive().nullish().optional(),
-      rateType: nameId.nullish().optional(),
-      remarks: z.string().nullish().optional(),
+      functionRoom: nameId.optional(),
+      rate: z.number().positive().optional(),
+      rateType: nameId.optional(),
+      remarks: z.string().optional(),
     })
   ),
-  roomTotal: z.number().int().positive().nullish().optional(),
-  roomType: z.string().nullish().optional(),
-  roomArrivalDate: z.date().nullish().optional(),
-  roomDepartureDate: z.date().nullish().optional(),
-  banquetsBudget: z.number().int().nullish().optional(),
-  roomsBudget: z.number().int().nullish().optional(),
-  otherHotelConsiderations: z.string().nullish().optional(),
+  roomTotal: z.number().int().positive().optional(),
+  roomType: z.string().optional(),
+  roomArrivalDate: z.date().optional(),
+  roomDepartureDate: z.date().optional(),
+  banquetsBudget: z.number().int().optional(),
+  roomsBudget: z.number().int().optional(),
+  otherHotelConsiderations: z.string().optional(),
   activities: z
     .array(
       z.object({
         date: z.date(),
         updatedBy: z.object({ id: z.string(), name: z.string() }),
-        clientFeedback: z.string().nullish().optional(),
-        nextTraceDate: z.date().nullish().optional(),
+        clientFeedback: z.string().optional(),
+        nextTraceDate: z.date().optional(),
       })
     )
-    .nullish()
     .optional(),
 });
 
-function normalize(values: z.infer<typeof formSchema>) {
+function normalize(
+  values: z.infer<typeof formSchema>
+): z.infer<typeof formSchema> {
   return {
+    ...values,
+    salesAccountManagerId: values.salesAccountManager.id,
+    leadTypeId: values.leadType.id,
     dateReceived: values.dateReceived,
     lastDateSent: values.lastDateSent ?? undefined,
-    leadTypeId: values.leadType.id,
-    salesManagerId: values.salesAccountManager.id,
     isCorporate: values.isCorporate,
     isLiveIn: values.isLiveIn,
-    eventTypeId:
-      values.eventType?.id === "other" ? undefined : values.eventType?.id,
     eventTypeOther: values.eventTypeOther ?? undefined,
     onSiteDate: values.onSiteDate ?? undefined,
     startDate: values.startDate,
@@ -119,6 +121,7 @@ function normalize(values: z.infer<typeof formSchema>) {
     eventLengthInDays: values.eventLengthInDays,
     contact: {
       email: values.contact.email,
+      title: values.contact.title,
       firstName: values.contact.firstName,
       lastName: values.contact?.lastName ?? undefined,
       mobileNumber: values.contact?.mobileNumber ?? undefined,
@@ -126,14 +129,21 @@ function normalize(values: z.infer<typeof formSchema>) {
     },
     banquetsBudget: values.banquetsBudget ?? undefined,
     roomsBudget: values.roomsBudget ?? undefined,
-    ...(values.company?.name && {
-      company: {
-        name: values.company.name ?? undefined,
-        address1: values.company.address1 ?? undefined,
-        address2: values.company.address2 ?? undefined,
-      },
-    }),
+    roomArrivalDate: values.roomArrivalDate ?? undefined,
+    roomDepartureDate: values.roomDepartureDate ?? undefined,
+    roomTotal: values.roomTotal ?? undefined,
+    roomType: values.roomType ?? undefined,
+    ...(values.company?.name
+      ? {
+          company: {
+            name: values.company.name ?? undefined,
+            address1: values.company.address1 ?? undefined,
+            address2: values.company.address2 ?? undefined,
+          },
+        }
+      : { company: undefined }),
     eventDetails: values.eventDetails?.map((event) => ({
+      ...event,
       date: event.date,
       functionRoomId: event.functionRoom?.id,
       pax: event.pax ?? undefined,
@@ -146,11 +156,14 @@ function normalize(values: z.infer<typeof formSchema>) {
       mealReqs: event.mealReqs,
     })),
     activities: values.activities?.map((activity) => ({
+      ...activity,
       updatedBy: activity.updatedBy,
+      updatedById: activity.updatedBy.id,
       clientFeedback: activity.clientFeedback ?? undefined,
       date: activity.date,
       nextTraceDate: activity.nextTraceDate ?? undefined,
     })),
+    otherHotelConsiderations: values.otherHotelConsiderations ?? undefined,
   };
 }
 
@@ -166,15 +179,20 @@ export default function LeadPage() {
       refetchOnWindowFocus: false,
     }
   );
-  const { data: leadFormData } = api.leads.getLeadFormData.useQuery();
+  const { data: leadFormData } = api.leads.getLeadFormData.useQuery(undefined, {
+    refetchOnWindowFocus: false,
+  });
+  const { toast } = useToast();
 
   useEffect(() => {
     if (leadData.length) {
       const lead = leadData[0]!;
       form.reset({
-        ...lead,
+        ...normalize(lead),
         eventType: lead?.eventTypeId
-          ? leadFormData?.eventTypes.find((a) => a.id === lead.eventTypeId)
+          ? leadFormData?.eventTypes.find(
+              (type) => type.id === lead.eventTypeId
+            )
           : {
               id: "other",
               name: "other",
@@ -185,10 +203,21 @@ export default function LeadPage() {
 
   const mutateLead = api.leads.mutateLead.useMutation({
     onSuccess: (e) => {
-      console.log(e);
+      toast({
+        title: "Success",
+        description: leadId
+          ? "Lead form has been updated"
+          : "Lead form has been created",
+      });
+      router.push("/");
     },
-    onMutate: () => {},
-    onSettled: () => {},
+    onError: () => {
+      toast({
+        title: "Failed",
+        description: "There was an error",
+        variant: "destructive",
+      });
+    },
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -219,20 +248,26 @@ export default function LeadPage() {
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit, (e) => {
-            console.log({ error: e, formValues });
+            toast({
+              title: "Invalid Form",
+              description: "Please fill out the missing values on the form",
+              variant: "destructive",
+            });
           })}
-          className="space-y-8"
         >
           <Tabs defaultValue="lead">
-            <TabsList>
-              <TabsTrigger value="lead">Lead</TabsTrigger>
-              <TabsTrigger value="event-type">Event Type</TabsTrigger>
-              <TabsTrigger value="contact">Contact</TabsTrigger>
-              <TabsTrigger value="event-details">Event Details</TabsTrigger>
-              <TabsTrigger value="budget">Budget</TabsTrigger>
-              <TabsTrigger value="activity">Activity</TabsTrigger>
-              <TabsTrigger value="review">Review</TabsTrigger>
-            </TabsList>
+            <div className="flex justify-between">
+              <TabsList>
+                <TabsTrigger value="lead">Lead</TabsTrigger>
+                <TabsTrigger value="event-type">Event Type</TabsTrigger>
+                <TabsTrigger value="contact">Contact</TabsTrigger>
+                <TabsTrigger value="event-details">Event Details</TabsTrigger>
+                <TabsTrigger value="budget">Budget</TabsTrigger>
+                <TabsTrigger value="activity">Activity</TabsTrigger>
+              </TabsList>
+              <Button type="submit">Save</Button>
+            </div>
+
             <TabsContent value="lead">
               <div className="grid grid-cols-2 gap-4 rounded border p-4">
                 <FormField
@@ -552,9 +587,22 @@ export default function LeadPage() {
                 <div className="flex gap-4">
                   <FormField
                     control={form.control}
+                    name="contact.title"
+                    render={({ field }) => (
+                      <FormItem className="w-40">
+                        <FormLabel>Title</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
                     name="contact.firstName"
                     render={({ field }) => (
-                      <FormItem className="w-full">
+                      <FormItem className="flex-grow">
                         <FormLabel>First Name</FormLabel>
                         <FormControl>
                           <Input {...field} />
@@ -567,7 +615,7 @@ export default function LeadPage() {
                     control={form.control}
                     name="contact.lastName"
                     render={({ field }) => (
-                      <FormItem className="w-full">
+                      <FormItem className="flex-grow">
                         <FormLabel>Last Name</FormLabel>
                         <FormControl>
                           <Input {...field} />
@@ -580,7 +628,7 @@ export default function LeadPage() {
                     control={form.control}
                     name="contact.email"
                     render={({ field }) => (
-                      <FormItem className="w-full">
+                      <FormItem className="flex-grow">
                         <FormLabel>Email</FormLabel>
                         <FormControl>
                           <Input type="email" {...field} />
@@ -676,7 +724,7 @@ export default function LeadPage() {
                     name="eventLengthInDays"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Event Length in Days?</FormLabel>
+                        <FormLabel>Event Length in Days</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
@@ -797,7 +845,6 @@ export default function LeadPage() {
                                 <FormLabel>Start Time</FormLabel>
                                 <Input
                                   type="time"
-                                  autoFocus={false}
                                   {...form.register(
                                     `eventDetails.${index}.startTime`
                                   )}
@@ -807,7 +854,6 @@ export default function LeadPage() {
                                 <FormLabel>End Time</FormLabel>
                                 <Input
                                   type="time"
-                                  autoFocus={false}
                                   {...form.register(
                                     `eventDetails.${index}.endTime`
                                   )}
@@ -838,7 +884,7 @@ export default function LeadPage() {
                                   selectedItem
                                 );
                               }}
-                              placeholder="Select Venue"
+                              placeholder="Select Room"
                             />
                             <Combobox
                               contentClassName="capitalize"
@@ -1079,15 +1125,6 @@ export default function LeadPage() {
                 >
                   Add
                 </Button>
-              </div>
-            </TabsContent>
-            <TabsContent value="review">
-              <div className="rounded border p-4">
-                <FormItem>
-                  <FormControl>
-                    <Button type="submit">Save</Button>
-                  </FormControl>
-                </FormItem>
               </div>
             </TabsContent>
           </Tabs>

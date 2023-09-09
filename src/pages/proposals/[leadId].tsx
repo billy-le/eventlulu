@@ -15,7 +15,7 @@ export default function ProposalPage() {
   const lead = leadData[0];
   if (!lead) return null;
   return (
-    <main className="flex flex-col text-sm">
+    <main className="flex flex-col font-garamond text-sm">
       <table className="flex-grow">
         <thead>
           <tr>
@@ -23,8 +23,8 @@ export default function ProposalPage() {
               <Image
                 src="/eastwood_richmonde_hotel_logo.png"
                 alt="Eastwood Richmonde Hotel Logo"
-                height={100}
-                width={200}
+                height={96}
+                width={177.6}
                 className="mx-auto"
               />
             </th>
@@ -32,7 +32,7 @@ export default function ProposalPage() {
         </thead>
         <tbody className="h-full">
           <tr>
-            <td className="space-y-6">
+            <td className="space-y-4">
               <div className="font-bold">
                 {dateFormat(today, "MMMM d, yyyy")}
               </div>
@@ -46,7 +46,8 @@ export default function ProposalPage() {
               {lead.contact && (
                 <div className="font-bold">
                   <div>
-                    {lead.contact.firstName} {lead.contact.lastName}
+                    {lead.contact.title} {lead.contact.firstName}{" "}
+                    {lead.contact.lastName}
                   </div>
                   <div>{lead.contact.phoneNumber}</div>
                   <div>{lead.contact.email}</div>
@@ -54,7 +55,10 @@ export default function ProposalPage() {
               )}
               <h3 className="text-center font-bold">RE: Event Requirement</h3>
               <div>
-                Dear <span className="font-bold">{lead.contact?.lastName}</span>
+                Dear{" "}
+                <span className="font-bold">
+                  {lead.contact.title} {lead.contact?.lastName}
+                </span>
                 ,
               </div>
               <p>Greetings from Eastwood Richmonde Hotel!</p>
@@ -70,7 +74,7 @@ export default function ProposalPage() {
                 you with these special rates and arrangements for your banquet
                 requirements.
               </p>
-              <h2 className="text-lg font-bold">EVENT SPACE</h2>
+              <h2 className="font-bold">EVENT SPACE</h2>
               <p>
                 The following details are based on the requisites of your event
                 and the venue availability as of this writing:
@@ -88,36 +92,70 @@ export default function ProposalPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {lead.eventDetails.map((detail) => (
-                    <tr key={detail.id}>
-                      <td className="border border-black text-left">
-                        {detail.date
-                          ? dateFormat(detail.date, "MMMM d, yyyy")
-                          : "-"}
-                      </td>
-                      <td className="border border-black">
-                        {detail.startTime} - {detail.endTime}
-                      </td>
-                      <td className="border border-black">
-                        {detail.pax?.toLocaleString()}
-                      </td>
-                      <td className="border border-black">
-                        <div>{detail.functionRoom?.name}</div>
-                      </td>
-                      <td className="border border-black">
-                        {detail.roomSetup?.name}
-                      </td>
-                      <td className="border border-black">
-                        Tenative (first to confirm)
-                      </td>
-                      <td className="border border-black">
-                        {detail.rate?.toLocaleString()}
-                        {detail.rateType?.name
-                          ? ` / ${detail.rateType.name}`
-                          : ""}
-                      </td>
-                    </tr>
-                  ))}
+                  {lead.eventDetails.map((detail, index) => {
+                    const a = detail.startTime?.split(":");
+                    const b = detail.endTime?.split(":");
+                    const startTime = detail.startTime
+                      ? dateFormat(
+                          new Date(
+                            0,
+                            0,
+                            0,
+                            parseInt(a?.[0] ?? "0", 10),
+                            parseInt(a?.[1] ?? "0", 10)
+                          ),
+                          "h:mm a"
+                        )
+                      : "0";
+                    const endTime = detail.endTime
+                      ? dateFormat(
+                          new Date(
+                            0,
+                            0,
+                            0,
+                            parseInt(b?.[0] ?? "0", 10),
+                            parseInt(b?.[1] ?? "0", 10)
+                          ),
+                          "h:mm a"
+                        )
+                      : "0";
+
+                    return (
+                      <tr key={detail.id}>
+                        <td className="border border-black text-left">
+                          {detail.date
+                            ? dateFormat(detail.date, "MMMM d, yyyy")
+                            : "-"}
+                        </td>
+                        <td className="border border-black">
+                          {startTime} - {endTime}
+                        </td>
+                        <td className="border border-black">
+                          {detail.pax?.toLocaleString()}
+                        </td>
+                        <td className="border border-black">
+                          <div>{detail.functionRoom?.name}</div>
+                        </td>
+                        <td className="border border-black">
+                          {detail.roomSetup?.name}
+                        </td>
+                        {index === 0 ? (
+                          <td
+                            rowSpan={lead.eventDetails.length}
+                            className="border border-black"
+                          >
+                            Tenative (first to confirm)
+                          </td>
+                        ) : null}
+                        <td className="border border-black">
+                          {detail.rate?.toLocaleString()}
+                          {detail.rateType?.name
+                            ? ` / ${detail.rateType.name}`
+                            : ""}
+                        </td>
+                      </tr>
+                    );
+                  })}
                   <tr>
                     <td colSpan={7}>
                       <mark>
@@ -130,7 +168,7 @@ export default function ProposalPage() {
                 </tbody>
               </table>
 
-              <h2>INCLUSION</h2>
+              <h2 className="font-bold">INCLUSION</h2>
               <em>Rate is consumable of Food & Beverage</em>
               <p className="font-bold italic">
                 Kindly be advised that the above-mentioned “Tentative” status
@@ -150,7 +188,7 @@ export default function ProposalPage() {
                 deposit on or before the date indicated in ERC will result in
                 the release of your booking.
               </p>
-              <h2 className="text-lg font-bold">
+              <h2 className="font-bold">
                 VENUE RENTAL CHARGES & MINIMUM CONSUMABLE AMOUNT
               </h2>
               <p>
@@ -163,7 +201,7 @@ export default function ProposalPage() {
                 room rental fees should you require additional function space or
                 break-out rooms.
               </p>
-              <h2 className="text-lg font-bold">BANQUET CONCESSIONS</h2>
+              <h2 className="font-bold">BANQUET CONCESSIONS</h2>
               <p>
                 The following amenities may be provided to you free of charge:
               </p>
@@ -179,9 +217,7 @@ export default function ProposalPage() {
                 <li>Complimentary Parking passes for 10% of total attendees</li>
                 <li>Complimentary Wi-Fi access for all participants</li>
               </ul>
-              <h2 className="text-lg font-bold">
-                FINAL EVENT DETAILS & BILLING
-              </h2>
+              <h2 className="font-bold">FINAL EVENT DETAILS & BILLING</h2>
               <p>
                 fter settlement of the non-refundable payment, we will discuss
                 with you the particulars of your function in detail which will
@@ -202,9 +238,7 @@ export default function ProposalPage() {
                 duly signed Letter of Authorization (LOA) must be submitted to
                 the undersigned together with the signed ERC.
               </p>
-              <h2 className="text-lg font-bold">
-                CANCELLATION & POSTPONEMENT POLICY
-              </h2>
+              <h2 className="font-bold">CANCELLATION & POSTPONEMENT POLICY</h2>
               <p>
                 The non-refundable deposit shall be forfeited in case of
                 cancellation or rescheduling of the event. A new proposal will
@@ -246,15 +280,19 @@ export default function ProposalPage() {
               </p>
               <div>Sincerely,</div>
 
-              <div className="capitalize">{lead.salesAccountManager.name}</div>
-              <div>Sales Account Manager</div>
-              <div>Eastwood Richmonde Hotel</div>
+              <div>
+                <div className="capitalize">
+                  {lead.salesAccountManager.name}
+                </div>
+                <div>Sales Account Manager</div>
+                <div>Eastwood Richmonde Hotel</div>
+              </div>
             </td>
           </tr>
         </tbody>
         <tfoot>
           <tr>
-            <th className="border-t border-black text-center text-xs">
+            <th className="border-t-2 border-black pt-2 text-center text-[10px] font-normal">
               <div>
                 17 Orchard Road, Eastwood City, Bagumbayan, Quezon City 1100,
                 Metro Manila, Philippines

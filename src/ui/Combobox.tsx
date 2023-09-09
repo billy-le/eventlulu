@@ -48,7 +48,7 @@ export function Combobox({
           aria-expanded={open}
           className={cn(`flex w-[200px] justify-between ${triggerClassName}`)}
         >
-          {selectedItem?.name || placeholder}
+          <span className="text-left">{selectedItem?.name || placeholder}</span>
           <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>

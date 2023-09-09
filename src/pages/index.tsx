@@ -41,6 +41,8 @@ import {
   ArrowUp,
 } from "lucide-react";
 import { eventTypes } from "prisma/seed-data/data";
+import { useRef, useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
 
 const statusColors = {
   tentative: "bg-yellow-400/20 text-yellow-500",
@@ -67,18 +69,42 @@ const eventIcons: Record<
 };
 
 export default function HomePage() {
-  const { data: leads } = api.leads.getLeads.useQuery();
+  const [cursorId, setCursorId] = useState<string | undefined>(undefined);
+  const { toast } = useToast();
+  const skip = useRef<0 | 1>(0);
+
+  const {
+    data: leads,
+    isError,
+    isLoading,
+    error,
+    isFetching,
+    isPreviousData,
+  } = api.leads.getLeads.useQuery(
+    {
+      cursorId,
+      skip: skip.current,
+    },
+    {
+      networkMode: "always",
+      keepPreviousData: true,
+    }
+  );
+
   const deleteLead = api.leads.delete.useMutation({ networkMode: "always" });
+  const markAsSent = api.leads.sentLead.useMutation({ networkMode: "always" });
 
   return (
     <DefaultLayout>
-      <Link href="/leads/create">
-        <Button className="mb-4" type="button">
-          <Plus size="18" className="mr-2" />
-          New Lead
-        </Button>
-      </Link>
       <DataTable
+        actionButtons={[
+          <Link href="/leads/create">
+            <Button type="button">
+              <Plus size="18" className="mr-2" />
+              New Lead
+            </Button>
+          </Link>,
+        ]}
         columns={[
           {
             accessorKey: "startDate",
@@ -101,11 +127,13 @@ export default function HomePage() {
             },
             cell: ({ row }) => {
               const lead = row.original;
-
+              const isSameDay = datefns.isSameDay(lead.startDate, lead.endDate);
               return (
                 <>
-                  {datefns.format(lead.startDate, "MMM d, yyyy")} -{" "}
-                  {datefns.format(lead.endDate, "MMM d, yyyy")}
+                  {datefns.format(lead.startDate, "MMM d, yyyy")}
+                  {isSameDay
+                    ? ""
+                    : ` - ${datefns.format(lead.endDate, "MMM d, yyyy")}`}
                 </>
               );
             },
@@ -295,7 +323,17 @@ export default function HomePage() {
                         onClick={() => {
                           deleteLead.mutate(lead.id, {
                             onSuccess: (data) => {
-                              console.log(data);
+                              toast({
+                                title: "Success",
+                                description: "Lead has been deleted",
+                              });
+                            },
+                            onError: () => {
+                              toast({
+                                title: "Failed",
+                                description: "There was an error",
+                                variant: "destructive",
+                              });
                             },
                           });
                         }}
@@ -304,19 +342,45 @@ export default function HomePage() {
                         <Delete size="16" />
                       </Button>
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <div className="flex w-full items-center justify-between">
-                        Mark as Sent
-                        <Send size="16" />
-                      </div>
-                    </DropdownMenuItem>
+                    {!lead.lastDateSent && (
+                      <DropdownMenuItem>
+                        <Button
+                          variant="ghost"
+                          className="flex h-auto w-full items-center justify-between p-0 font-normal"
+                          onClick={() => {
+                            markAsSent.mutate(
+                              { id: lead.id, date: new Date() },
+                              {
+                                onSuccess: (data) => {
+                                  toast({
+                                    title: "Success",
+                                    description:
+                                      "Lead has been marked with today's date",
+                                  });
+                                },
+                                onError: () => {
+                                  toast({
+                                    title: "Failed",
+                                    description: "There was an error",
+                                    variant: "destructive",
+                                  });
+                                },
+                              }
+                            );
+                          }}
+                        >
+                          Mark as Sent
+                          <Send size="16" />
+                        </Button>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem>
                       <Link href={`/proposals/${lead.id}`}>
                         Generate Proposal
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem>Generate Lead Form PDF</DropdownMenuItem>
+                    {/* <DropdownMenuItem>Generate Lead Form PDF</DropdownMenuItem> */}
                   </DropdownMenuContent>
                 </DropdownMenu>
               );

@@ -1,19 +1,22 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { EventDetails } from "@prisma/client";
-import * as datefns from "date-fns";
+import { Contact, Organization, Prisma } from "@prisma/client";
 
 export const leadsRouter = createTRPCRouter({
   getLeads: protectedProcedure
     .input(
       z
         .object({
-          leadId: z.string().nullable(),
+          cursorId: z.string().optional(),
+          leadId: z.string().nullable().optional(),
+          orderBy: z.array(z.any({})).optional(),
+          skip: z.number().int().optional(),
+          take: z.number().int().optional(),
         })
         .optional()
     )
-    .query(({ ctx, input }) => {
-      return ctx.prisma.leadForm.findMany({
+    .query(async ({ ctx, input }) => {
+      const leads = await ctx.prisma.leadForm.findMany({
         ...(input?.leadId && {
           where: {
             id: input.leadId,
@@ -51,13 +54,29 @@ export const leadsRouter = createTRPCRouter({
             },
           },
         },
+        take: input?.take,
+        orderBy: input?.orderBy ?? [
+          { startDate: "desc" },
+          { createDate: "desc" },
+        ],
+        ...(input?.cursorId && {
+          cursor: {
+            id: input.cursorId,
+          },
+        }),
+        ...(input?.skip && {
+          skip: input.skip,
+        }),
       });
+
+      return leads;
     }),
+
   mutateLead: protectedProcedure
     .input(
       z.object({
         id: z.string().optional(),
-        salesManagerId: z.string(),
+        salesAccountManagerId: z.string(),
         leadTypeId: z.string(),
         dateReceived: z.date().optional(),
         lastDateSent: z.date().optional(),
@@ -69,8 +88,8 @@ export const leadsRouter = createTRPCRouter({
         startDate: z.date(),
         endDate: z.date(),
         eventLengthInDays: z.number().int().positive(),
-        banquetsBudget: z.number().int().positive().optional(),
-        roomsBudget: z.number().int().positive().optional(),
+        banquetsBudget: z.number().int().optional(),
+        roomsBudget: z.number().int().optional(),
         otherHotelConsiderations: z.string().optional(),
         contact: z.object({
           firstName: z.string(),
@@ -119,8 +138,8 @@ export const leadsRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        let company = null;
-        let contact = null;
+        let company: Organization | null = null;
+        let contact: Contact | null = null;
         if (input.company) {
           company = await ctx.prisma.organization.findUnique({
             where: {
@@ -156,19 +175,15 @@ export const leadsRouter = createTRPCRouter({
         }
 
         if (input.id) {
-          return await ctx.prisma.leadForm.update({
+          const lead = await ctx.prisma.leadForm.update({
             where: {
               id: input.id,
             },
-            data: {},
-          });
-        } else {
-          const lead = await ctx.prisma.leadForm.create({
             data: {
               dateReceived: input.dateReceived ?? new Date(),
               lastDateSent: input.lastDateSent,
               leadTypeId: input.leadTypeId,
-              salesAccountManagerId: input.salesManagerId,
+              salesAccountManagerId: input.salesAccountManagerId,
               isCorporate: input.isCorporate,
               isLiveIn: input.isLiveIn,
               startDate: input.startDate,
@@ -176,11 +191,45 @@ export const leadsRouter = createTRPCRouter({
               eventLengthInDays: input.eventLengthInDays,
               banquetsBudget: input.banquetsBudget,
               roomsBudget: input.roomsBudget,
+              contactId: contact!.id,
               ...(company && {
                 companyId: company.id,
               }),
-              ...(contact && {
-                contactId: contact.id,
+              ...(input.eventTypeId && {
+                eventTypeId: input.eventTypeId,
+              }),
+              ...(input.eventTypeOther && {
+                eventTypeOther: input.eventTypeOther,
+              }),
+              ...(input.onSiteDate && {
+                onSiteDate: input.onSiteDate,
+              }),
+              // ...((input.activities?.length ?? 0) > 0 && {
+              //   activities: {
+
+              //   },
+              // }),
+            },
+          });
+
+          return lead;
+        } else {
+          const lead = await ctx.prisma.leadForm.create({
+            data: {
+              dateReceived: input.dateReceived ?? new Date(),
+              lastDateSent: input.lastDateSent,
+              leadTypeId: input.leadTypeId,
+              salesAccountManagerId: input.salesAccountManagerId,
+              isCorporate: input.isCorporate,
+              isLiveIn: input.isLiveIn,
+              startDate: input.startDate,
+              endDate: input.endDate,
+              eventLengthInDays: input.eventLengthInDays,
+              banquetsBudget: input.banquetsBudget,
+              roomsBudget: input.roomsBudget,
+              contactId: contact!.id,
+              ...(company && {
+                companyId: company.id,
               }),
               ...(input.eventTypeId && {
                 eventTypeId: input.eventTypeId,
@@ -206,12 +255,10 @@ export const leadsRouter = createTRPCRouter({
             },
           });
 
-          let eventDetails: EventDetails[] = [];
-          let index = 0;
           for (const event of input.eventDetails ?? []) {
             const detail = await ctx.prisma.eventDetails.create({
               data: {
-                date: datefns.addDays(event.date, index),
+                date: event.date,
                 pax: event.pax,
                 roomSetupId: event.roomSetupId,
                 functionRoomId: event.functionRoomId,
@@ -227,8 +274,6 @@ export const leadsRouter = createTRPCRouter({
               },
             });
 
-            index++;
-
             for (const meal of event.mealReqs) {
               await ctx.prisma.eventDetails.update({
                 where: {
@@ -243,8 +288,6 @@ export const leadsRouter = createTRPCRouter({
                 },
               });
             }
-
-            eventDetails.push(detail);
           }
 
           return lead;
@@ -252,6 +295,20 @@ export const leadsRouter = createTRPCRouter({
       } catch (err) {
         console.log(err);
       }
+    }),
+  sentLead: protectedProcedure
+    .input(z.object({ id: z.string(), date: z.date() }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await ctx.prisma.leadForm.update({
+          where: {
+            id: input.id,
+          },
+          data: {
+            lastDateSent: input.date,
+          },
+        });
+      } catch (err) {}
     }),
   delete: protectedProcedure
     .input(z.string())

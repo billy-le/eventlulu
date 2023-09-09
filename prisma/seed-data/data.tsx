@@ -8,7 +8,7 @@ export const leadTypes = [
 ];
 
 export const functionRooms = [
-  "amberly",
+  "amberley",
   "belmont",
   "amberley-belmont",
   "ballroom I",

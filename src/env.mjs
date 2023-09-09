@@ -10,6 +10,7 @@ export const env = createEnv({
     DATABASE_URL: z.string().url(),
     NODE_ENV: z.enum(["development", "test", "production"]),
     DEFAULT_PASSWORD: z.string(),
+    SALT_ROUNDS: z.string(),
   },
 
   /**
@@ -29,6 +30,7 @@ export const env = createEnv({
     DATABASE_URL: process.env.DATABASE_URL,
     NODE_ENV: process.env.NODE_ENV,
     DEFAULT_PASSWORD: process.env.DEFAULT_PASSWORD,
+    SALT_ROUNDS: process.env.SALT_ROUNDS,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**

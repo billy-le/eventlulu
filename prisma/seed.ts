@@ -160,6 +160,7 @@ async function main() {
     const endDate = datefns.addDays(startDate, eventLengthInDays - 1);
     const contactFirstName = person.firstName();
     const contactLastName = person.lastName();
+
     const contact = await prisma.contact.create({
       data: {
         email: internet.email({
@@ -170,6 +171,7 @@ async function main() {
         firstName: contactFirstName,
         lastName: contactLastName,
         phoneNumber: phone.number(),
+        title: person.prefix(person.sexType()),
       },
     });
 
@@ -191,10 +193,19 @@ async function main() {
 
     try {
       let eventDetails = [];
+      let i = 0;
       for (const _ of Array(eventLengthInDays)) {
+        const randomDate = date.anytime();
+        const startTime = datefns.format(randomDate, "HH:MM");
+        const randomEndDate = datefns.addHours(
+          randomDate,
+          number.int({ min: 1, max: 8 })
+        );
+        const endTime = datefns.format(randomEndDate, "HH:MM");
+
         const detail = await prisma.eventDetails.create({
           data: {
-            date: datefns.addDays(startDate, 1),
+            date: datefns.addDays(startDate, i),
             pax: number.int({ max: 200 }),
             roomSetupId: helpers.arrayElement(roomSetupsArray).id,
             functionRoomId: helpers.arrayElement(functionRoomsArray).id,
@@ -204,10 +215,13 @@ async function main() {
             mealReqs: {
               connect: helpers.arrayElements(mealReqsArray, { min: 1, max: 3 }),
             },
+            startTime,
+            endTime,
           },
         });
 
         eventDetails.push(detail);
+        i++;
       }
 
       await prisma.leadForm.create({
