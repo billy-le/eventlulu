@@ -49,19 +49,17 @@ export default function ProposalPage() {
       <main className="font-garamond text-sm">
         <table>
           <thead className="h-28">
-            <tr>
-              <th></th>
-            </tr>
+            <tr />
           </thead>
           <tfoot className="h-12 leading-tight">
-            <tr>
-              <th />
-            </tr>
+            <tr />
           </tfoot>
           <tbody>
             <tr>
               <td className="space-y-4">
                 <div className="font-bold">
+                  <br />
+                  <br />
                   {dateFormat(today, "MMMM d, yyyy")}
                 </div>
                 {lead.company && (
@@ -309,7 +307,7 @@ export default function ProposalPage() {
                   email address{" "}
                   <a
                     href={`mailto:${lead.salesAccountManager.email}`}
-                    className="text-blue-500"
+                    className="text-blue-500 underline"
                   >
                     {lead.salesAccountManager.email}
                   </a>
@@ -322,7 +320,7 @@ export default function ProposalPage() {
                   Richmonde Hotels by logging on to our website at{" "}
                   <a
                     href="https://www.richmondehotels.com.ph"
-                    className="text-blue-500"
+                    className="text-blue-500 underline"
                     target="__blank"
                     rel="noreferrer"
                   >
@@ -339,6 +337,16 @@ export default function ProposalPage() {
                 <div>Sincerely,</div>
 
                 <div>
+                  <div className="relative h-[50px]">
+                    <Image
+                      src="/signature.png"
+                      height={100}
+                      width={100}
+                      alt="signature"
+                      className="absolute"
+                    />
+                  </div>
+
                   <div className="capitalize">
                     {lead.salesAccountManager.name}
                   </div>
