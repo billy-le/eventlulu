@@ -32,21 +32,18 @@ export default function ProposalPage() {
         </div>
         <div>
           Tel: 632.570.7777 • Fax: 632.352.7281 • E-mail:{" "}
-          <a href="mailto:erh@richmondehotel.com.ph" className="text-blue-500">
+          <a href="mailto:erh@richmondehotel.com.ph">
             erh@richmondehotel.com.ph
           </a>
         </div>
         <div>
           Website:{" "}
-          <a
-            href="https://www.richmondehotels.com.ph"
-            className="text-blue-500"
-          >
+          <a href="https://www.richmondehotels.com.ph">
             www.richmondehotels.com.ph
           </a>
         </div>
       </footer>
-      <main className="font-garamond text-sm">
+      <main className="bg-white font-garamond text-sm">
         <table>
           <thead className="h-28">
             <tr />
@@ -106,18 +103,17 @@ export default function ProposalPage() {
                     The following details are based on the requisites of your
                     event and the venue availability as of this writing:
                   </p>
-                  <table className="w-full text-center capitalize">
+                  <table className="w-full text-center">
                     <thead>
                       <tr>
-                        <th className="border border-black">Date</th>
-                        <th className="border border-black">Time</th>
-                        <th className="border border-black">
+                        <th className="border border-black px-1">Date</th>
+                        <th className="border border-black px-1">Time</th>
+                        <th className="border border-black px-1">
                           No. of Attendees
                         </th>
-                        <th className="border border-black">Venue</th>
-                        <th className="border border-black">Set Up</th>
-                        <th className="border border-black">Status</th>
-                        <th className="border border-black">Rate</th>
+                        <th className="border border-black px-1">Venue</th>
+                        <th className="border border-black px-1">Set Up</th>
+                        <th className="border border-black px-1">Rate</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -150,36 +146,30 @@ export default function ProposalPage() {
                           : "0";
 
                         return (
-                          <tr key={detail.id}>
-                            <td className="border border-black text-left">
+                          <tr key={detail.id} className="">
+                            <td className="border border-black px-1">
                               {detail.date
                                 ? dateFormat(detail.date, "MMMM d, yyyy")
                                 : "-"}
                             </td>
-                            <td className="border border-black">
-                              {startTime} - {endTime}
+                            <td className="border border-black px-1">
+                              {startTime} -<br />
+                              {endTime}
                             </td>
-                            <td className="border border-black">
+                            <td className="border border-black px-1">
                               {detail.pax?.toLocaleString()}
                             </td>
-                            <td className="border border-black">
+                            <td className="border border-black px-1 capitalize">
                               <div>{detail.functionRoom?.name}</div>
                             </td>
-                            <td className="border border-black">
+                            <td className="border border-black px-1 capitalize">
                               {detail.roomSetup?.name}
                             </td>
-                            {index === 0 ? (
-                              <td
-                                rowSpan={lead.eventDetails.length}
-                                className="border border-black"
-                              >
-                                Tenative (first to confirm)
-                              </td>
-                            ) : null}
-                            <td className="border border-black">
+
+                            <td className="border border-black px-1">
                               {detail.rate?.toLocaleString()}
                               {detail.rateType?.name
-                                ? ` / ${detail.rateType.name}`
+                                ? ` / ${detail.rateType.name.toLowerCase()}`
                                 : ""}
                             </td>
                           </tr>
@@ -190,7 +180,8 @@ export default function ProposalPage() {
                           <mark className="italic">
                             Please note that the hotel reserves the right to
                             assign and re-assign venues based on availability
-                            and your set-up requirements.
+                            and your set-up requirements. Venue is on tentative
+                            status; first to confirm.
                           </mark>
                         </td>
                       </tr>
@@ -307,7 +298,7 @@ export default function ProposalPage() {
                   email address{" "}
                   <a
                     href={`mailto:${lead.salesAccountManager.email}`}
-                    className="text-blue-500 underline"
+                    className="text-blue-600"
                   >
                     {lead.salesAccountManager.email}
                   </a>
@@ -320,7 +311,7 @@ export default function ProposalPage() {
                   Richmonde Hotels by logging on to our website at{" "}
                   <a
                     href="https://www.richmondehotels.com.ph"
-                    className="text-blue-500 underline"
+                    className=" underline"
                     target="__blank"
                     rel="noreferrer"
                   >
@@ -337,7 +328,7 @@ export default function ProposalPage() {
                 <div>Sincerely,</div>
 
                 <div>
-                  <div className="relative h-[50px]">
+                  <div className="relative h-14">
                     <Image
                       src="/signature.png"
                       height={100}
