@@ -199,9 +199,10 @@ export default function LeadPage() {
     onSuccess: (e) => {
       toast({
         title: "Success",
-        description: leadId
-          ? "Lead form has been updated"
-          : "Lead form has been created",
+        description:
+          leadId === "create"
+            ? "Lead form has been created"
+            : "Lead form has been updated",
       });
       router.push("/");
     },

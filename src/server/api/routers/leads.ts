@@ -2,6 +2,8 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { Contact, Organization, Prisma } from "@prisma/client";
 
+const nameId = z.object({ id: z.string(), name: z.string() });
+
 export const leadsRouter = createTRPCRouter({
   getLeads: protectedProcedure
     .input(
@@ -76,14 +78,14 @@ export const leadsRouter = createTRPCRouter({
     .input(
       z.object({
         id: z.string().optional(),
-        salesAccountManagerId: z.string(),
-        leadTypeId: z.string(),
+        salesAccountManager: nameId,
+        leadType: nameId,
         dateReceived: z.date().optional(),
         lastDateSent: z.date().optional(),
         onSiteDate: z.date().optional(),
         isCorporate: z.boolean().optional(),
         isLiveIn: z.boolean().optional(),
-        eventTypeId: z.string().optional(),
+        eventType: nameId.optional(),
         eventTypeOther: z.string().optional(),
         startDate: z.date(),
         endDate: z.date(),
@@ -111,16 +113,13 @@ export const leadsRouter = createTRPCRouter({
               date: z.date(),
               startTime: z.string().optional(),
               endTime: z.string().optional(),
-              pax: z.number().int().positive().optional(),
-              roomSetupId: z.string().optional(),
-              mealReqs: z
-                .array(z.object({ id: z.string(), name: z.string() }))
-                .optional()
-                .default([]),
-              functionRoomId: z.string().optional(),
+              pax: z.number().int().optional(),
+              roomSetup: nameId.optional(),
+              mealReqs: z.array(nameId).optional().default([]),
+              functionRoom: nameId.optional(),
               remarks: z.string().optional(),
-              rate: z.number().positive().optional(),
-              rateTypeId: z.string().optional(),
+              rate: z.number().int().optional(),
+              rateType: nameId.optional(),
             })
           )
           .optional(),
@@ -128,7 +127,7 @@ export const leadsRouter = createTRPCRouter({
           .array(
             z.object({
               date: z.date(),
-              updatedById: z.string(),
+              updatedBy: nameId,
               clientFeedback: z.string().optional(),
               nextTraceDate: z.date().optional(),
             })
@@ -182,8 +181,8 @@ export const leadsRouter = createTRPCRouter({
             data: {
               dateReceived: input.dateReceived ?? new Date(),
               lastDateSent: input.lastDateSent,
-              leadTypeId: input.leadTypeId,
-              salesAccountManagerId: input.salesAccountManagerId,
+              leadTypeId: input.leadType.id,
+              salesAccountManagerId: input.salesAccountManager.id,
               isCorporate: input.isCorporate,
               isLiveIn: input.isLiveIn,
               startDate: input.startDate,
@@ -195,8 +194,8 @@ export const leadsRouter = createTRPCRouter({
               ...(company && {
                 companyId: company.id,
               }),
-              ...(input.eventTypeId && {
-                eventTypeId: input.eventTypeId,
+              ...(input.eventType?.id && {
+                eventTypeId: input.eventType?.id,
               }),
               ...(input.eventTypeOther && {
                 eventTypeOther: input.eventTypeOther,
@@ -218,8 +217,8 @@ export const leadsRouter = createTRPCRouter({
             data: {
               dateReceived: input.dateReceived ?? new Date(),
               lastDateSent: input.lastDateSent,
-              leadTypeId: input.leadTypeId,
-              salesAccountManagerId: input.salesAccountManagerId,
+              leadTypeId: input.leadType.id,
+              salesAccountManagerId: input.salesAccountManager.id,
               isCorporate: input.isCorporate,
               isLiveIn: input.isLiveIn,
               startDate: input.startDate,
@@ -231,8 +230,8 @@ export const leadsRouter = createTRPCRouter({
               ...(company && {
                 companyId: company.id,
               }),
-              ...(input.eventTypeId && {
-                eventTypeId: input.eventTypeId,
+              ...(input.eventType?.id && {
+                eventTypeId: input.eventType.id,
               }),
               ...(input.eventTypeOther && {
                 eventTypeOther: input.eventTypeOther,
@@ -247,7 +246,7 @@ export const leadsRouter = createTRPCRouter({
                       date: activity.date,
                       clientFeedback: activity.clientFeedback,
                       nextTraceDate: activity.nextTraceDate,
-                      updatedById: activity.updatedById,
+                      updatedById: activity.updatedBy?.id,
                     })),
                   },
                 },
@@ -260,11 +259,11 @@ export const leadsRouter = createTRPCRouter({
               data: {
                 date: event.date,
                 pax: event.pax,
-                roomSetupId: event.roomSetupId,
-                functionRoomId: event.functionRoomId,
+                roomSetupId: event.roomSetup?.id,
+                functionRoomId: event.functionRoom?.id,
                 remarks: event.remarks,
                 rate: event.rate,
-                rateTypeId: event.rateTypeId,
+                rateTypeId: event.rateType?.id,
                 mealReqs: {
                   connect: event.mealReqs,
                 },
