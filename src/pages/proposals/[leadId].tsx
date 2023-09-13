@@ -31,7 +31,7 @@ export default function ProposalPage() {
           Manila, Philippines
         </div>
         <div>
-          Tel: 632.570.7777 • Fax: 632.352.7281 • E-mail:{" "}
+          Tel: <a href="tel:+6325707777">632.570.7777</a> • E-mail:{" "}
           <a href="mailto:erh@richmondehotel.com.ph">
             erh@richmondehotel.com.ph
           </a>
@@ -106,14 +106,16 @@ export default function ProposalPage() {
                   <table className="w-full text-center">
                     <thead>
                       <tr>
-                        <th className="border border-black px-1">Date</th>
-                        <th className="border border-black px-1">Time</th>
-                        <th className="border border-black px-1">
+                        <th className="border border-black px-1 py-2">Date</th>
+                        <th className="border border-black px-1 py-2">Time</th>
+                        <th className="border border-black px-1 py-2">
                           No. of Attendees
                         </th>
-                        <th className="border border-black px-1">Venue</th>
-                        <th className="border border-black px-1">Set Up</th>
-                        <th className="border border-black px-1">Rate</th>
+                        <th className="border border-black px-1 py-2">Venue</th>
+                        <th className="border border-black px-1 py-2">
+                          Set Up
+                        </th>
+                        <th className="border border-black px-1 py-2">Rate</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -147,26 +149,26 @@ export default function ProposalPage() {
 
                         return (
                           <tr key={detail.id} className="">
-                            <td className="border border-black px-1">
+                            <td className="border border-black px-1 py-2">
                               {detail.date
                                 ? dateFormat(detail.date, "MMMM d, yyyy")
                                 : "-"}
                             </td>
-                            <td className="border border-black px-1">
+                            <td className="border border-black px-1 py-2">
                               {startTime} -<br />
                               {endTime}
                             </td>
-                            <td className="border border-black px-1">
+                            <td className="border border-black px-1 py-2">
                               {detail.pax?.toLocaleString()}
                             </td>
-                            <td className="border border-black px-1 capitalize">
+                            <td className="border border-black px-1 py-2 capitalize">
                               <div>{detail.functionRoom?.name}</div>
                             </td>
-                            <td className="border border-black px-1 capitalize">
+                            <td className="border border-black px-1 py-2 capitalize">
                               {detail.roomSetup?.name}
                             </td>
 
-                            <td className="border border-black px-1">
+                            <td className="border border-black px-1 py-2">
                               {detail.rate?.toLocaleString()}
                               {detail.rateType?.name
                                 ? ` / ${detail.rateType.name.toLowerCase()}`
@@ -294,7 +296,8 @@ export default function ProposalPage() {
                 <p>
                   We trust you find the above arrangements in order. Should you
                   have further queries, please do not hesitate to contact the
-                  undersigned at telephone number +63 2 570 7777 loc. 8503 or
+                  undersigned at telephone number{" "}
+                  <a href="tel:+6325707777;8503">+63 2 570 7777 loc. 8503</a> or
                   email address{" "}
                   <a
                     href={`mailto:${lead.salesAccountManager.email}`}
