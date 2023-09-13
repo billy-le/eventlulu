@@ -86,13 +86,12 @@ export default function HomePage() {
       skip: skip.current,
     },
     {
-      networkMode: "always",
       keepPreviousData: true,
     }
   );
 
-  const deleteLead = api.leads.delete.useMutation({ networkMode: "always" });
-  const markAsSent = api.leads.sentLead.useMutation({ networkMode: "always" });
+  const deleteLead = api.leads.delete.useMutation();
+  const markAsSent = api.leads.sentLead.useMutation();
 
   return (
     <DefaultLayout>

@@ -47,6 +47,9 @@ export const api = createTRPCNext<AppRouter>({
           queries: {
             networkMode: "always",
           },
+          mutations: {
+            networkMode: "always",
+          },
         },
       },
     };

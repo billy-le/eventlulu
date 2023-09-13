@@ -75,16 +75,16 @@ const formSchema = z.object({
       date: z.date(),
       startTime: z.string().optional(),
       endTime: z.string().optional(),
-      pax: z.number().positive().optional(),
+      pax: z.number().optional(),
       roomSetup: nameId.optional(),
       mealReqs: z.array(nameId.optional()).optional(),
       functionRoom: nameId.optional(),
-      rate: z.number().positive().optional(),
+      rate: z.number().optional(),
       rateType: nameId.optional(),
       remarks: z.string().optional(),
     })
   ),
-  roomTotal: z.number().int().positive().optional(),
+  roomTotal: z.number().int().optional(),
   roomType: z.string().optional(),
   roomArrivalDate: z.date().optional(),
   roomDepartureDate: z.date().optional(),
@@ -108,8 +108,6 @@ function normalize(
 ): z.infer<typeof formSchema> {
   return {
     ...values,
-    salesAccountManagerId: values.salesAccountManager.id,
-    leadTypeId: values.leadType.id,
     dateReceived: values.dateReceived,
     lastDateSent: values.lastDateSent ?? undefined,
     isCorporate: values.isCorporate,
@@ -145,20 +143,16 @@ function normalize(
     eventDetails: values.eventDetails?.map((event) => ({
       ...event,
       date: event.date,
-      functionRoomId: event.functionRoom?.id,
       pax: event.pax ?? undefined,
       remarks: event.remarks ?? undefined,
-      roomSetupId: event.roomSetup?.id,
       startTime: event.startTime ?? undefined,
       endTime: event.endTime ?? undefined,
-      rateTypeId: event.rateType?.id,
       rate: event.rate ?? undefined,
       mealReqs: event.mealReqs,
     })),
     activities: values.activities?.map((activity) => ({
       ...activity,
       updatedBy: activity.updatedBy,
-      updatedById: activity.updatedBy.id,
       clientFeedback: activity.clientFeedback ?? undefined,
       date: activity.date,
       nextTraceDate: activity.nextTraceDate ?? undefined,
@@ -247,10 +241,22 @@ export default function LeadPage() {
     <DefaultLayout>
       <Form {...form}>
         <form
-          onSubmit={form.handleSubmit(onSubmit, (e) => {
+          onSubmit={form.handleSubmit(onSubmit, (err) => {
             toast({
               title: "Invalid Form",
-              description: "Please fill out the missing values on the form",
+              description: (
+                <div>
+                  Please fill out the missing values on the form:
+                  <ul>
+                    {Object.keys(err).map((key, index) => {
+                      const errorName = key
+                        .replaceAll(/([A-Z])/g, (value) => ` ${value}`)
+                        .toUpperCase();
+                      return <li key={index}>{errorName}</li>;
+                    })}
+                  </ul>
+                </div>
+              ),
               variant: "destructive",
             });
           })}

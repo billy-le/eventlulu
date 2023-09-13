@@ -15,8 +15,8 @@ export default function ProposalPage() {
   const lead = leadData[0];
   if (!lead) return null;
   return (
-    <main className="flex flex-col font-garamond text-sm">
-      <table className="flex-grow">
+    <main id="proposal" className="font-garamond text-sm">
+      <table>
         <thead>
           <tr>
             <th>
@@ -27,10 +27,12 @@ export default function ProposalPage() {
                 width={177.6}
                 className="mx-auto"
               />
+              <br />
+              <br />
             </th>
           </tr>
         </thead>
-        <tbody className="h-full">
+        <tbody>
           <tr>
             <td className="space-y-4">
               <div className="font-bold">
@@ -74,102 +76,106 @@ export default function ProposalPage() {
                 you with these special rates and arrangements for your banquet
                 requirements.
               </p>
-              <h2 className="font-bold">EVENT SPACE</h2>
-              <p>
-                The following details are based on the requisites of your event
-                and the venue availability as of this writing:
-              </p>
-              <table className="w-full text-center capitalize">
-                <thead>
-                  <tr>
-                    <th className="border border-black">Date</th>
-                    <th className="border border-black">Time</th>
-                    <th className="border border-black">No. of Attendees</th>
-                    <th className="border border-black">Venue</th>
-                    <th className="border border-black">Set Up</th>
-                    <th className="border border-black">Status</th>
-                    <th className="border border-black">Rate</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {lead.eventDetails.map((detail, index) => {
-                    const a = detail.startTime?.split(":");
-                    const b = detail.endTime?.split(":");
-                    const startTime = detail.startTime
-                      ? dateFormat(
-                          new Date(
-                            0,
-                            0,
-                            0,
-                            parseInt(a?.[0] ?? "0", 10),
-                            parseInt(a?.[1] ?? "0", 10)
-                          ),
-                          "h:mm a"
-                        )
-                      : "0";
-                    const endTime = detail.endTime
-                      ? dateFormat(
-                          new Date(
-                            0,
-                            0,
-                            0,
-                            parseInt(b?.[0] ?? "0", 10),
-                            parseInt(b?.[1] ?? "0", 10)
-                          ),
-                          "h:mm a"
-                        )
-                      : "0";
+              <div>
+                <h2 className="font-bold">EVENT SPACE</h2>
+                <p>
+                  The following details are based on the requisites of your
+                  event and the venue availability as of this writing:
+                </p>
+                <table className="w-full text-center capitalize">
+                  <thead>
+                    <tr>
+                      <th className="border border-black">Date</th>
+                      <th className="border border-black">Time</th>
+                      <th className="border border-black">No. of Attendees</th>
+                      <th className="border border-black">Venue</th>
+                      <th className="border border-black">Set Up</th>
+                      <th className="border border-black">Status</th>
+                      <th className="border border-black">Rate</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {lead.eventDetails.map((detail, index) => {
+                      const a = detail.startTime?.split(":");
+                      const b = detail.endTime?.split(":");
+                      const startTime = detail.startTime
+                        ? dateFormat(
+                            new Date(
+                              0,
+                              0,
+                              0,
+                              parseInt(a?.[0] ?? "0", 10),
+                              parseInt(a?.[1] ?? "0", 10)
+                            ),
+                            "h:mm a"
+                          )
+                        : "0";
+                      const endTime = detail.endTime
+                        ? dateFormat(
+                            new Date(
+                              0,
+                              0,
+                              0,
+                              parseInt(b?.[0] ?? "0", 10),
+                              parseInt(b?.[1] ?? "0", 10)
+                            ),
+                            "h:mm a"
+                          )
+                        : "0";
 
-                    return (
-                      <tr key={detail.id}>
-                        <td className="border border-black text-left">
-                          {detail.date
-                            ? dateFormat(detail.date, "MMMM d, yyyy")
-                            : "-"}
-                        </td>
-                        <td className="border border-black">
-                          {startTime} - {endTime}
-                        </td>
-                        <td className="border border-black">
-                          {detail.pax?.toLocaleString()}
-                        </td>
-                        <td className="border border-black">
-                          <div>{detail.functionRoom?.name}</div>
-                        </td>
-                        <td className="border border-black">
-                          {detail.roomSetup?.name}
-                        </td>
-                        {index === 0 ? (
-                          <td
-                            rowSpan={lead.eventDetails.length}
-                            className="border border-black"
-                          >
-                            Tenative (first to confirm)
+                      return (
+                        <tr key={detail.id}>
+                          <td className="border border-black text-left">
+                            {detail.date
+                              ? dateFormat(detail.date, "MMMM d, yyyy")
+                              : "-"}
                           </td>
-                        ) : null}
-                        <td className="border border-black">
-                          {detail.rate?.toLocaleString()}
-                          {detail.rateType?.name
-                            ? ` / ${detail.rateType.name}`
-                            : ""}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                  <tr>
-                    <td colSpan={7}>
-                      <mark>
-                        Please note that the hotel reserves the right to assign
-                        and re-assign venues based on availability and your
-                        set-up requirements.
-                      </mark>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                          <td className="border border-black">
+                            {startTime} - {endTime}
+                          </td>
+                          <td className="border border-black">
+                            {detail.pax?.toLocaleString()}
+                          </td>
+                          <td className="border border-black">
+                            <div>{detail.functionRoom?.name}</div>
+                          </td>
+                          <td className="border border-black">
+                            {detail.roomSetup?.name}
+                          </td>
+                          {index === 0 ? (
+                            <td
+                              rowSpan={lead.eventDetails.length}
+                              className="border border-black"
+                            >
+                              Tenative (first to confirm)
+                            </td>
+                          ) : null}
+                          <td className="border border-black">
+                            {detail.rate?.toLocaleString()}
+                            {detail.rateType?.name
+                              ? ` / ${detail.rateType.name}`
+                              : ""}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    <tr>
+                      <td colSpan={7} className="text-left">
+                        <mark className="italic">
+                          Please note that the hotel reserves the right to
+                          assign and re-assign venues based on availability and
+                          your set-up requirements.
+                        </mark>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
 
               <h2 className="font-bold">INCLUSION</h2>
               <em>Rate is consumable of Food & Beverage</em>
+
+              <h2 className="text-center font-bold">STATUS & CONFIRMATION</h2>
               <p className="font-bold italic">
                 Kindly be advised that the above-mentioned “Tentative” status
                 means that, as of this writing, there is another client who has
@@ -181,69 +187,90 @@ export default function ProposalPage() {
                 functions rooms, you may confirm your booking with us by sending
                 an email to the undersigned. We will then email you back the
                 Event Reservation Contract (ERC) which details the settlement of
-                the non-refundable down payment equivalent to 50% of your total
-                consumable rate to secure your booking on the above date.
-                Payment due dates and other terms and conditions of your booking
-                shall also be indicated in the ERC. Failure to settle this
-                deposit on or before the date indicated in ERC will result in
-                the release of your booking.
+                the{" "}
+                <span className="underline">non-refundable down payment</span>{" "}
+                equivalent to 50% of your total consumable rate to secure your
+                booking on the above date. Payment due dates and other terms and
+                conditions of your booking shall also be indicated in the ERC.
+                Failure to settle this deposit on or before the date indicated
+                in ERC will result in the release of your booking.
               </p>
-              <h2 className="font-bold">
-                VENUE RENTAL CHARGES & MINIMUM CONSUMABLE AMOUNT
-              </h2>
-              <p>
-                Rental charge for the venue will be waived if the estimated
-                total charges for food, beverage and amenities are equal to or
-                greater than the minimum consumable amount for the venue.
-                Additional non-consumable rental rate per hour shall apply
-                should the function extend beyond the number of hours specified
-                in the contract. The hotel reserves the right to impose meeting
-                room rental fees should you require additional function space or
-                break-out rooms.
-              </p>
-              <h2 className="font-bold">BANQUET CONCESSIONS</h2>
-              <p>
-                The following amenities may be provided to you free of charge:
-              </p>
-              <ul className="list-inside list-disc pl-4">
-                <li>
-                  Use of the following equipment:
-                  <ul className="list-inside list-disc pl-4">
-                    <li>(1) LCD Projector & screen</li>
-                    <li>Basic sound system</li>
-                  </ul>
-                </li>
-                <li>Function Room Set-Up</li>
-                <li>Complimentary Parking passes for 10% of total attendees</li>
-                <li>Complimentary Wi-Fi access for all participants</li>
-              </ul>
-              <h2 className="font-bold">FINAL EVENT DETAILS & BILLING</h2>
-              <p>
-                fter settlement of the non-refundable payment, we will discuss
-                with you the particulars of your function in detail which will
-                be specified in a Banquet Event Order (BEO). Details such as
-                menu choice, set-up service time, etc., including the Hotel's
-                banquet terms and conditions, will be indicated in the BEO which
-                must be finalized and signed off at least 7 days prior to your
-                event. Failure to sign the BEO before the deadline authorizes
-                the Hotel to exercise its discretion in delivering the services
-                during your event.
-              </p>
-              <p>
-                The contract balance after the initial deposit must be settled
-                according to the schedule indicated in the ERC. Any additional
-                charges, including incidentals, must be paid in full immediately
-                after the event either in cash or credit card, unless you or
-                your company has a credit line with the hotel, in which case a
-                duly signed Letter of Authorization (LOA) must be submitted to
-                the undersigned together with the signed ERC.
-              </p>
-              <h2 className="font-bold">CANCELLATION & POSTPONEMENT POLICY</h2>
-              <p>
-                The non-refundable deposit shall be forfeited in case of
-                cancellation or rescheduling of the event. A new proposal will
-                be drawn in case of a change in schedule.
-              </p>
+
+              <div>
+                <h2 className="font-bold">
+                  VENUE RENTAL CHARGES & MINIMUM CONSUMABLE AMOUNT
+                </h2>
+                <p>
+                  Rental charge for the venue will be waived if the estimated
+                  total charges for food, beverage and amenities are equal to or
+                  greater than the minimum consumable amount for the venue.
+                </p>
+                <br />
+                <p>
+                  Additional non-consumable rental rate per hour shall apply
+                  should the function extend beyond the number of hours
+                  specified in the contract. The hotel reserves the right to
+                  impose meeting room rental fees should you require additional
+                  function space or break-out rooms.
+                </p>
+              </div>
+
+              <div>
+                <h2 className="font-bold">BANQUET CONCESSIONS</h2>
+                <p>
+                  The following amenities may be provided to you free of charge:
+                </p>
+                <ul className="list-inside list-disc pl-4">
+                  <li>
+                    Use of the following equipment:
+                    <ul className="list-inside list-disc pl-4">
+                      <li>(1) LCD Projector & screen</li>
+                      <li>Basic sound system</li>
+                    </ul>
+                  </li>
+                  <li>Function Room Set-Up</li>
+                  <li>
+                    Complimentary Parking passes for 10% of total attendees
+                  </li>
+                  <li>Complimentary Wi-Fi access for all participants</li>
+                </ul>
+              </div>
+
+              <div>
+                <h2 className="font-bold">FINAL EVENT DETAILS & BILLING</h2>
+                <p>
+                  fter settlement of the non-refundable payment, we will discuss
+                  with you the particulars of your function in detail which will
+                  be specified in a Banquet Event Order (BEO). Details such as
+                  menu choice, set-up service time, etc., including the Hotel's
+                  banquet terms and conditions, will be indicated in the BEO
+                  which must be finalized and signed off at least 7 days prior
+                  to your event. Failure to sign the BEO before the deadline
+                  authorizes the Hotel to exercise its discretion in delivering
+                  the services during your event.
+                </p>
+                <p>
+                  The contract balance after the initial deposit must be settled
+                  according to the schedule indicated in the ERC. Any additional
+                  charges, including incidentals, must be paid in full
+                  immediately after the event either in cash or credit card,
+                  unless you or your company has a credit line with the hotel,
+                  in which case a duly signed Letter of Authorization (LOA) must
+                  be submitted to the undersigned together with the signed ERC.
+                </p>
+              </div>
+
+              <div>
+                <h2 className="font-bold">
+                  CANCELLATION & POSTPONEMENT POLICY
+                </h2>
+                <p>
+                  The non-refundable deposit shall be forfeited in case of
+                  cancellation or rescheduling of the event. A new proposal will
+                  be drawn in case of a change in schedule.
+                </p>
+              </div>
+
               <p>
                 We trust you find the above arrangements in order. Should you
                 have further queries, please do not hesitate to contact the
@@ -292,7 +319,7 @@ export default function ProposalPage() {
         </tbody>
         <tfoot>
           <tr>
-            <th className="border-t-2 border-black pt-2 text-center text-[10px] font-normal">
+            <th className="border-t-2 border-black pt-2 text-center text-[10px] font-normal leading-tight">
               <div>
                 17 Orchard Road, Eastwood City, Bagumbayan, Quezon City 1100,
                 Metro Manila, Philippines
