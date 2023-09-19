@@ -97,6 +97,7 @@ const formSchema = z.object({
   activities: z
     .array(
       z.object({
+        id: z.string().optional(),
         date: z.date(),
         updatedBy: z.object({ id: z.string(), name: z.string() }),
         clientFeedback: z.string().optional(),
@@ -121,6 +122,7 @@ function normalize(
     endDate: values.endDate!,
     eventLengthInDays: values.eventLengthInDays,
     contact: {
+      ...values.contact,
       email: values.contact.email,
       title: values.contact.title ?? undefined,
       firstName: values.contact.firstName,
@@ -137,6 +139,7 @@ function normalize(
     ...(values.company?.name
       ? {
           company: {
+            ...values.company,
             name: values.company.name ?? undefined,
             address1: values.company.address1 ?? undefined,
             address2: values.company.address2 ?? undefined,
@@ -172,7 +175,6 @@ export default function LeadPage() {
   const leadId = router.query["leadId"];
   const isValidLeadId = !!leadId && isCuid(leadId as string);
   const { data: session } = useSession();
-  const updateEventDetails = api.eventDetails.updateEventDetails.useMutation();
   const { data: leadData = [] } = api.leads.getLeads.useQuery(
     {
       leadId: leadId as string,
@@ -182,8 +184,11 @@ export default function LeadPage() {
       enabled: isValidLeadId,
     }
   );
-  const deleteEventDetails = api.eventDetails.deleteEventDetails.useMutation();
   const createEventDetails = api.eventDetails.createEventDetails.useMutation();
+  const updateEventDetails = api.eventDetails.updateEventDetails.useMutation();
+  const deleteEventDetails = api.eventDetails.deleteEventDetails.useMutation();
+  const createActivities = api.activities.createActivities.useMutation();
+  const updateActivities = api.activities.updateActivities.useMutation();
 
   const { data: leadFormData } = api.leads.getLeadFormData.useQuery(undefined, {
     refetchOnWindowFocus: false,
@@ -263,6 +268,13 @@ export default function LeadPage() {
         leadFormId: lead.id,
         eventDetails: eventDetailsToCreate,
       });
+      const activitiesToUpdate = formValues.activities.filter((act) => act.id);
+      const activitiesToCreate = formValues.activities.filter((act) => !act.id);
+      await createActivities.mutateAsync({
+        leadFormId: lead.id,
+        activities: activitiesToCreate,
+      });
+      await updateActivities.mutateAsync(activitiesToUpdate);
     }
     await mutateLead.mutateAsync(leadFormValues);
   }

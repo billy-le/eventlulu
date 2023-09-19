@@ -179,13 +179,14 @@ model Organization {
 }
 
 model Contact {
-    id          String     @id @default(cuid())
-    firstName   String
-    email       String     @unique
-    title       String?
-    lastName    String?
-    phoneNumber String?
-    LeadForm    LeadForm[]
+    id           String     @id @default(cuid())
+    firstName    String
+    email        String     @unique
+    title        String?
+    lastName     String?
+    phoneNumber  String?
+    mobileNumber String?
+    LeadForm     LeadForm[]
 }
 
 enum Role {

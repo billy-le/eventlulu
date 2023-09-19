@@ -72,7 +72,11 @@ export default function ProposalPage() {
                       {lead.contact.title} {lead.contact.firstName}{" "}
                       {lead.contact.lastName}
                     </div>
-                    <div>{lead.contact.phoneNumber}</div>
+                    <div>
+                      {lead.contact.mobileNumber ??
+                        lead.contact.phoneNumber ??
+                        ""}
+                    </div>
                     <div>{lead.contact.email}</div>
                   </div>
                 )}
@@ -169,8 +173,7 @@ export default function ProposalPage() {
                             </td>
 
                             <td className="border border-black px-1 py-2">
-                              {detail.rate?.toLocaleString() ?? "-"}
-                              {" / "}
+                              {detail.rate?.toLocaleString() ?? "-"}{" "}
                               {detail.rateType
                                 ? detail.rateType?.name === "per person"
                                   ? "per person"

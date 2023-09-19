@@ -157,7 +157,7 @@ async function main() {
           name: "user",
           password: process.env.DEFAULT_PASSWORD!,
           role: "salesManager",
-          phoneNumber: "123-123-1234",
+          phoneNumber: phone.number(),
         },
       });
 
@@ -182,6 +182,7 @@ async function main() {
             firstName: contactFirstName,
             lastName: contactLastName,
             phoneNumber: phone.number(),
+            mobileNumber: phone.number("###-###-####"),
             title: person.prefix(person.sexType()),
           },
         });

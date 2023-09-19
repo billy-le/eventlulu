@@ -45,6 +45,9 @@ export const leadsRouter = createTRPCRouter({
                 },
               },
             },
+            orderBy: {
+              date: "asc",
+            },
           },
           company: true,
           eventType: true,
@@ -74,7 +77,6 @@ export const leadsRouter = createTRPCRouter({
 
       return leads;
     }),
-
   mutateLead: protectedProcedure
     .input(
       z.object({
@@ -95,11 +97,13 @@ export const leadsRouter = createTRPCRouter({
         roomsBudget: z.number().int().optional(),
         otherHotelConsiderations: z.string().optional(),
         contact: z.object({
+          id: z.string().optional(),
           firstName: z.string(),
           lastName: z.string().optional(),
           email: z.string(),
           phoneNumber: z.string().optional(),
           mobileNumber: z.string().optional(),
+          title: z.string().optional(),
         }),
         company: z
           .object({
@@ -156,22 +160,31 @@ export const leadsRouter = createTRPCRouter({
             });
           }
         }
-        if (input.contact) {
-          contact = await ctx.prisma.contact.findUnique({
+        if (input.contact?.id) {
+          contact = await ctx.prisma.contact.update({
             where: {
+              id: input.contact.id,
               email: input.contact.email,
             },
+            data: {
+              firstName: input.contact.firstName,
+              lastName: input.contact.lastName,
+              email: input.contact.email,
+              mobileNumber: input.contact.mobileNumber,
+              phoneNumber: input.contact.phoneNumber,
+              title: input.contact.title,
+            },
           });
-          if (!contact) {
-            contact = await ctx.prisma.contact.create({
-              data: {
-                email: input.contact.email,
-                firstName: input.contact.firstName,
-                lastName: input.contact.lastName,
-                phoneNumber: input.contact.phoneNumber,
-              },
-            });
-          }
+        } else {
+          contact = await ctx.prisma.contact.create({
+            data: {
+              email: input.contact.email,
+              firstName: input.contact.firstName,
+              lastName: input.contact.lastName,
+              phoneNumber: input.contact.phoneNumber,
+              mobileNumber: input.contact.mobileNumber,
+            },
+          });
         }
 
         if (input.id) {

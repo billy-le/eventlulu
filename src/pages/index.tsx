@@ -41,7 +41,6 @@ import {
   ArrowUp,
 } from "lucide-react";
 import { eventTypes } from "prisma/seed-data/data";
-import { useRef, useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 
 const statusColors = {
@@ -69,26 +68,8 @@ const eventIcons: Record<
 };
 
 export default function HomePage() {
-  const [cursorId, setCursorId] = useState<string | undefined>(undefined);
   const { toast } = useToast();
-  const skip = useRef<0 | 1>(0);
-
-  const {
-    data: leads,
-    isError,
-    isLoading,
-    error,
-    isFetching,
-    isPreviousData,
-  } = api.leads.getLeads.useQuery(
-    {
-      cursorId,
-      skip: skip.current,
-    },
-    {
-      keepPreviousData: true,
-    }
-  );
+  const { data: leads } = api.leads.getLeads.useQuery();
 
   const deleteLead = api.leads.delete.useMutation();
   const markAsSent = api.leads.sentLead.useMutation();
