@@ -9,6 +9,7 @@ import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { isCuid } from "@paralleldrive/cuid2";
 
 import {
   Form,
@@ -43,6 +44,7 @@ const nameId = z.object({
 });
 
 const formSchema = z.object({
+  id: z.string().optional(),
   isCorporate: z.boolean().default(false),
   isLiveIn: z.boolean().default(false),
   dateReceived: z.date(),
@@ -72,6 +74,7 @@ const formSchema = z.object({
   eventTypeOther: z.string().optional(),
   eventDetails: z.array(
     z.object({
+      id: z.string().optional(),
       date: z.date(),
       startTime: z.string().optional(),
       endTime: z.string().optional(),
@@ -119,7 +122,7 @@ function normalize(
     eventLengthInDays: values.eventLengthInDays,
     contact: {
       email: values.contact.email,
-      title: values.contact.title,
+      title: values.contact.title ?? undefined,
       firstName: values.contact.firstName,
       lastName: values.contact?.lastName ?? undefined,
       mobileNumber: values.contact?.mobileNumber ?? undefined,
@@ -148,6 +151,9 @@ function normalize(
       startTime: event.startTime ?? undefined,
       endTime: event.endTime ?? undefined,
       rate: event.rate ?? undefined,
+      functionRoom: event.functionRoom ?? undefined,
+      roomSetup: event.roomSetup ?? undefined,
+      rateType: event.rateType ?? undefined,
       mealReqs: event.mealReqs,
     })),
     activities: values.activities?.map((activity) => ({
@@ -164,36 +170,26 @@ function normalize(
 export default function LeadPage() {
   const router = useRouter();
   const leadId = router.query["leadId"];
+  const isValidLeadId = !!leadId && isCuid(leadId as string);
   const { data: session } = useSession();
+  const updateEventDetails = api.eventDetails.updateEventDetails.useMutation();
   const { data: leadData = [] } = api.leads.getLeads.useQuery(
     {
       leadId: leadId as string,
     },
     {
       refetchOnWindowFocus: false,
+      enabled: isValidLeadId,
     }
   );
+  const deleteEventDetails = api.eventDetails.deleteEventDetails.useMutation();
+  const createEventDetails = api.eventDetails.createEventDetails.useMutation();
+
   const { data: leadFormData } = api.leads.getLeadFormData.useQuery(undefined, {
     refetchOnWindowFocus: false,
   });
+  const lead = leadData[0];
   const { toast } = useToast();
-
-  useEffect(() => {
-    if (leadData.length) {
-      const lead = leadData[0]!;
-      form.reset({
-        ...normalize(lead),
-        eventType: lead?.eventTypeId
-          ? leadFormData?.eventTypes.find(
-              (type) => type.id === lead.eventTypeId
-            )
-          : {
-              id: "other",
-              name: "other",
-            },
-      });
-    }
-  }, [leadData, leadFormData]);
 
   const mutateLead = api.leads.mutateLead.useMutation({
     onSuccess: (e) => {
@@ -217,14 +213,29 @@ export default function LeadPage() {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      dateReceived: new Date(),
-      eventDetails: [],
-      activities: [],
-      banquetsBudget: 0,
-      roomsBudget: 0,
-    },
   });
+
+  useEffect(() => {
+    if (leadData.length) {
+      const lead = leadData[0]!;
+      form.reset(
+        normalize({
+          ...lead,
+          eventType: lead.eventTypeOther
+            ? {
+                id: "other",
+                name: "other",
+              }
+            : lead.eventType
+            ? {
+                id: lead.eventType.id,
+                name: lead.eventType.name,
+              }
+            : undefined,
+        })
+      );
+    }
+  }, [leadData]);
 
   const formValues = useWatch<z.infer<typeof formSchema>>(form);
 
@@ -233,9 +244,27 @@ export default function LeadPage() {
     control: form.control,
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    const leadData = normalize(values);
-    mutateLead.mutate(leadData);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    const leadFormValues = normalize(formValues);
+
+    if (lead?.id) {
+      const eventDetailsToDelete = lead.eventDetails
+        .filter((d) => !leadFormValues.eventDetails.find((a) => a.id === d.id))
+        .filter((x) => x.id)
+        .map((x) => x.id);
+      const eventDetailsToCreate =
+        leadFormValues.eventDetails.filter((x) => !x.id) ?? [];
+      const eventDetailsToUpdate = leadFormValues.eventDetails.filter(
+        (x) => x.id
+      );
+      await deleteEventDetails.mutateAsync(eventDetailsToDelete);
+      await updateEventDetails.mutateAsync(eventDetailsToUpdate);
+      await createEventDetails.mutateAsync({
+        leadFormId: lead.id,
+        eventDetails: eventDetailsToCreate,
+      });
+    }
+    await mutateLead.mutateAsync(leadFormValues);
   }
 
   return (
@@ -243,6 +272,7 @@ export default function LeadPage() {
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit, (err) => {
+            console.log(err);
             toast({
               title: "Invalid Form",
               description: (
@@ -734,11 +764,8 @@ export default function LeadPage() {
                         <FormLabel>Event Length in Days</FormLabel>
                         <FormControl>
                           <Input
-                            type="number"
-                            disabled={!formValues.startDate}
-                            min="1"
-                            step="1"
                             {...field}
+                            type="number"
                             {...form.register("eventLengthInDays", {
                               valueAsNumber: true,
                               onChange: (e) => {
@@ -754,17 +781,22 @@ export default function LeadPage() {
                                       formValues.startDate!,
                                       i
                                     );
+                                    const curr = formValues.eventDetails?.[i];
                                     events.push({
+                                      ...(curr?.id && {
+                                        id: curr?.id ?? undefined,
+                                      }),
                                       date,
-                                      startTime: "",
-                                      endTime: "",
-                                      pax: 0,
-                                      roomSetup: undefined,
-                                      mealReqs: [],
-                                      functionRoom: undefined,
-                                      remarks: "",
-                                      rate: 0,
-                                      rateType: undefined,
+                                      startTime: curr?.startTime ?? "",
+                                      endTime: curr?.endTime ?? "",
+                                      pax: curr?.pax ?? 0,
+                                      roomSetup: curr?.roomSetup ?? undefined,
+                                      mealReqs: curr?.mealReqs ?? [],
+                                      functionRoom:
+                                        curr?.functionRoom ?? undefined,
+                                      remarks: curr?.remarks ?? "",
+                                      rate: curr?.rate ?? 0,
+                                      rateType: curr?.rateType ?? undefined,
                                     });
                                     form.setValue("eventDetails", events);
                                   }
@@ -781,6 +813,9 @@ export default function LeadPage() {
                                 }
                               },
                             })}
+                            disabled={!formValues.startDate}
+                            min="1"
+                            step="1"
                           />
                         </FormControl>
                         <FormMessage />
@@ -1066,7 +1101,7 @@ export default function LeadPage() {
                     {activities.fields.map((_, index) => {
                       return (
                         <TableRow key={index}>
-                          <TableCell className="font-medium">
+                          <TableCell>
                             <DatePicker
                               date={formValues.activities?.[index]?.date}
                               onChange={(date) => {
@@ -1077,13 +1112,14 @@ export default function LeadPage() {
                                   );
                                 }
                               }}
+                              disabled={!!formValues.activities?.[index]?.id}
                             />
                           </TableCell>
                           <TableCell>
                             {formValues.activities?.[index]?.updatedBy?.name}
                           </TableCell>
                           <TableCell>
-                            <Input
+                            <Textarea
                               {...form.register(
                                 `activities.${index}.clientFeedback`
                               )}
@@ -1105,14 +1141,16 @@ export default function LeadPage() {
                             />
                           </TableCell>
                           <TableCell>
-                            <Button
-                              type="button"
-                              onClick={() => {
-                                activities.remove(index);
-                              }}
-                            >
-                              <Trash />
-                            </Button>
+                            {!formValues.activities?.[index]?.id && (
+                              <Button
+                                type="button"
+                                onClick={() => {
+                                  activities.remove(index);
+                                }}
+                              >
+                                <Trash />
+                              </Button>
+                            )}
                           </TableCell>
                         </TableRow>
                       );

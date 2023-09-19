@@ -17,10 +17,12 @@ export function DatePicker({
   date,
   onChange,
   className,
+  disabled,
 }: {
   date: Date | undefined;
   onChange: (date: Date | undefined) => void;
   className?: string;
+  disabled?: boolean;
 }) {
   return (
     <Popover>
@@ -32,6 +34,7 @@ export function DatePicker({
             !date && "text-muted-foreground",
             className
           )}
+          disabled={disabled}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
           {date ? format(date, "PPP") : <span>Pick a date</span>}
@@ -43,6 +46,7 @@ export function DatePicker({
           selected={date}
           onSelect={onChange}
           initialFocus
+          disabled={disabled}
         />
       </PopoverContent>
     </Popover>

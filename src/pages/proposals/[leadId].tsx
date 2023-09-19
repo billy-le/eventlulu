@@ -169,9 +169,12 @@ export default function ProposalPage() {
                             </td>
 
                             <td className="border border-black px-1 py-2">
-                              {detail.rate?.toLocaleString()}
-                              {detail.rateType?.name
-                                ? ` / ${detail.rateType.name.toLowerCase()}`
+                              {detail.rate?.toLocaleString() ?? "-"}
+                              {" / "}
+                              {detail.rateType
+                                ? detail.rateType?.name === "per person"
+                                  ? "per person"
+                                  : "nett"
                                 : ""}
                             </td>
                           </tr>

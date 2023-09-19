@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { Contact, Organization, Prisma } from "@prisma/client";
+import { eventDetailsRouter } from "./eventDetails";
 
 const nameId = z.object({ id: z.string(), name: z.string() });
 
@@ -203,11 +204,6 @@ export const leadsRouter = createTRPCRouter({
               ...(input.onSiteDate && {
                 onSiteDate: input.onSiteDate,
               }),
-              // ...((input.activities?.length ?? 0) > 0 && {
-              //   activities: {
-
-              //   },
-              // }),
             },
           });
 
@@ -255,7 +251,7 @@ export const leadsRouter = createTRPCRouter({
           });
 
           for (const event of input.eventDetails ?? []) {
-            const detail = await ctx.prisma.eventDetails.create({
+            await ctx.prisma.eventDetails.create({
               data: {
                 date: event.date,
                 pax: event.pax,
@@ -272,21 +268,6 @@ export const leadsRouter = createTRPCRouter({
                 leadFormId: lead.id,
               },
             });
-
-            for (const meal of event.mealReqs) {
-              await ctx.prisma.eventDetails.update({
-                where: {
-                  id: detail.id,
-                },
-                data: {
-                  mealReqs: {
-                    connect: {
-                      id: meal.id,
-                    },
-                  },
-                },
-              });
-            }
           }
 
           return lead;
