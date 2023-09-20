@@ -82,6 +82,7 @@ model LeadForm {
     roomDepartureDate        DateTime?
     eventDetails             EventDetails[]
     activities               LeadFormActivity[]
+    rateType                 RateType?          @relation(fields: [rateTypeId], references: [id])
     banquetsBudget           Int?
     roomsBudget              Int?
     otherHotelConsiderations String?
@@ -125,12 +126,10 @@ model EventDetails {
     mealReqs       MealReq[]
     functionRoom   FunctionRoom? @relation(fields: [functionRoomId], references: [id])
     rate           Int?
-    rateType       RateType?     @relation(fields: [rateTypeId], references: [id])
     LeadForm       LeadForm?     @relation(fields: [leadFormId], references: [id])
     leadFormId     String?
     roomSetupId    String?
     functionRoomId String?
-    rateTypeId     String?
 }
 
 model FunctionRoom {
@@ -152,9 +151,9 @@ model MealReq {
 }
 
 model RateType {
-    id           String         @id @default(cuid())
-    name         String         @unique
-    EventDetails EventDetails[]
+    id       String     @id @default(cuid())
+    name     String     @unique
+    LeadForm LeadForm[]
 }
 
 model LeadFormActivity {

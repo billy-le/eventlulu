@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { Contact, Organization, Prisma } from "@prisma/client";
-import { eventDetailsRouter } from "./eventDetails";
+import { Contact, Organization } from "@prisma/client";
 
 const nameId = z.object({ id: z.string(), name: z.string() });
 
@@ -32,7 +31,6 @@ export const leadsRouter = createTRPCRouter({
               functionRoom: true,
               mealReqs: true,
               roomSetup: true,
-              rateType: true,
             },
           },
           activities: {
@@ -52,6 +50,7 @@ export const leadsRouter = createTRPCRouter({
           company: true,
           eventType: true,
           leadType: true,
+          rateType: true,
           salesAccountManager: {
             select: {
               id: true,
@@ -105,6 +104,7 @@ export const leadsRouter = createTRPCRouter({
           mobileNumber: z.string().optional(),
           title: z.string().optional(),
         }),
+        rateType: nameId.optional(),
         company: z
           .object({
             name: z.string(),
@@ -124,7 +124,6 @@ export const leadsRouter = createTRPCRouter({
               functionRoom: nameId.optional(),
               remarks: z.string().optional(),
               rate: z.number().int().optional(),
-              rateType: nameId.optional(),
             })
           )
           .optional(),
@@ -205,6 +204,7 @@ export const leadsRouter = createTRPCRouter({
               banquetsBudget: input.banquetsBudget,
               roomsBudget: input.roomsBudget,
               contactId: contact!.id,
+              rateTypeId: input.rateType?.id,
               ...(company && {
                 companyId: company.id,
               }),
@@ -236,6 +236,7 @@ export const leadsRouter = createTRPCRouter({
               banquetsBudget: input.banquetsBudget,
               roomsBudget: input.roomsBudget,
               contactId: contact!.id,
+              rateTypeId: input.rateType?.id,
               ...(company && {
                 companyId: company.id,
               }),
@@ -272,7 +273,6 @@ export const leadsRouter = createTRPCRouter({
                 functionRoomId: event.functionRoom?.id,
                 remarks: event.remarks,
                 rate: event.rate,
-                rateTypeId: event.rateType?.id,
                 mealReqs: {
                   connect: event.mealReqs,
                 },

@@ -19,7 +19,6 @@ export const eventDetailsRouter = createTRPCRouter({
             functionRoom: nameId.optional(),
             remarks: z.string().optional(),
             rate: z.number().int().optional(),
-            rateType: nameId.optional(),
           })
         ),
       })
@@ -35,7 +34,6 @@ export const eventDetailsRouter = createTRPCRouter({
             functionRoomId: event.functionRoom?.id,
             remarks: event.remarks,
             rate: event.rate,
-            rateTypeId: event.rateType?.id,
             mealReqs: {
               connect: event.mealReqs,
             },
@@ -62,7 +60,6 @@ export const eventDetailsRouter = createTRPCRouter({
           functionRoom: nameId.optional(),
           remarks: z.string().optional(),
           rate: z.number().int().optional(),
-          rateType: nameId.optional(),
         })
       )
     )
@@ -92,7 +89,6 @@ export const eventDetailsRouter = createTRPCRouter({
             functionRoomId: event.functionRoom?.id,
             remarks: event.remarks,
             rate: event.rate,
-            rateTypeId: event.rateType?.id,
             startTime: event.startTime,
             endTime: event.endTime,
             mealReqs: {
@@ -103,7 +99,6 @@ export const eventDetailsRouter = createTRPCRouter({
           include: {
             functionRoom: true,
             roomSetup: true,
-            rateType: true,
             mealReqs: true,
           },
         });
