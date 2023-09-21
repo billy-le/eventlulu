@@ -18,7 +18,7 @@ import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import * as z from "zod";
+import { z } from "zod";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -27,7 +27,7 @@ const loginSchema = z.object({
 
 export default function LoginPage() {
   const router = useRouter();
-  const {toast} = useToast()
+  const { toast } = useToast();
   const { status } = useSession();
 
   useEffect(() => {
@@ -50,12 +50,12 @@ export default function LoginPage() {
         router.push("/");
       } else {
         toast({
-          title: 'Login Failed',
-          description: 'Wrong email and password',
-          variant: 'destructive'
-        })
+          title: "Login Failed",
+          description: "Wrong email and password",
+          variant: "destructive",
+        });
       }
-    })
+    });
   }
   return (
     <section className="flex min-h-screen items-center justify-center">

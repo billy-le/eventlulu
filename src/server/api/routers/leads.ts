@@ -340,6 +340,9 @@ export const leadsRouter = createTRPCRouter({
       const rateTypes = await ctx.prisma.rateType.findMany();
       const eventTypes = await ctx.prisma.eventType.findMany();
       const leadTypes = await ctx.prisma.leadType.findMany();
+      const inclusions = await ctx.prisma.inclusion.findMany({
+        orderBy: { name: "asc" },
+      });
 
       return {
         salesManagers,
@@ -349,6 +352,7 @@ export const leadsRouter = createTRPCRouter({
         rateTypes,
         eventTypes,
         leadTypes,
+        inclusions,
       };
     } catch (err) {
       console.log(err);

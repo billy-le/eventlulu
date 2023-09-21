@@ -1,5 +1,5 @@
 "use client";
-import * as z from "zod";
+import { z } from "zod";
 import * as datefns from "date-fns";
 import { api } from "~/utils/api";
 
@@ -7,9 +7,10 @@ import { useForm, useWatch, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { isCuid } from "@paralleldrive/cuid2";
+import { inclusions } from "prisma/seed-data/data";
 
 import {
   Form,
@@ -34,8 +35,13 @@ import {
 import { DatePicker } from "src/ui/DatePicker";
 import { DefaultLayout } from "~/layouts/default";
 import { Combobox } from "~/ui/Combobox";
-import { Plus, Trash } from "lucide-react";
+import { Plus, Trash, Edit } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 
 const nameId = z.object({
   id: z.string(),
@@ -104,6 +110,7 @@ const formSchema = z.object({
       })
     )
     .optional(),
+  inclusions: z.array(nameId).default([]),
 });
 
 function normalize(
@@ -166,6 +173,7 @@ function normalize(
       nextTraceDate: activity.nextTraceDate ?? undefined,
     })),
     otherHotelConsiderations: values.otherHotelConsiderations ?? undefined,
+    inclusions: values.inclusions ?? [],
   };
 }
 
@@ -188,10 +196,14 @@ export default function LeadPage() {
   const deleteEventDetails = api.eventDetails.deleteEventDetails.useMutation();
   const createActivities = api.activities.createActivities.useMutation();
   const updateActivities = api.activities.updateActivities.useMutation();
+  const createInclusion = api.inclusions.createInclusions.useMutation();
+  const [incPopoverOpen, setIncPopoverOpen] = useState(false);
+  const incRef = useRef<HTMLInputElement | null>(null);
 
-  const { data: leadFormData } = api.leads.getLeadFormData.useQuery(undefined, {
-    refetchOnWindowFocus: false,
-  });
+  const { data: leadFormData, refetch: refetchLeadFormData } =
+    api.leads.getLeadFormData.useQuery(undefined, {
+      refetchOnWindowFocus: false,
+    });
   const lead = leadData[0];
   const { toast } = useToast();
 
@@ -217,6 +229,13 @@ export default function LeadPage() {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
+    values: leadFormData?.inclusions
+      ? {
+          inclusions: leadFormData.inclusions.filter((x) =>
+            inclusions.some((a) => a === x.name)
+          ),
+        }
+      : undefined,
   });
 
   useEffect(() => {
@@ -302,15 +321,8 @@ export default function LeadPage() {
               variant: "destructive",
             });
           })}
-          className="mx-auto max-w-4xl space-y-10"
+          className="relative mx-auto max-w-4xl space-y-10"
         >
-          <FormItem>
-            <FormControl>
-              <Button type="submit" className="ml-auto block">
-                Save
-              </Button>
-            </FormControl>
-          </FormItem>
           <div className="grid grid-cols-2 gap-4 rounded border bg-slate-50 p-4">
             <FormField
               control={form.control}
@@ -968,12 +980,12 @@ export default function LeadPage() {
                                       mealReqs
                                     );
                                   } else {
-                                    const bas = mealReqs?.filter(
-                                      (z) => z?.id !== mealReq.id
+                                    const meals = mealReqs?.filter(
+                                      (meal) => meal?.id !== mealReq.id
                                     );
                                     form.setValue(
                                       `eventDetails.${index}.mealReqs`,
-                                      bas
+                                      meals
                                     );
                                   }
                                 }}
@@ -1008,6 +1020,7 @@ export default function LeadPage() {
               </TableBody>
             </Table>
           </div>
+
           <div className="rounded border bg-slate-50 p-4">
             Estimated Budget:
             <div className="grid grid-cols-2 gap-4">
@@ -1067,6 +1080,93 @@ export default function LeadPage() {
               />
             </div>
           </div>
+
+          <div className="space-y-4 rounded border bg-slate-50 p-4">
+            <div className="flex items-center justify-between">
+              <FormLabel>Inclusions</FormLabel>
+              <Popover
+                open={incPopoverOpen}
+                onOpenChange={(isOpen) => setIncPopoverOpen(isOpen)}
+              >
+                <PopoverTrigger asChild>
+                  <Button type="button" size="icon">
+                    <Plus />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent>
+                  <div className="flex items-center justify-center gap-4">
+                    <Input ref={incRef} />
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => {
+                        const value = incRef.current?.value;
+                        if (value) {
+                          createInclusion.mutate([value], {
+                            onSuccess: (inclusions) => {
+                              refetchLeadFormData();
+                              form.setValue("inclusions", [
+                                ...(formValues.inclusions ?? []),
+                                ...inclusions,
+                              ]);
+                              setIncPopoverOpen(false);
+                            },
+                          });
+                        }
+                      }}
+                    >
+                      Create
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div className="space-y-1">
+              {leadFormData?.inclusions?.map((inclusion) => (
+                <FormItem
+                  key={inclusion.id}
+                  className="flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-3">
+                    <FormControl>
+                      <Checkbox
+                        checked={formValues.inclusions?.some(
+                          (inc) => inc?.id === inclusion.id
+                        )}
+                        onCheckedChange={(checked) => {
+                          const value = checked.valueOf();
+                          console.log(value);
+                          if (value) {
+                            form.setValue(
+                              "inclusions",
+                              formValues.inclusions?.concat(inclusion)
+                            );
+                          } else {
+                            form.setValue(
+                              "inclusions",
+                              formValues.inclusions?.filter(
+                                (inc) => inc.id !== inclusion.id
+                              )
+                            );
+                          }
+                        }}
+                      />
+                    </FormControl>
+                    <div className="leading-none">
+                      <FormLabel className="text-xs">
+                        {inclusion.name}
+                      </FormLabel>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 text-xs">
+                    <Edit size="12" />
+                    <Trash size="12" className="text-destructive" />
+                  </div>
+                </FormItem>
+              ))}
+            </div>
+          </div>
+
           <div className="rounded border bg-slate-50 p-4">
             <Table>
               <TableHeader>
@@ -1150,6 +1250,12 @@ export default function LeadPage() {
                 })}
               </TableBody>
             </Table>
+          </div>
+
+          <div className="sticky bottom-0 bg-white py-4">
+            <Button type="submit" className="ml-auto block">
+              Save
+            </Button>
           </div>
         </form>
       </Form>

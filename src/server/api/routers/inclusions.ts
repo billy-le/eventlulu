@@ -1,0 +1,34 @@
+import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { z } from "zod";
+
+export const inclusionsRouter = createTRPCRouter({
+  createInclusions: protectedProcedure
+    .input(z.array(z.string()))
+    .mutation(async ({ ctx, input }) => {
+      const inclusions: {
+        id: string;
+        name: string;
+        leadFormId?: string | null;
+      }[] = [];
+
+      for (let item of input) {
+        const inclusion = await ctx.prisma.inclusion.create({
+          data: { name: item },
+        });
+        inclusions.push(inclusion);
+      }
+
+      return inclusions;
+    }),
+  deleteInclusions: protectedProcedure
+    .input(z.array(z.string()))
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.prisma.inclusion.deleteMany({
+        where: {
+          id: {
+            in: input,
+          },
+        },
+      });
+    }),
+});

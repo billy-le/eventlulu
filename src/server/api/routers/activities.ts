@@ -1,5 +1,5 @@
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import * as z from "zod";
+import { z } from "zod";
 
 export const activitiesRouter = createTRPCRouter({
   createActivities: protectedProcedure

@@ -35,7 +35,7 @@ export const mealReqs = [
   "cocktails",
 ] as const;
 
-export const rateTypes = ["per person", "minimum consumable rate"] as const;
+export const rateTypes = ["per person", "minimum consumable amount"] as const;
 
 export const roomSetups = [
   "roundtable",
@@ -64,3 +64,11 @@ export const eventTypes = {
     "birthday party",
   ],
 } as const;
+
+export const inclusions = [
+  "(1) LCD Projector & screen",
+  "Basic sound system",
+  "Function Room Set-Up",
+  "Complimentary Parking passes for 10% of total attendees",
+  "Complimentary Wi-Fi access for all participants",
+];

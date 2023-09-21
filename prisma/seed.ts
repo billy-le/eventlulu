@@ -7,6 +7,7 @@ import {
   roomSetups,
   eventTypes,
   leadTypes,
+  inclusions,
 } from "./seed-data/data";
 import { faker } from "@faker-js/faker";
 const {
@@ -79,6 +80,7 @@ async function main() {
   const mealReqsArray: Item[] = [];
   const roomSetupsArray: Item[] = [];
   const rateTypesArray: Item[] = [];
+  const inclusionsArray: Item[] = [];
 
   for (const type of leadTypes) {
     const leadType = await prisma.leadType.upsert({
@@ -133,6 +135,17 @@ async function main() {
       },
     });
     rateTypesArray.push(type);
+  }
+
+  for (const inclusion of inclusions) {
+    const leadType = await prisma.inclusion.upsert({
+      where: { name: inclusion },
+      update: {},
+      create: {
+        name: inclusion,
+      },
+    });
+    inclusionsArray.push(leadType);
   }
 
   switch (environment) {
@@ -223,7 +236,6 @@ async function main() {
                 functionRoomId: helpers.arrayElement(functionRoomsArray).id,
                 remarks: lorem.sentence(),
                 rate: number.int({ max: 500_000 }),
-                rateTypeId: helpers.arrayElement(rateTypesArray).id,
                 mealReqs: {
                   connect: helpers.arrayElements(mealReqsArray, {
                     min: 1,
@@ -254,6 +266,7 @@ async function main() {
               companyId: company?.id ?? null,
               salesAccountManagerId: user.id,
               leadTypeId: helpers.arrayElement(leadTypesArray).id,
+              rateTypeId: helpers.arrayElement(rateTypesArray).id,
               eventTypeId: eventType?.id,
               eventTypeOther: !eventType ? word.verb() : null,
               lastDateSent: helpers.maybe(() => date.recent({ refDate: now }), {
