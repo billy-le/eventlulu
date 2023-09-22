@@ -317,6 +317,9 @@ async function main() {
               eventDetails: {
                 connect: eventDetails,
               },
+              inclusions: {
+                connect: inclusionsArray,
+              },
             },
           });
         } catch (err) {

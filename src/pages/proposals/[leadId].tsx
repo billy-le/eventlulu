@@ -2,13 +2,21 @@ import { api } from "~/utils/api";
 import { useRouter } from "next/router";
 import { format as dateFormat } from "date-fns";
 import Image from "next/image";
+import { isCuid } from "@paralleldrive/cuid2";
 
 export default function ProposalPage() {
   const router = useRouter();
   const leadId = router.query["leadId"];
-  const { data: leadData = [] } = api.leads.getLeads.useQuery({
-    leadId: leadId as string,
-  });
+  const isValidLeadId = !!leadId && isCuid(leadId as string);
+
+  const { data: leadData = [] } = api.leads.getLeads.useQuery(
+    {
+      leadId: leadId as string,
+    },
+    {
+      enabled: isValidLeadId,
+    }
+  );
 
   const today = new Date();
 
@@ -107,6 +115,7 @@ export default function ProposalPage() {
                     The following details are based on the requisites of your
                     event and the venue availability as of this writing:
                   </p>
+
                   <table className="w-full text-center">
                     <thead>
                       <tr>
@@ -187,22 +196,26 @@ export default function ProposalPage() {
                           </tr>
                         );
                       })}
-                      <tr>
-                        <td colSpan={7} className="text-left">
-                          <mark className="italic">
-                            Please note that the hotel reserves the right to
-                            assign and re-assign venues based on availability
-                            and your set-up requirements. Venue is on tentative
-                            status; first to confirm.
-                          </mark>
-                        </td>
-                      </tr>
                     </tbody>
                   </table>
+                  <mark className="italic">
+                    Please note that the hotel reserves the right to assign and
+                    re-assign venues based on availability and your set-up
+                    requirements. Venue is on tentative status; first to
+                    confirm.
+                  </mark>
                 </div>
 
-                <h2 className="font-bold">INCLUSION</h2>
-                <em>Rate is consumable of Food & Beverage</em>
+                <div>
+                  <h2 className="font-bold">INCLUSION</h2>
+                  <ul>
+                    {lead?.inclusions?.map((inclusion) => (
+                      <li key={inclusion.id}>
+                        <em>{inclusion.name}</em>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
 
                 <h2 className="text-center font-bold">STATUS & CONFIRMATION</h2>
                 <p className="font-bold italic">
@@ -225,7 +238,6 @@ export default function ProposalPage() {
                   ERC. Failure to settle this deposit on or before the date
                   indicated in ERC will result in the release of your booking.
                 </p>
-
                 <div>
                   <h2 className="font-bold">
                     VENUE RENTAL CHARGES & MINIMUM CONSUMABLE AMOUNT
@@ -244,7 +256,6 @@ export default function ProposalPage() {
                     additional function space or break-out rooms.
                   </p>
                 </div>
-
                 <div>
                   <h2 className="font-bold">BANQUET CONCESSIONS</h2>
                   <p>
@@ -266,7 +277,6 @@ export default function ProposalPage() {
                     <li>Complimentary Wi-Fi access for all participants</li>
                   </ul>
                 </div>
-
                 <div>
                   <h2 className="font-bold">FINAL EVENT DETAILS & BILLING</h2>
                   <p>
@@ -291,7 +301,6 @@ export default function ProposalPage() {
                     signed ERC.
                   </p>
                 </div>
-
                 <div>
                   <h2 className="font-bold">
                     CANCELLATION & POSTPONEMENT POLICY
@@ -302,7 +311,6 @@ export default function ProposalPage() {
                     will be drawn in case of a change in schedule.
                   </p>
                 </div>
-
                 <p>
                   We trust you find the above arrangements in order. Should you
                   have further queries, please do not hesitate to contact the
@@ -339,7 +347,6 @@ export default function ProposalPage() {
                   Richmonde Hotel, where service is distinctly personal!
                 </p>
                 <div>Sincerely,</div>
-
                 <div>
                   <div className="relative h-14">
                     <Image

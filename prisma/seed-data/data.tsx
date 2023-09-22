@@ -65,10 +65,4 @@ export const eventTypes = {
   ],
 } as const;
 
-export const inclusions = [
-  "(1) LCD Projector & screen",
-  "Basic sound system",
-  "Function Room Set-Up",
-  "Complimentary Parking passes for 10% of total attendees",
-  "Complimentary Wi-Fi access for all participants",
-];
+export const inclusions = ["Rate is consumable of Food & Beverage"];

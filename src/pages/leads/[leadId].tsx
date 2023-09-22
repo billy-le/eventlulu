@@ -42,6 +42,18 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from "@/components/ui/popover";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Label } from "@/components/ui/label";
 
 const nameId = z.object({
   id: z.string(),
@@ -196,8 +208,13 @@ export default function LeadPage() {
   const deleteEventDetails = api.eventDetails.deleteEventDetails.useMutation();
   const createActivities = api.activities.createActivities.useMutation();
   const updateActivities = api.activities.updateActivities.useMutation();
-  const createInclusion = api.inclusions.createInclusions.useMutation();
+  const createInclusions = api.inclusions.createInclusions.useMutation();
+  const updateInclusions = api.inclusions.updateInclusions.useMutation();
+  const deleteInclusions = api.inclusions.deleteInclusions.useMutation();
   const [incPopoverOpen, setIncPopoverOpen] = useState(false);
+  const [incUpdatePopoverOpen, setUpdateIncPopoverOpen] = useState<
+    string | null
+  >(null);
   const incRef = useRef<HTMLInputElement | null>(null);
 
   const { data: leadFormData, refetch: refetchLeadFormData } =
@@ -269,7 +286,9 @@ export default function LeadPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     const leadFormValues = normalize(formValues);
-    console.log(leadFormValues);
+    if (leadFormValues.eventType?.id === "other") {
+      leadFormValues.eventType = undefined;
+    }
     if (lead?.id) {
       const eventDetailsToDelete = lead.eventDetails
         .filter((d) => !leadFormValues.eventDetails.find((a) => a.id === d.id))
@@ -1102,7 +1121,7 @@ export default function LeadPage() {
                       onClick={() => {
                         const value = incRef.current?.value;
                         if (value) {
-                          createInclusion.mutate([value], {
+                          createInclusions.mutate([value], {
                             onSuccess: (inclusions) => {
                               refetchLeadFormData();
                               form.setValue("inclusions", [
@@ -1135,7 +1154,6 @@ export default function LeadPage() {
                         )}
                         onCheckedChange={(checked) => {
                           const value = checked.valueOf();
-                          console.log(value);
                           if (value) {
                             form.setValue(
                               "inclusions",
@@ -1159,8 +1177,87 @@ export default function LeadPage() {
                     </div>
                   </div>
                   <div className="flex gap-2 text-xs">
-                    <Edit size="12" />
-                    <Trash size="12" className="text-destructive" />
+                    <Popover
+                      open={incUpdatePopoverOpen === inclusion.id}
+                      onOpenChange={(isOpen) => {
+                        setUpdateIncPopoverOpen(isOpen ? inclusion.id : null);
+                      }}
+                    >
+                      <PopoverTrigger asChild>
+                        <Edit size="12" />
+                      </PopoverTrigger>
+                      <PopoverContent>
+                        <div className="flex items-center gap-4">
+                          <Input ref={incRef} defaultValue={inclusion.name} />
+                          <Button
+                            type="button"
+                            onClick={() => {
+                              const value = incRef.current?.value;
+                              if (value) {
+                                updateInclusions.mutate(
+                                  [{ id: inclusion.id, name: value }],
+                                  {
+                                    onSuccess: () => {
+                                      const incIndex =
+                                        formValues?.inclusions?.findIndex(
+                                          (inc) => inc.id === inclusion.id
+                                        ) ?? -1;
+                                      if (incIndex > -1) {
+                                        const copy = [
+                                          ...(formValues?.inclusions ?? []),
+                                        ];
+                                        copy[incIndex]!.name === value;
+                                        form.setValue("inclusions", copy);
+                                      }
+                                      refetchLeadFormData();
+                                      setUpdateIncPopoverOpen(null);
+                                    },
+                                  }
+                                );
+                              }
+                            }}
+                          >
+                            Update
+                          </Button>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                    <AlertDialog>
+                      <AlertDialogTrigger>
+                        <Trash size="12" className="text-destructive" />
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>
+                            Are you absolutely sure?
+                          </AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently
+                            delete the inclusion, "{inclusion.name}".
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => {
+                              deleteInclusions.mutate([inclusion.id], {
+                                onSuccess: () => {
+                                  form.setValue(
+                                    "inclusions",
+                                    formValues.inclusions?.filter(
+                                      (inc) => inc.id !== inclusion.id
+                                    )
+                                  );
+                                  refetchLeadFormData();
+                                },
+                              });
+                            }}
+                          >
+                            Continue
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </FormItem>
               ))}

@@ -58,6 +58,7 @@ export const leadsRouter = createTRPCRouter({
               email: true,
             },
           },
+          inclusions: true,
         },
         take: input?.take,
         orderBy: input?.orderBy ?? [
@@ -137,6 +138,7 @@ export const leadsRouter = createTRPCRouter({
             })
           )
           .optional(),
+        inclusions: z.array(nameId).default([]),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -187,6 +189,15 @@ export const leadsRouter = createTRPCRouter({
         }
 
         if (input.id) {
+          const orig = await ctx.prisma.leadForm.findUnique({
+            where: { id: input.id },
+            select: { inclusions: true },
+          });
+          const disconnectInclusions =
+            orig?.inclusions?.filter(
+              (inc) => !input.inclusions.some((i) => i.id === inc.id)
+            ) ?? [];
+
           const lead = await ctx.prisma.leadForm.update({
             where: {
               id: input.id,
@@ -205,6 +216,10 @@ export const leadsRouter = createTRPCRouter({
               roomsBudget: input.roomsBudget,
               contactId: contact!.id,
               rateTypeId: input.rateType?.id,
+              inclusions: {
+                connect: input.inclusions,
+                disconnect: disconnectInclusions,
+              },
               ...(company && {
                 companyId: company.id,
               }),
@@ -237,6 +252,9 @@ export const leadsRouter = createTRPCRouter({
               roomsBudget: input.roomsBudget,
               contactId: contact!.id,
               rateTypeId: input.rateType?.id,
+              inclusions: {
+                connect: input.inclusions,
+              },
               ...(company && {
                 companyId: company.id,
               }),

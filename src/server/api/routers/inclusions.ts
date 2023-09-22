@@ -20,6 +20,27 @@ export const inclusionsRouter = createTRPCRouter({
 
       return inclusions;
     }),
+  updateInclusions: protectedProcedure
+    .input(z.array(z.object({ id: z.string(), name: z.string() })))
+    .mutation(async ({ ctx, input }) => {
+      let inclusions: {
+        id: string;
+        name: string;
+        leadFormId?: string | null;
+      }[] = [];
+      for (let item of input) {
+        const inclusion = await ctx.prisma.inclusion.update({
+          where: {
+            id: item.id,
+          },
+          data: {
+            name: item.name,
+          },
+        });
+        inclusions.push(inclusion);
+      }
+      return inclusions;
+    }),
   deleteInclusions: protectedProcedure
     .input(z.array(z.string()))
     .mutation(async ({ ctx, input }) => {
