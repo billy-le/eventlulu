@@ -320,8 +320,10 @@ export default function LeadPage() {
           eventDetails: eventDetailsToCreate,
         });
       }
-      const activitiesToUpdate = formValues.activities.filter((act) => act.id);
-      const activitiesToCreate = formValues.activities.filter((act) => !act.id);
+      const activitiesToUpdate =
+        formValues.activities?.filter((act) => act.id) ?? [];
+      const activitiesToCreate =
+        formValues.activities?.filter((act) => !act.id) ?? [];
       if (activitiesToCreate.length) {
         await createActivities.mutateAsync({
           leadFormId: lead.id,
@@ -340,7 +342,6 @@ export default function LeadPage() {
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit, (err) => {
-            console.log(err);
             toast({
               title: "Invalid Form",
               description: (
@@ -361,42 +362,47 @@ export default function LeadPage() {
           })}
           className="relative mx-auto space-y-10"
         >
-          <div className="grid grid-cols-2 gap-4 rounded border bg-slate-50 p-4">
-            <FormField
-              control={form.control}
-              name="dateReceived"
-              render={(field) => (
-                <FormItem>
-                  <FormLabel>Date Received:</FormLabel>
-                  <FormControl>
-                    <DatePicker
-                      date={field.field.value}
-                      onChange={field.field.onChange}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <div className="space-y-4 rounded border bg-slate-50 p-4">
+            <div className="flex gap-4">
+              <FormField
+                control={form.control}
+                name="dateReceived"
+                render={(field) => (
+                  <FormItem>
+                    <FormLabel>Date Received:</FormLabel>
+                    <FormControl>
+                      <DatePicker
+                        date={field.field.value}
+                        onChange={field.field.onChange}
+                        className="w-64"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormItem>
-              <FormLabel>Date Proposal Was Sent:</FormLabel>
-              <FormControl>
-                <DatePicker
-                  date={formValues.lastDateSent}
-                  onChange={(date) => {
-                    if (date) {
-                      form.setValue("lastDateSent", date);
-                    }
-                  }}
-                />
-              </FormControl>
-            </FormItem>
+              <FormItem>
+                <FormLabel>Date Proposal Was Sent:</FormLabel>
+                <FormControl>
+                  <DatePicker
+                    date={formValues.lastDateSent}
+                    onChange={(date) => {
+                      if (date) {
+                        form.setValue("lastDateSent", date);
+                      }
+                    }}
+                    className="w-64"
+                  />
+                </FormControl>
+              </FormItem>
+            </div>
+
             <FormField
               control={form.control}
               name="leadType"
               render={({ field }) => (
-                <FormItem className="col-span-2 space-y-3">
+                <FormItem className="space-y-3">
                   <FormLabel>Lead Type</FormLabel>
                   <FormControl>
                     <RadioGroup
@@ -406,7 +412,7 @@ export default function LeadPage() {
                         );
                         field.onChange(leadType);
                       }}
-                      className="flex gap-8"
+                      className="flex flex-wrap gap-8"
                       value={formValues.leadType?.id}
                     >
                       {leadFormData?.leadTypes?.map((type) => (
@@ -428,7 +434,7 @@ export default function LeadPage() {
                 </FormItem>
               )}
             />
-            <div className="col-span-2">
+            <div className="flex gap-4">
               <FormField
                 control={form.control}
                 name="salesAccountManager"
@@ -443,26 +449,30 @@ export default function LeadPage() {
                           form.setValue("salesAccountManager", selectedItem);
                         }}
                         placeholder="Select One"
+                        itemClassName="w-64"
+                        triggerClassName="w-64"
+                        contentClassName="w-64"
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+              <FormItem>
+                <FormLabel>Occular Date:</FormLabel>
+                <FormControl>
+                  <DatePicker
+                    date={formValues.onSiteDate}
+                    onChange={(date) => {
+                      if (date) {
+                        form.setValue("onSiteDate", date);
+                      }
+                    }}
+                    className="w-64"
+                  />
+                </FormControl>
+              </FormItem>
             </div>
-            <FormItem>
-              <FormLabel>Site Inspection Date:</FormLabel>
-              <FormControl>
-                <DatePicker
-                  date={formValues.onSiteDate}
-                  onChange={(date) => {
-                    if (date) {
-                      form.setValue("onSiteDate", date);
-                    }
-                  }}
-                />
-              </FormControl>
-            </FormItem>
           </div>
           <div className="grid grid-cols-2 gap-4 rounded border bg-slate-50 p-4">
             <div className="col-span-2 flex gap-8">
@@ -504,9 +514,9 @@ export default function LeadPage() {
             </div>
 
             {formValues.isLiveIn && (
-              <div className="col-span-2 space-y-4 rounded-md border bg-slate-200 p-4">
+              <div className="col-span-2 space-y-4 rounded border bg-slate-200 p-4">
                 <h2 className="text-xl">Live-in Info</h2>
-                <div className="grid grid-cols-2 gap-4 ">
+                <div className="flex gap-4">
                   <FormField
                     control={form.control}
                     name="roomTotal"
@@ -520,6 +530,7 @@ export default function LeadPage() {
                             {...form.register("roomTotal", {
                               valueAsNumber: true,
                             })}
+                            className="w-64"
                           />
                         </FormControl>
                         <FormMessage />
@@ -533,7 +544,7 @@ export default function LeadPage() {
                       <FormItem>
                         <FormLabel>Room Type</FormLabel>
                         <FormControl>
-                          <Input {...field} />
+                          <Input {...field} className="w-64" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -553,6 +564,7 @@ export default function LeadPage() {
                                 field.onChange(date);
                               }
                             }}
+                            className="w-64"
                           />
                         </FormControl>
                         <FormMessage />
@@ -573,6 +585,7 @@ export default function LeadPage() {
                                 field.onChange(date);
                               }
                             }}
+                            className="w-64"
                           />
                         </FormControl>
                         <FormMessage />
@@ -675,7 +688,7 @@ export default function LeadPage() {
                 control={form.control}
                 name="contact.title"
                 render={({ field }) => (
-                  <FormItem className="w-40">
+                  <FormItem className="w-52">
                     <FormLabel>Title</FormLabel>
                     <FormControl>
                       <Input {...field} />
@@ -710,6 +723,9 @@ export default function LeadPage() {
                   </FormItem>
                 )}
               />
+            </div>
+
+            <div className="flex gap-4">
               <FormField
                 control={form.control}
                 name="contact.email"
@@ -723,17 +739,14 @@ export default function LeadPage() {
                   </FormItem>
                 )}
               />
-            </div>
-
-            <div className="flex items-center justify-between gap-4">
               <FormField
                 control={form.control}
                 name="contact.phoneNumber"
                 render={({ field }) => (
-                  <FormItem className="w-full">
+                  <FormItem>
                     <FormLabel>Phone Number</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} className="w-64" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -743,10 +756,10 @@ export default function LeadPage() {
                 control={form.control}
                 name="contact.mobileNumber"
                 render={({ field }) => (
-                  <FormItem className="w-full">
+                  <FormItem>
                     <FormLabel>Mobile Number</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} className="w-64" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -763,7 +776,7 @@ export default function LeadPage() {
                     <FormItem>
                       <FormLabel>Name</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} className="w-64" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -776,7 +789,7 @@ export default function LeadPage() {
                     <FormItem>
                       <FormLabel>Address 1</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} className="w-96" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -789,7 +802,7 @@ export default function LeadPage() {
                     <FormItem>
                       <FormLabel>Address 2</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} className="w-96" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -803,7 +816,7 @@ export default function LeadPage() {
                       <FormItem>
                         <FormLabel>City</FormLabel>
                         <FormControl>
-                          <Input {...field} />
+                          <Input {...field} className="w-64" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -816,31 +829,31 @@ export default function LeadPage() {
                       <FormItem>
                         <FormLabel>Province</FormLabel>
                         <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="company.postalCode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Postal Code</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
+                          <Input {...field} className="w-64" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
+                <FormField
+                  control={form.control}
+                  name="company.postalCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Postal Code</FormLabel>
+                      <FormControl>
+                        <Input {...field} className="w-64" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
             )}
           </div>
           <div className="space-y-4 rounded border bg-slate-50 p-4">
-            <div className="grid grid-cols-4 gap-4">
+            <div className="flex gap-4">
               <FormItem>
                 <FormLabel>Event Start Date:</FormLabel>
                 <FormControl>
@@ -851,6 +864,7 @@ export default function LeadPage() {
                         form.setValue("startDate", datefns.startOfDay(date));
                       }
                     }}
+                    className="w-64"
                   />
                 </FormControl>
                 <FormMessage />
@@ -865,6 +879,7 @@ export default function LeadPage() {
                       <Input
                         {...field}
                         type="number"
+                        className="w-32"
                         {...form.register("eventLengthInDays", {
                           valueAsNumber: true,
                           onChange: (e) => {
@@ -932,8 +947,9 @@ export default function LeadPage() {
                 <FormLabel>Rate Type</FormLabel>
                 <FormControl>
                   <Combobox
-                    contentClassName="capitalize"
-                    triggerClassName="capitalize"
+                    contentClassName="capitalize w-64"
+                    triggerClassName="capitalize w-64"
+                    itemClassName="w-64"
                     items={leadFormData?.rateTypes ?? []}
                     selectedItem={formValues.rateType}
                     onChange={(selectedItem) => {
@@ -1121,7 +1137,7 @@ export default function LeadPage() {
 
           <div className="rounded border bg-slate-50 p-4">
             Estimated Budget:
-            <div className="grid grid-cols-2 gap-4">
+            <div className="flex gap-4">
               <FormField
                 control={form.control}
                 name="banquetsBudget"
@@ -1136,6 +1152,7 @@ export default function LeadPage() {
                           valueAsNumber: true,
                         })}
                         defaultValue={0}
+                        className="w-64"
                       />
                     </FormControl>
                     <FormMessage />
@@ -1156,6 +1173,7 @@ export default function LeadPage() {
                           valueAsNumber: true,
                         })}
                         defaultValue={0}
+                        className="w-64"
                       />
                     </FormControl>
                     <FormMessage />
@@ -1167,7 +1185,7 @@ export default function LeadPage() {
                 control={form.control}
                 name="otherHotelConsiderations"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="flex-grow">
                     <FormLabel>Other Hotels Being Considered</FormLabel>
                     <FormControl>
                       <Input {...field} />
