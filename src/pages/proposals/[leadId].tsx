@@ -70,8 +70,21 @@ export default function ProposalPage() {
                 {lead.company && (
                   <div className="font-bold">
                     <div>{lead.company.name}</div>
-                    <div>{lead.company.address1}</div>
-                    <div>{lead.company.address2}</div>
+                    {lead.company.address1 && (
+                      <div>{lead.company.address1}</div>
+                    )}
+                    {lead.company.address2 && (
+                      <div>{lead.company.address2}</div>
+                    )}
+                    {lead.company.city && (
+                      <div>
+                        {lead.company.city}
+                        {lead.company.province && `, ${lead.company.province}`}
+                        {lead.company.postalCode
+                          ? ` ${lead.company.postalCode}`
+                          : ""}
+                      </div>
+                    )}
                   </div>
                 )}
                 {lead.contact && (

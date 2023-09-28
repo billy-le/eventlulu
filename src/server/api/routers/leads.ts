@@ -108,9 +108,13 @@ export const leadsRouter = createTRPCRouter({
         rateType: nameId.optional(),
         company: z
           .object({
+            id: z.string().optional(),
             name: z.string(),
             address1: z.string().optional(),
             address2: z.string().optional(),
+            city: z.string().optional(),
+            province: z.string().optional(),
+            postalCode: z.string().optional(),
           })
           .optional(),
         eventDetails: z
@@ -145,22 +149,27 @@ export const leadsRouter = createTRPCRouter({
       try {
         let company: Organization | null = null;
         let contact: Contact | null = null;
-        if (input.company) {
+        if (input.company?.id) {
+          company = await ctx.prisma.organization.update({
+            where: {
+              id: input.company.id,
+            },
+            data: input.company,
+          });
+        } else if (input.company?.name) {
           company = await ctx.prisma.organization.findUnique({
             where: {
               name: input.company.name,
             },
           });
+
           if (!company) {
             company = await ctx.prisma.organization.create({
-              data: {
-                name: input.company.name,
-                address1: input.company.address1,
-                address2: input.company.address2,
-              },
+              data: input.company,
             });
           }
         }
+
         if (input.contact?.id) {
           contact = await ctx.prisma.contact.update({
             where: {
@@ -184,6 +193,7 @@ export const leadsRouter = createTRPCRouter({
               lastName: input.contact.lastName,
               phoneNumber: input.contact.phoneNumber,
               mobileNumber: input.contact.mobileNumber,
+              title: input.contact.title,
             },
           });
         }

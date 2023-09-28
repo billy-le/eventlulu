@@ -53,7 +53,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Label } from "@/components/ui/label";
 
 const nameId = z.object({
   id: z.string(),
@@ -82,9 +81,13 @@ const formSchema = z.object({
   }),
   company: z
     .object({
+      id: z.string().optional(),
       name: z.string(),
       address1: z.string().optional(),
       address2: z.string().optional(),
+      city: z.string().optional(),
+      province: z.string().optional(),
+      postalCode: z.string().optional(),
     })
     .optional(),
   eventType: nameId.optional(),
@@ -158,10 +161,13 @@ function normalize(
     ...(values.company?.name
       ? {
           company: {
-            ...values.company,
+            id: values.company.id ?? undefined,
             name: values.company.name ?? undefined,
             address1: values.company.address1 ?? undefined,
             address2: values.company.address2 ?? undefined,
+            city: values.company.city ?? undefined,
+            province: values.company.province ?? undefined,
+            postalCode: values.company.postalCode ?? undefined,
           },
         }
       : { company: undefined }),
@@ -246,6 +252,9 @@ export default function LeadPage() {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      dateReceived: new Date(),
+    },
     values: leadFormData?.inclusions
       ? {
           inclusions: leadFormData.inclusions.filter((x) =>
@@ -299,19 +308,29 @@ export default function LeadPage() {
       const eventDetailsToUpdate = leadFormValues.eventDetails.filter(
         (x) => x.id
       );
-      await deleteEventDetails.mutateAsync(eventDetailsToDelete);
-      await updateEventDetails.mutateAsync(eventDetailsToUpdate);
-      await createEventDetails.mutateAsync({
-        leadFormId: lead.id,
-        eventDetails: eventDetailsToCreate,
-      });
+      if (eventDetailsToDelete.length) {
+        await deleteEventDetails.mutateAsync(eventDetailsToDelete);
+      }
+      if (eventDetailsToUpdate.length) {
+        await updateEventDetails.mutateAsync(eventDetailsToUpdate);
+      }
+      if (eventDetailsToCreate.length) {
+        await createEventDetails.mutateAsync({
+          leadFormId: lead.id,
+          eventDetails: eventDetailsToCreate,
+        });
+      }
       const activitiesToUpdate = formValues.activities.filter((act) => act.id);
       const activitiesToCreate = formValues.activities.filter((act) => !act.id);
-      await createActivities.mutateAsync({
-        leadFormId: lead.id,
-        activities: activitiesToCreate,
-      });
-      await updateActivities.mutateAsync(activitiesToUpdate);
+      if (activitiesToCreate.length) {
+        await createActivities.mutateAsync({
+          leadFormId: lead.id,
+          activities: activitiesToCreate,
+        });
+      }
+      if (activitiesToUpdate.length) {
+        await updateActivities.mutateAsync(activitiesToUpdate);
+      }
     }
     await mutateLead.mutateAsync(leadFormValues);
   }
@@ -340,7 +359,7 @@ export default function LeadPage() {
               variant: "destructive",
             });
           })}
-          className="relative mx-auto max-w-4xl space-y-10"
+          className="relative mx-auto space-y-10"
         >
           <div className="grid grid-cols-2 gap-4 rounded border bg-slate-50 p-4">
             <FormField
@@ -485,79 +504,82 @@ export default function LeadPage() {
             </div>
 
             {formValues.isLiveIn && (
-              <div className="col-span-2 grid grid-cols-2 gap-4 rounded-md border bg-slate-200 p-4">
-                <FormField
-                  control={form.control}
-                  name="roomTotal"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Number of Rooms</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          {...field}
-                          {...form.register("roomTotal", {
-                            valueAsNumber: true,
-                          })}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="roomType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Room Type</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="roomArrivalDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Arrival Date</FormLabel>
-                      <FormControl>
-                        <DatePicker
-                          date={field.value}
-                          onChange={(date) => {
-                            if (date) {
-                              field.onChange(date);
-                            }
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="roomDepartureDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Departure Date</FormLabel>
-                      <FormControl>
-                        <DatePicker
-                          date={field.value}
-                          onChange={(date) => {
-                            if (date) {
-                              field.onChange(date);
-                            }
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <div className="col-span-2 space-y-4 rounded-md border bg-slate-200 p-4">
+                <h2 className="text-xl">Live-in Info</h2>
+                <div className="grid grid-cols-2 gap-4 ">
+                  <FormField
+                    control={form.control}
+                    name="roomTotal"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Number of Rooms</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            {...field}
+                            {...form.register("roomTotal", {
+                              valueAsNumber: true,
+                            })}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="roomType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Room Type</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="roomArrivalDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Arrival Date</FormLabel>
+                        <FormControl>
+                          <DatePicker
+                            date={field.value}
+                            onChange={(date) => {
+                              if (date) {
+                                field.onChange(date);
+                              }
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="roomDepartureDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Departure Date</FormLabel>
+                        <FormControl>
+                          <DatePicker
+                            date={field.value}
+                            onChange={(date) => {
+                              if (date) {
+                                field.onChange(date);
+                              }
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
             )}
 
@@ -732,13 +754,14 @@ export default function LeadPage() {
               />
             </div>
             {formValues?.isCorporate && (
-              <>
+              <div className="space-y-4 rounded bg-slate-200 p-4">
+                <h2 className="text-xl">Company Info</h2>
                 <FormField
                   control={form.control}
                   name="company.name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Company Name</FormLabel>
+                      <FormLabel>Name</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -751,7 +774,7 @@ export default function LeadPage() {
                   name="company.address1"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Company Address</FormLabel>
+                      <FormLabel>Address 1</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -759,7 +782,61 @@ export default function LeadPage() {
                     </FormItem>
                   )}
                 />
-              </>
+                <FormField
+                  control={form.control}
+                  name="company.address2"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Address 2</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex gap-4">
+                  <FormField
+                    control={form.control}
+                    name="company.city"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>City</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="company.province"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Province</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="company.postalCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Postal Code</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
             )}
           </div>
           <div className="space-y-4 rounded border bg-slate-50 p-4">
@@ -871,23 +948,25 @@ export default function LeadPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>
-                    Date{" "}
-                    <span className="text-xs text-gray-400">
+                  <TableHead className="align-top">
+                    Date
+                    <p className="whitespace-pre text-xs text-gray-400">
                       (include rehearsals, if any)
-                    </span>
+                    </p>
                   </TableHead>
 
-                  <TableHead># of Pax</TableHead>
-                  <TableHead>Function Room / Set-Up</TableHead>
-                  <TableHead className="whitespace-pre">
-                    Meal Req{" "}
-                    <span className="text-xs text-gray-400">
-                      (include dietary restrictions, if any)
-                    </span>
+                  <TableHead className="align-top"># of Pax</TableHead>
+                  <TableHead className="align-top">
+                    Function Room / Set-Up
                   </TableHead>
-                  <TableHead>Rate</TableHead>
-                  <TableHead>Remarks</TableHead>
+                  <TableHead className="align-top">
+                    Meal Req
+                    <p className="whitespace-pre text-xs text-gray-400">
+                      (include dietary restrictions, if any)
+                    </p>
+                  </TableHead>
+                  <TableHead className="align-top">Rate</TableHead>
+                  <TableHead className="align-top">Remarks</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

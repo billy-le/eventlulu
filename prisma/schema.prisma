@@ -182,6 +182,9 @@ model Organization {
     phoneNumber String?
     address1    String?
     address2    String?
+    city        String?
+    province    String?
+    postalCode  String?
     company     LeadForm[] @relation(name: "company")
 }
 

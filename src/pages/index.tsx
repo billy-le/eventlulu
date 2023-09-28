@@ -42,6 +42,8 @@ import {
 } from "lucide-react";
 import { eventTypes } from "prisma/seed-data/data";
 import { useToast } from "@/components/ui/use-toast";
+import { useRef, useState } from "react";
+import { LeadSummaryModal } from "~/ui/LeadSummaryModal";
 
 const statusColors = {
   tentative: "bg-yellow-400/20 text-yellow-500",
@@ -69,7 +71,10 @@ const eventIcons: Record<
 
 export default function HomePage() {
   const { toast } = useToast();
-  const { data: leads } = api.leads.getLeads.useQuery();
+  const { data: leads = [], refetch: refetchLeads } =
+    api.leads.getLeads.useQuery();
+  const dialogRef = useRef<HTMLDialogElement | null>(null);
+  const [lead, setLead] = useState<(typeof leads)[number] | null>(null);
 
   const deleteLead = api.leads.delete.useMutation();
   const markAsSent = api.leads.sentLead.useMutation();
@@ -85,6 +90,12 @@ export default function HomePage() {
             </Button>
           </Link>,
         ]}
+        onRowClick={(data) => {
+          if (dialogRef.current) {
+            setLead(data);
+            dialogRef.current.showModal();
+          }
+        }}
         columns={[
           {
             accessorKey: "startDate",
@@ -291,6 +302,9 @@ export default function HomePage() {
                       <Link
                         href={`/leads/${row.original.id}`}
                         className="flex w-full items-center justify-between"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}
                       >
                         Edit
                         <Edit size="16" />
@@ -307,6 +321,7 @@ export default function HomePage() {
                                 title: "Success",
                                 description: "Lead has been deleted",
                               });
+                              refetchLeads();
                             },
                             onError: () => {
                               toast({
@@ -337,6 +352,7 @@ export default function HomePage() {
                                     description:
                                       "Lead has been marked with today's date",
                                   });
+                                  refetchLeads();
                                 },
                                 onError: () => {
                                   toast({
@@ -367,8 +383,9 @@ export default function HomePage() {
             },
           },
         ]}
-        data={leads || []}
+        data={leads}
       />
+      <LeadSummaryModal ref={dialogRef} lead={lead} />
     </DefaultLayout>
   );
 }

@@ -29,6 +29,7 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   onNextClick?: () => Promise<undefined>;
   onPreviousClick?: () => Promise<undefined>;
+  onRowClick?: (data: TData) => void;
   actionButtons?: ReactElement[];
 }
 
@@ -38,6 +39,7 @@ export function DataTable<TData, TValue>({
   actionButtons,
   onNextClick,
   onPreviousClick,
+  onRowClick,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -107,6 +109,11 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  onClick={() => {
+                    if (onRowClick) {
+                      onRowClick(row.original);
+                    }
+                  }}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

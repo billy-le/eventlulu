@@ -1,7 +1,9 @@
+"use client";
+
 import { useSession } from "next-auth/react";
 import { DefaultLayout } from "~/layouts/default";
 
-import z from "zod";
+import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "~/utils/api";

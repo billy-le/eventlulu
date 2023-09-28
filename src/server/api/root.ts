@@ -9,6 +9,7 @@ import { usersRouter } from "~/server/api/routers/users";
 import { activitiesRouter } from "~/server/api/routers/activities";
 import { eventDetailsRouter } from "~/server/api/routers/eventDetails";
 import { inclusionsRouter } from "~/server/api/routers/inclusions";
+import { calendarEventsRouter } from "~/server/api/routers/calendarEvents";
 
 /**
  * This is the primary router for your server.
@@ -25,6 +26,7 @@ export const appRouter = createTRPCRouter({
   activities: activitiesRouter,
   eventDetails: eventDetailsRouter,
   inclusions: inclusionsRouter,
+  calendarEvents: calendarEventsRouter,
 });
 
 // export type definition of API
