@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactElement } from "react";
+import React, { useState, type ReactElement } from "react";
 import {
   ColumnDef,
   SortingState,
@@ -79,7 +79,9 @@ export function DataTable<TData, TValue>({
         />
         {actionButtons && (
           <div className="flex gap-4">
-            {actionButtons.map((Button) => Button)}
+            {actionButtons.map((Button, index) => (
+              <React.Fragment key={index}>{Button}</React.Fragment>
+            ))}
           </div>
         )}
       </div>

@@ -142,7 +142,9 @@ export default function ProposalPage() {
                           Set Up
                         </th>
                         <th className="border border-black px-1 py-2 capitalize">
-                          {lead.rateType?.name ?? ""}
+                          {lead.rateType?.name === "per person"
+                            ? "Rate Per Person"
+                            : lead.rateType?.name ?? ""}
                         </th>
                       </tr>
                     </thead>
@@ -176,7 +178,7 @@ export default function ProposalPage() {
                           : "0";
 
                         return (
-                          <tr key={detail.id} className="">
+                          <tr key={detail.id}>
                             <td className="border border-black px-1 py-2">
                               {detail.date
                                 ? dateFormat(detail.date, "MMMM d, yyyy")
@@ -198,13 +200,11 @@ export default function ProposalPage() {
 
                             <td className="border border-black px-1 py-2">
                               {detail.rate
-                                ? `Php ${detail.rate?.toLocaleString() ?? "-"}`
+                                ? `Php ${
+                                    detail.rate?.toLocaleString() + ".00" ?? "-"
+                                  }`
                                 : "-"}{" "}
-                              {lead.rateType
-                                ? lead.rateType?.name === "per person"
-                                  ? "per person"
-                                  : "nett"
-                                : ""}
+                              {lead.rateType ? "nett" : ""}
                             </td>
                           </tr>
                         );
