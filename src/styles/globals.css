@@ -68,14 +68,12 @@
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border antialiased;
+
+    -webkit-print-color-adjust: exact; /* Chrome, Safari 6 – 15.3, Edge */
+    print-color-adjust: exact; /* Firefox 97+, Safari 15.4+ */
   }
   body {
     @apply bg-background text-foreground;
-  }
-
-  * {
-    -webkit-print-color-adjust: exact; /* Chrome, Safari 6 – 15.3, Edge */
-    print-color-adjust: exact; /* Firefox 97+, Safari 15.4+ */
   }
 }
