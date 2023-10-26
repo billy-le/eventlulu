@@ -33,7 +33,7 @@ export default function ProposalPage() {
           className="mx-auto"
         />
       </header>
-      <footer className="fixed bottom-0 flex h-12 w-full flex-col items-center justify-end border-t border-black bg-white font-garamond text-[10px] leading-tight">
+      <footer className="fixed bottom-0 flex h-12 w-full flex-col items-center justify-end border-t border-black bg-white font-calibri text-[10px] leading-tight">
         <div>
           17 Orchard Road, Eastwood City, Bagumbayan, Quezon City 1100, Metro
           Manila, Philippines
@@ -51,7 +51,7 @@ export default function ProposalPage() {
           </a>
         </div>
       </footer>
-      <main className="bg-white font-garamond text-sm">
+      <main className="bg-white font-calibri text-sm">
         <table>
           <thead className="h-28">
             <tr />

@@ -18,7 +18,7 @@ module.exports = {
     },
     extend: {
       fontFamily: {
-        garamond: ["Garamond"],
+        calibri: ["Calibri", "Arial", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
