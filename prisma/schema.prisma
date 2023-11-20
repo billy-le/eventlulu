@@ -158,10 +158,9 @@ model RateType {
 }
 
 model Inclusion {
-    id         String    @id @default(cuid())
-    name       String    @unique
-    LeadForm   LeadForm? @relation(fields: [leadFormId], references: [id])
-    leadFormId String?
+    id        String     @id @default(cuid())
+    name      String     @unique
+    LeadForms LeadForm[]
 }
 
 model LeadFormActivity {
