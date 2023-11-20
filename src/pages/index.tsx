@@ -36,6 +36,9 @@ import {
   Check,
   Frown,
   Smartphone,
+  Filter,
+  FilterX,
+  Eye,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useRef, useState } from "react";
@@ -51,6 +54,7 @@ export default function HomePage() {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [lead, setLead] = useState<(typeof leads)[number] | null>(null);
   const [search, setSearch] = useState("");
+  const [filters, setFilters] = useState([]);
 
   const deleteLead = api.leads.deleteLead.useMutation();
   const markAsSent = api.leads.sentLead.useMutation();
@@ -60,16 +64,53 @@ export default function HomePage() {
     <DefaultLayout>
       <DataTable
         searchInput={() => (
-          <Input
-            placeholder="Find by contact..."
-            value={search}
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-              const value = event.target.value;
-              setSearch(value);
-            }}
-            className="max-w-sm"
-            type="search"
-          />
+          <div className="flex gap-4">
+            <Input
+              placeholder="Find by contact..."
+              value={search}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                const value = event.target.value;
+                setSearch(value);
+              }}
+              className="max-w-sm"
+              type="search"
+            />
+            {/* <DropdownMenu>
+              <DropdownMenuTrigger asChild className="h-10">
+                <Button className="h-10 w-12 p-0">
+                  <span className="sr-only">Open Filter Menu</span>
+                  <Filter size="16" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <span>Event Type</span>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuPortal>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuItem>Corporate</DropdownMenuItem>
+                      <DropdownMenuItem>Social Function</DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuPortal>
+                </DropdownMenuSub>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <span>Status</span>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuPortal>
+                    <DropdownMenuSubContent>
+                      {Object.values(EventStatus).map((status) => (
+                        <DropdownMenuItem className="capitalize">
+                          {status}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuPortal>
+                </DropdownMenuSub>
+              </DropdownMenuContent>
+            </DropdownMenu> */}
+          </div>
         )}
         actionButtons={[
           <Link href="/leads/create">
@@ -79,12 +120,6 @@ export default function HomePage() {
             </Button>
           </Link>,
         ]}
-        onRowClick={(data) => {
-          if (dialogRef.current) {
-            setLead(data);
-            dialogRef.current.showModal();
-          }
-        }}
         columns={[
           {
             accessorKey: "startDate",
@@ -114,51 +149,6 @@ export default function HomePage() {
                   {isSameDay
                     ? ""
                     : ` - ${datefns.format(lead.endDate, "MMM d, yyyy")}`}
-                </div>
-              );
-            },
-          },
-          {
-            accessorKey: "eventType.activity",
-            header: ({ column }) => {
-              const isAscending = column.getIsSorted() === "asc";
-              return (
-                <Button
-                  variant="ghost"
-                  onClick={() => column.toggleSorting(isAscending)}
-                  className="space-x-2"
-                >
-                  <span>Event Type</span>
-                  {isAscending ? (
-                    <ArrowDown size="20" />
-                  ) : (
-                    <ArrowUp size="20" />
-                  )}
-                </Button>
-              );
-            },
-            cell: ({ row }) => {
-              const lead = row.original;
-              const Component =
-                eventIcons[
-                  lead?.eventType?.activity! as keyof typeof eventIcons
-                ] || Calendar;
-
-              return (
-                <div className="flex items-center gap-3">
-                  <Component size="24" className="text-blue-400" />
-                  <div>
-                    <div className="capitalize">
-                      {lead.eventType?.activity ?? lead.eventTypeOther}
-                    </div>
-                    <div className="text-xs capitalize text-gray-400">
-                      {lead.eventType?.name === "corporate"
-                        ? lead.company?.name ?? ""
-                        : lead.eventType?.name === "social function"
-                        ? ""
-                        : "Other"}
-                    </div>
-                  </div>
                 </div>
               );
             },
@@ -210,6 +200,51 @@ export default function HomePage() {
                       {contactNumber}
                     </div>
                   )}
+                </div>
+              );
+            },
+          },
+          {
+            accessorKey: "eventType.activity",
+            header: ({ column }) => {
+              const isAscending = column.getIsSorted() === "asc";
+              return (
+                <Button
+                  variant="ghost"
+                  onClick={() => column.toggleSorting(isAscending)}
+                  className="space-x-2"
+                >
+                  <span>Event Type</span>
+                  {isAscending ? (
+                    <ArrowDown size="20" />
+                  ) : (
+                    <ArrowUp size="20" />
+                  )}
+                </Button>
+              );
+            },
+            cell: ({ row }) => {
+              const lead = row.original;
+              const Component =
+                eventIcons[
+                  lead?.eventType?.activity! as keyof typeof eventIcons
+                ] || Calendar;
+
+              return (
+                <div className="flex items-center gap-3">
+                  <Component size="24" className="text-blue-400" />
+                  <div>
+                    <div className="capitalize">
+                      {lead.eventType?.name === "corporate"
+                        ? lead.company?.name ?? ""
+                        : lead.eventType?.name === "social function"
+                        ? ""
+                        : lead.eventTypeOther ?? ""}
+                    </div>
+                    <div className="text-xs capitalize text-gray-400">
+                      {lead.eventType?.activity ?? "Other"}
+                    </div>
+                  </div>
                 </div>
               );
             },
@@ -282,161 +317,175 @@ export default function HomePage() {
             cell: ({ row }) => {
               const lead = row.original;
               return (
-                <DropdownMenu>
-                  <DropdownMenuTrigger
-                    asChild
-                    onClick={(e) => {
-                      e.stopPropagation();
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    className="h-8 w-8 p-0"
+                    onClick={() => {
+                      if (dialogRef.current) {
+                        setLead(lead);
+                        dialogRef.current.showModal();
+                      }
                     }}
                   >
-                    <Button variant="ghost" className="h-8 w-8 p-0">
-                      <span className="sr-only">Open menu</span>
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                    }}
-                  >
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem>
-                      <Link
-                        href={`/leads/${row.original.id}`}
-                        className="flex w-full items-center justify-between"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                        }}
-                      >
-                        Edit
-                        <Edit size="16" />
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Button
-                        variant="ghost"
-                        className="flex h-auto w-full items-center justify-between p-0 font-normal"
-                        onClick={() => {
-                          deleteLead.mutate(lead.id, {
-                            onSuccess: () => {
-                              toast({
-                                title: "Success",
-                                description: "Lead has been deleted",
-                              });
-                              refetchLeads();
-                            },
-                            onError: () => {
-                              toast({
-                                title: "Failed",
-                                description: "There was an error",
-                                variant: "destructive",
-                              });
-                            },
-                          });
-                        }}
-                      >
-                        Delete
-                        <Delete size="16" />
+                    <span className="sr-only">View Lead Summary</span>
+                    <Eye size="16" />
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Open menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
                       </Button>
-                    </DropdownMenuItem>
-                    <DropdownMenuSub>
-                      <DropdownMenuSubTrigger>
-                        <span>Change Status</span>
-                      </DropdownMenuSubTrigger>
-                      <DropdownMenuPortal>
-                        <DropdownMenuSubContent>
-                          {Object.values(EventStatus)
-                            .filter((status) => status !== lead.status)
-                            .map((status) => {
-                              return (
-                                <DropdownMenuItem>
-                                  <Button
-                                    variant="ghost"
-                                    className="h-auto p-0 font-normal"
-                                    onClick={() => {
-                                      changeStatus.mutate(
-                                        {
-                                          id: lead.id,
-                                          status: status,
-                                        },
-                                        {
-                                          onSuccess: () => {
-                                            toast({
-                                              title: "Success",
-                                              description:
-                                                "Lead has been updated",
-                                            });
-                                            refetchLeads();
-                                          },
-                                          onError: () => {
-                                            toast({
-                                              title: "Failed",
-                                              description: "There was an error",
-                                              variant: "destructive",
-                                            });
-                                          },
-                                        }
-                                      );
-                                    }}
-                                  >
-                                    {status === "confirmed" ? (
-                                      <Check className="mr-2 h-4 w-4 text-green-400" />
-                                    ) : status === "lost" ? (
-                                      <Frown className="mr-2 h-4 w-4 text-red-400" />
-                                    ) : (
-                                      <AlertTriangle className="mr-2 h-4 w-4 text-yellow-400" />
-                                    )}
-                                    <span className="capitalize">{status}</span>
-                                  </Button>
-                                </DropdownMenuItem>
-                              );
-                            })}
-                        </DropdownMenuSubContent>
-                      </DropdownMenuPortal>
-                    </DropdownMenuSub>
-                    {!lead.lastDateSent && (
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="end"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
+                    >
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuItem>
+                        <Link
+                          href={`/leads/${row.original.id}`}
+                          className="flex w-full items-center justify-between"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                          }}
+                        >
+                          Edit
+                          <Edit size="16" />
+                        </Link>
+                      </DropdownMenuItem>
                       <DropdownMenuItem>
                         <Button
                           variant="ghost"
                           className="flex h-auto w-full items-center justify-between p-0 font-normal"
                           onClick={() => {
-                            markAsSent.mutate(
-                              { id: lead.id, date: new Date() },
-                              {
-                                onSuccess: () => {
-                                  toast({
-                                    title: "Success",
-                                    description:
-                                      "Lead has been marked with today's date",
-                                  });
-                                  refetchLeads();
-                                },
-                                onError: () => {
-                                  toast({
-                                    title: "Failed",
-                                    description: "There was an error",
-                                    variant: "destructive",
-                                  });
-                                },
-                              }
-                            );
+                            deleteLead.mutate(lead.id, {
+                              onSuccess: () => {
+                                toast({
+                                  title: "Success",
+                                  description: "Lead has been deleted",
+                                });
+                                refetchLeads();
+                              },
+                              onError: () => {
+                                toast({
+                                  title: "Failed",
+                                  description: "There was an error",
+                                  variant: "destructive",
+                                });
+                              },
+                            });
                           }}
                         >
-                          Mark as Sent
-                          <Send size="16" />
+                          Delete
+                          <Delete size="16" />
                         </Button>
                       </DropdownMenuItem>
-                    )}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem>
-                      <Link href={`/proposals/${lead.id}`}>
-                        Generate Proposal
-                      </Link>
-                    </DropdownMenuItem>
-                    {/* <DropdownMenuItem>Generate Lead Form PDF</DropdownMenuItem> */}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>
+                          <span>Change Status</span>
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuPortal>
+                          <DropdownMenuSubContent>
+                            {Object.values(EventStatus)
+                              .filter((status) => status !== lead.status)
+                              .map((status) => {
+                                return (
+                                  <DropdownMenuItem>
+                                    <Button
+                                      variant="ghost"
+                                      className="h-auto p-0 font-normal"
+                                      onClick={() => {
+                                        changeStatus.mutate(
+                                          {
+                                            id: lead.id,
+                                            status: status,
+                                          },
+                                          {
+                                            onSuccess: () => {
+                                              toast({
+                                                title: "Success",
+                                                description:
+                                                  "Lead has been updated",
+                                              });
+                                              refetchLeads();
+                                            },
+                                            onError: () => {
+                                              toast({
+                                                title: "Failed",
+                                                description:
+                                                  "There was an error",
+                                                variant: "destructive",
+                                              });
+                                            },
+                                          }
+                                        );
+                                      }}
+                                    >
+                                      {status === "confirmed" ? (
+                                        <Check className="mr-2 h-4 w-4 text-green-400" />
+                                      ) : status === "lost" ? (
+                                        <Frown className="mr-2 h-4 w-4 text-red-400" />
+                                      ) : (
+                                        <AlertTriangle className="mr-2 h-4 w-4 text-yellow-400" />
+                                      )}
+                                      <span className="capitalize">
+                                        {status}
+                                      </span>
+                                    </Button>
+                                  </DropdownMenuItem>
+                                );
+                              })}
+                          </DropdownMenuSubContent>
+                        </DropdownMenuPortal>
+                      </DropdownMenuSub>
+                      {!lead.lastDateSent && (
+                        <DropdownMenuItem>
+                          <Button
+                            variant="ghost"
+                            className="flex h-auto w-full items-center justify-between p-0 font-normal"
+                            onClick={() => {
+                              markAsSent.mutate(
+                                { id: lead.id, date: new Date() },
+                                {
+                                  onSuccess: () => {
+                                    toast({
+                                      title: "Success",
+                                      description:
+                                        "Lead has been marked with today's date",
+                                    });
+                                    refetchLeads();
+                                  },
+                                  onError: () => {
+                                    toast({
+                                      title: "Failed",
+                                      description: "There was an error",
+                                      variant: "destructive",
+                                    });
+                                  },
+                                }
+                              );
+                            }}
+                          >
+                            Mark as Sent
+                            <Send size="16" />
+                          </Button>
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem>
+                        <Link href={`/proposals/${lead.id}`}>
+                          Generate Proposal
+                        </Link>
+                      </DropdownMenuItem>
+                      {/* <DropdownMenuItem>Generate Lead Form PDF</DropdownMenuItem> */}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               );
             },
           },
