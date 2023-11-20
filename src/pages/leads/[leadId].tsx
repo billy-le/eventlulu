@@ -890,28 +890,35 @@ export default function LeadPage() {
                               let events: z.infer<
                                 typeof formSchema
                               >["eventDetails"] = [];
+
                               for (let i = 0; i < count; i++) {
                                 const date = datefns.addDays(
                                   formValues.startDate!,
                                   i
                                 );
-                                const curr = formValues.eventDetails?.[i];
+                                const event =
+                                  formValues.eventDetails?.[i] ??
+                                  formValues?.eventDetails?.[i - 1];
+
                                 events.push({
-                                  ...(curr?.id && {
-                                    id: curr?.id ?? undefined,
+                                  ...(event?.id && {
+                                    id: event?.id ?? undefined,
                                   }),
                                   date,
-                                  startTime: curr?.startTime ?? "",
-                                  endTime: curr?.endTime ?? "",
-                                  pax: curr?.pax ?? 0,
-                                  roomSetup: curr?.roomSetup ?? undefined,
-                                  mealReqs: curr?.mealReqs ?? [],
-                                  functionRoom: curr?.functionRoom ?? undefined,
-                                  remarks: curr?.remarks ?? "",
-                                  rate: curr?.rate ?? 0,
+                                  startTime: event?.startTime ?? "",
+                                  endTime: event?.endTime ?? "",
+                                  pax: event?.pax ?? 0,
+                                  roomSetup: event?.roomSetup ?? undefined,
+                                  mealReqs: event?.mealReqs ?? [],
+                                  functionRoom:
+                                    event?.functionRoom ?? undefined,
+                                  remarks: event?.remarks ?? "",
+                                  rate: event?.rate ?? 0,
                                 });
-                                form.setValue("eventDetails", events);
                               }
+
+                              form.setValue("eventDetails", events);
+
                               const endDate = datefns.endOfDay(
                                 datefns.addDays(
                                   formValues.startDate!,
