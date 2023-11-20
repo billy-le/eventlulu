@@ -35,6 +35,7 @@ import {
   AlertTriangle,
   Check,
   Frown,
+  Smartphone,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useRef, useState } from "react";
@@ -183,6 +184,8 @@ export default function HomePage() {
             },
             cell: ({ row }) => {
               const lead = row.original;
+              const contactNumber =
+                lead.contact?.mobileNumber ?? lead.contact?.phoneNumber;
               return (
                 <div className="space-y-1">
                   {lead.contact?.firstName && (
@@ -197,10 +200,14 @@ export default function HomePage() {
                       {lead.contact?.email}
                     </div>
                   )}
-                  {lead.contact?.phoneNumber && (
+                  {contactNumber && (
                     <div className="flex items-center gap-3 text-xs text-gray-400">
-                      <Phone size="14" className="text-emerald-400" />{" "}
-                      {lead.contact?.phoneNumber}
+                      {lead.contact?.mobileNumber ? (
+                        <Smartphone size="14" className="text-emerald-400" />
+                      ) : (
+                        <Phone size="14" className="text-emerald-400" />
+                      )}
+                      {contactNumber}
                     </div>
                   )}
                 </div>
