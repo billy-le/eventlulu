@@ -14,6 +14,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
   DropdownMenuContent,
+  DropdownMenuPortal,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuSub,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
@@ -28,12 +32,16 @@ import {
   User2,
   ArrowDown,
   ArrowUp,
+  AlertTriangle,
+  Check,
+  Frown,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useRef, useState } from "react";
 import { LeadSummaryModal } from "~/ui/LeadSummaryModal";
 import { eventIcons } from "~/utils/eventIcons";
 import { statusColors } from "~/utils/statusColors";
+import { EventStatus } from "@prisma/client";
 
 export default function HomePage() {
   const { toast } = useToast();
@@ -45,6 +53,7 @@ export default function HomePage() {
 
   const deleteLead = api.leads.deleteLead.useMutation();
   const markAsSent = api.leads.sentLead.useMutation();
+  const changeStatus = api.leads.updateStatus.useMutation();
 
   return (
     <DefaultLayout>
@@ -324,6 +333,61 @@ export default function HomePage() {
                         <Delete size="16" />
                       </Button>
                     </DropdownMenuItem>
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger>
+                        <span>Change Status</span>
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuPortal>
+                        <DropdownMenuSubContent>
+                          {Object.values(EventStatus)
+                            .filter((status) => status !== lead.status)
+                            .map((status) => {
+                              return (
+                                <DropdownMenuItem>
+                                  <Button
+                                    variant="ghost"
+                                    className="h-auto p-0 font-normal"
+                                    onClick={() => {
+                                      changeStatus.mutate(
+                                        {
+                                          id: lead.id,
+                                          status: status,
+                                        },
+                                        {
+                                          onSuccess: () => {
+                                            toast({
+                                              title: "Success",
+                                              description:
+                                                "Lead has been updated",
+                                            });
+                                            refetchLeads();
+                                          },
+                                          onError: () => {
+                                            toast({
+                                              title: "Failed",
+                                              description: "There was an error",
+                                              variant: "destructive",
+                                            });
+                                          },
+                                        }
+                                      );
+                                    }}
+                                  >
+                                    {status === "confirmed" ? (
+                                      <Check className="mr-2 h-4 w-4 text-green-400" />
+                                    ) : status === "lost" ? (
+                                      <Frown className="mr-2 h-4 w-4 text-red-400" />
+                                    ) : (
+                                      <AlertTriangle className="mr-2 h-4 w-4 text-yellow-400" />
+                                    )}
+                                    <span className="capitalize">{status}</span>
+                                  </Button>
+                                </DropdownMenuItem>
+                              );
+                            })}
+                        </DropdownMenuSubContent>
+                      </DropdownMenuPortal>
+                    </DropdownMenuSub>
                     {!lead.lastDateSent && (
                       <DropdownMenuItem>
                         <Button
