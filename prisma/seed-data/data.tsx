@@ -55,6 +55,7 @@ export const eventTypes = {
     "fellowship/team building",
     "business meeting",
     "luncheon/dinner",
+    "christmas party",
   ],
   "social function": [
     "wedding",
@@ -62,6 +63,7 @@ export const eventTypes = {
     "baptismal",
     "kids party",
     "birthday party",
+    "prom",
   ],
 } as const;
 

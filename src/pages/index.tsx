@@ -19,6 +19,17 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSub,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import {
   MoreHorizontal,
@@ -332,36 +343,153 @@ export default function HomePage() {
                     <span className="sr-only">View Lead Summary</span>
                     <Eye size="16" />
                   </Button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
-                        <span className="sr-only">Open menu</span>
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="end"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                      }}
-                    >
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem>
-                        <Link
-                          href={`/leads/${row.original.id}`}
-                          className="flex w-full items-center justify-between"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                          }}
-                        >
-                          Edit
-                          <Edit size="16" />
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Button
-                          variant="ghost"
-                          className="flex h-auto w-full items-center justify-between p-0 font-normal"
+                  <AlertDialog>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <span className="sr-only">Open menu</span>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        align="end"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}
+                      >
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem>
+                          <Link
+                            href={`/leads/${row.original.id}`}
+                            className="flex w-full items-center justify-between"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                            }}
+                          >
+                            Edit
+                            <Edit size="16" />
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <AlertDialogTrigger className="flex w-full items-center justify-between">
+                            <div>Delete</div>
+                            <Delete size="16" className="text-red-400" />
+                          </AlertDialogTrigger>
+                        </DropdownMenuItem>
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger>
+                            <span>Change Status</span>
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuPortal>
+                            <DropdownMenuSubContent>
+                              {Object.values(EventStatus)
+                                .filter((status) => status !== lead.status)
+                                .map((status) => {
+                                  return (
+                                    <DropdownMenuItem>
+                                      <Button
+                                        variant="ghost"
+                                        className="h-auto p-0 font-normal"
+                                        onClick={() => {
+                                          changeStatus.mutate(
+                                            {
+                                              id: lead.id,
+                                              status: status,
+                                            },
+                                            {
+                                              onSuccess: () => {
+                                                toast({
+                                                  title: "Success",
+                                                  description:
+                                                    "Lead has been updated",
+                                                });
+                                                refetchLeads();
+                                              },
+                                              onError: () => {
+                                                toast({
+                                                  title: "Failed",
+                                                  description:
+                                                    "There was an error",
+                                                  variant: "destructive",
+                                                });
+                                              },
+                                            }
+                                          );
+                                        }}
+                                      >
+                                        {status === "confirmed" ? (
+                                          <Check className="mr-2 h-4 w-4 text-green-400" />
+                                        ) : status === "lost" ? (
+                                          <Frown className="mr-2 h-4 w-4 text-red-400" />
+                                        ) : (
+                                          <AlertTriangle className="mr-2 h-4 w-4 text-yellow-400" />
+                                        )}
+                                        <span className="capitalize">
+                                          {status}
+                                        </span>
+                                      </Button>
+                                    </DropdownMenuItem>
+                                  );
+                                })}
+                            </DropdownMenuSubContent>
+                          </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                        {!lead.lastDateSent && (
+                          <DropdownMenuItem>
+                            <Button
+                              variant="ghost"
+                              className="flex h-auto w-full items-center justify-between p-0 font-normal"
+                              onClick={() => {
+                                markAsSent.mutate(
+                                  { id: lead.id, date: new Date() },
+                                  {
+                                    onSuccess: () => {
+                                      toast({
+                                        title: "Success",
+                                        description:
+                                          "Lead has been marked with today's date",
+                                      });
+                                      refetchLeads();
+                                    },
+                                    onError: () => {
+                                      toast({
+                                        title: "Failed",
+                                        description: "There was an error",
+                                        variant: "destructive",
+                                      });
+                                    },
+                                  }
+                                );
+                              }}
+                            >
+                              Mark as Sent
+                              <Send size="16" />
+                            </Button>
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem>
+                          <Link href={`/proposals/${lead.id}`}>
+                            Generate Proposal
+                          </Link>
+                        </DropdownMenuItem>
+                        {/* <DropdownMenuItem>Generate Lead Form PDF</DropdownMenuItem> */}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>
+                          Are you absolutely sure?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently
+                          delete this lead.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          className="bg-red-500"
                           onClick={() => {
                             deleteLead.mutate(lead.id, {
                               onSuccess: () => {
@@ -381,110 +509,11 @@ export default function HomePage() {
                             });
                           }}
                         >
-                          Delete
-                          <Delete size="16" />
-                        </Button>
-                      </DropdownMenuItem>
-                      <DropdownMenuSub>
-                        <DropdownMenuSubTrigger>
-                          <span>Change Status</span>
-                        </DropdownMenuSubTrigger>
-                        <DropdownMenuPortal>
-                          <DropdownMenuSubContent>
-                            {Object.values(EventStatus)
-                              .filter((status) => status !== lead.status)
-                              .map((status) => {
-                                return (
-                                  <DropdownMenuItem>
-                                    <Button
-                                      variant="ghost"
-                                      className="h-auto p-0 font-normal"
-                                      onClick={() => {
-                                        changeStatus.mutate(
-                                          {
-                                            id: lead.id,
-                                            status: status,
-                                          },
-                                          {
-                                            onSuccess: () => {
-                                              toast({
-                                                title: "Success",
-                                                description:
-                                                  "Lead has been updated",
-                                              });
-                                              refetchLeads();
-                                            },
-                                            onError: () => {
-                                              toast({
-                                                title: "Failed",
-                                                description:
-                                                  "There was an error",
-                                                variant: "destructive",
-                                              });
-                                            },
-                                          }
-                                        );
-                                      }}
-                                    >
-                                      {status === "confirmed" ? (
-                                        <Check className="mr-2 h-4 w-4 text-green-400" />
-                                      ) : status === "lost" ? (
-                                        <Frown className="mr-2 h-4 w-4 text-red-400" />
-                                      ) : (
-                                        <AlertTriangle className="mr-2 h-4 w-4 text-yellow-400" />
-                                      )}
-                                      <span className="capitalize">
-                                        {status}
-                                      </span>
-                                    </Button>
-                                  </DropdownMenuItem>
-                                );
-                              })}
-                          </DropdownMenuSubContent>
-                        </DropdownMenuPortal>
-                      </DropdownMenuSub>
-                      {!lead.lastDateSent && (
-                        <DropdownMenuItem>
-                          <Button
-                            variant="ghost"
-                            className="flex h-auto w-full items-center justify-between p-0 font-normal"
-                            onClick={() => {
-                              markAsSent.mutate(
-                                { id: lead.id, date: new Date() },
-                                {
-                                  onSuccess: () => {
-                                    toast({
-                                      title: "Success",
-                                      description:
-                                        "Lead has been marked with today's date",
-                                    });
-                                    refetchLeads();
-                                  },
-                                  onError: () => {
-                                    toast({
-                                      title: "Failed",
-                                      description: "There was an error",
-                                      variant: "destructive",
-                                    });
-                                  },
-                                }
-                              );
-                            }}
-                          >
-                            Mark as Sent
-                            <Send size="16" />
-                          </Button>
-                        </DropdownMenuItem>
-                      )}
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem>
-                        <Link href={`/proposals/${lead.id}`}>
-                          Generate Proposal
-                        </Link>
-                      </DropdownMenuItem>
-                      {/* <DropdownMenuItem>Generate Lead Form PDF</DropdownMenuItem> */}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                          Continue
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               );
             },
@@ -507,6 +536,7 @@ export default function HomePage() {
         })}
       />
       <LeadSummaryModal ref={dialogRef} lead={lead} />
+      <AlertDialog></AlertDialog>
     </DefaultLayout>
   );
 }
