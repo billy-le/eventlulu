@@ -11,6 +11,7 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   getFilteredRowModel,
+  Table as TableType,
 } from "@tanstack/react-table";
 
 import {
@@ -22,7 +23,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -31,6 +31,7 @@ interface DataTableProps<TData, TValue> {
   onPreviousClick?: () => Promise<undefined>;
   onRowClick?: (data: TData) => void;
   actionButtons?: ReactElement[];
+  searchInput?: (table: TableType<TData>) => ReactElement;
 }
 
 export function DataTable<TData, TValue>({
@@ -40,6 +41,7 @@ export function DataTable<TData, TValue>({
   onNextClick,
   onPreviousClick,
   onRowClick,
+  searchInput: searchInput,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -62,21 +64,7 @@ export function DataTable<TData, TValue>({
   return (
     <>
       <div className="mb-4 flex justify-between space-y-1.5">
-        <Input
-          placeholder="Find by first name..."
-          value={
-            (table
-              .getColumn("contact_firstName")
-              ?.getFilterValue() as string) ?? ""
-          }
-          onChange={(event) =>
-            table
-              .getColumn("contact_firstName")
-              ?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-          type="search"
-        />
+        {searchInput && searchInput(table)}
         {actionButtons && (
           <div className="flex gap-4">
             {actionButtons.map((Button, index) => (

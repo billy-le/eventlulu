@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import {
   MoreHorizontal,
   Plus,
@@ -40,6 +41,7 @@ export default function HomePage() {
     api.leads.getLeads.useQuery();
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [lead, setLead] = useState<(typeof leads)[number] | null>(null);
+  const [search, setSearch] = useState("");
 
   const deleteLead = api.leads.deleteLead.useMutation();
   const markAsSent = api.leads.sentLead.useMutation();
@@ -47,6 +49,18 @@ export default function HomePage() {
   return (
     <DefaultLayout>
       <DataTable
+        searchInput={() => (
+          <Input
+            placeholder="Find by contact..."
+            value={search}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+              const value = event.target.value;
+              setSearch(value);
+            }}
+            className="max-w-sm"
+            type="search"
+          />
+        )}
         actionButtons={[
           <Link href="/leads/create">
             <Button type="button">
@@ -85,12 +99,12 @@ export default function HomePage() {
               const lead = row.original;
               const isSameDay = datefns.isSameDay(lead.startDate, lead.endDate);
               return (
-                <>
+                <div>
                   {datefns.format(lead.startDate, "MMM d, yyyy")}
                   {isSameDay
                     ? ""
                     : ` - ${datefns.format(lead.endDate, "MMM d, yyyy")}`}
-                </>
+                </div>
               );
             },
           },
@@ -121,23 +135,21 @@ export default function HomePage() {
                 ] || Calendar;
 
               return (
-                <>
-                  <div className="flex items-center gap-3">
-                    <Component size="24" className="text-blue-400" />
-                    <div>
-                      <div className="capitalize">
-                        {lead.eventType?.activity ?? lead.eventTypeOther}
-                      </div>
-                      <div className="text-xs capitalize text-gray-400">
-                        {lead.eventType?.name === "corporate"
-                          ? lead.company?.name ?? ""
-                          : lead.eventType?.name === "social function"
-                          ? ""
-                          : "Other"}
-                      </div>
+                <div className="flex items-center gap-3">
+                  <Component size="24" className="text-blue-400" />
+                  <div>
+                    <div className="capitalize">
+                      {lead.eventType?.activity ?? lead.eventTypeOther}
+                    </div>
+                    <div className="text-xs capitalize text-gray-400">
+                      {lead.eventType?.name === "corporate"
+                        ? lead.company?.name ?? ""
+                        : lead.eventType?.name === "social function"
+                        ? ""
+                        : "Other"}
                     </div>
                   </div>
-                </>
+                </div>
               );
             },
           },
@@ -209,15 +221,13 @@ export default function HomePage() {
               const lead = row.original;
 
               return (
-                <>
-                  <div
-                    className={`rounded ${
-                      statusColors[lead.status]
-                    } w-fit px-2 py-1 text-center text-xs uppercase`}
-                  >
-                    {lead.status}
-                  </div>
-                </>
+                <div
+                  className={`rounded ${
+                    statusColors[lead.status]
+                  } w-fit px-2 py-1 text-center text-xs uppercase`}
+                >
+                  {lead.status}
+                </div>
               );
             },
           },
@@ -243,13 +253,11 @@ export default function HomePage() {
             cell: ({ row }) => {
               const lead = row.original;
               return (
-                <>
-                  <div>
-                    {lead.lastDateSent
-                      ? datefns.format(lead.lastDateSent, "MMM d, yyyy")
-                      : ""}
-                  </div>
-                </>
+                <div>
+                  {lead.lastDateSent
+                    ? datefns.format(lead.lastDateSent, "MMM d, yyyy")
+                    : ""}
+                </div>
               );
             },
           },
@@ -295,8 +303,8 @@ export default function HomePage() {
                         className="flex h-auto w-full items-center justify-between p-0 font-normal"
                         onClick={() => {
                           deleteLead.mutate(lead.id, {
-                            onSuccess: (data) => {
-                              const t = toast({
+                            onSuccess: () => {
+                              toast({
                                 title: "Success",
                                 description: "Lead has been deleted",
                               });
@@ -325,7 +333,7 @@ export default function HomePage() {
                             markAsSent.mutate(
                               { id: lead.id, date: new Date() },
                               {
-                                onSuccess: (data) => {
+                                onSuccess: () => {
                                   toast({
                                     title: "Success",
                                     description:
@@ -362,7 +370,21 @@ export default function HomePage() {
             },
           },
         ]}
-        data={leads}
+        data={leads.filter((lead) => {
+          if (search) {
+            const containsEmail = lead.contact?.email
+              ?.toLowerCase()
+              ?.includes(search.toLowerCase());
+            const containsFirstName = lead.contact?.firstName
+              ?.toLowerCase()
+              ?.includes(search.toLowerCase());
+            const containsLastName = lead.contact?.lastName
+              ?.toLowerCase()
+              ?.includes(search.toLowerCase());
+            return containsEmail || containsFirstName || containsLastName;
+          }
+          return true;
+        })}
       />
       <LeadSummaryModal ref={dialogRef} lead={lead} />
     </DefaultLayout>
