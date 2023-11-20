@@ -328,7 +328,7 @@ export const leadsRouter = createTRPCRouter({
         });
       } catch (err) {}
     }),
-  delete: protectedProcedure
+  deleteLead: protectedProcedure
     .input(z.string())
     .mutation(async ({ ctx, input: id }) => {
       try {
@@ -351,7 +351,6 @@ export const leadsRouter = createTRPCRouter({
         console.log(err);
       }
     }),
-
   getLeadFormData: protectedProcedure.query(async ({ ctx }) => {
     try {
       const salesManagers = await ctx.prisma.user.findMany({

@@ -16,23 +16,11 @@ import {
   DropdownMenuContent,
 } from "@/components/ui/dropdown-menu";
 import {
-  LucideIcon,
   MoreHorizontal,
   Plus,
   Delete,
   Edit,
   Send,
-  Cake,
-  Church,
-  PartyPopper,
-  Crown,
-  Gem,
-  Briefcase,
-  Presentation,
-  Projector,
-  Users,
-  HeartHandshake,
-  Utensils,
   Calendar,
   Phone,
   Mail,
@@ -40,34 +28,11 @@ import {
   ArrowDown,
   ArrowUp,
 } from "lucide-react";
-import { eventTypes } from "prisma/seed-data/data";
 import { useToast } from "@/components/ui/use-toast";
 import { useRef, useState } from "react";
 import { LeadSummaryModal } from "~/ui/LeadSummaryModal";
-
-const statusColors = {
-  tentative: "bg-yellow-400/20 text-yellow-500",
-  lost: "bg-red-400/20 text-red-500",
-  confirmed: "bg-green-400/20 text-green-500",
-};
-
-const eventIcons: Record<
-  | (typeof eventTypes.corporate)[number]
-  | (typeof eventTypes)["social function"][number],
-  LucideIcon
-> = {
-  "business meeting": Briefcase,
-  "conference/seminar": Presentation,
-  convention: Users,
-  "fellowship/team building": HeartHandshake,
-  "luncheon/dinner": Utensils,
-  "training: planning session": Projector,
-  "birthday party": Cake,
-  baptismal: Church,
-  debut: Crown,
-  "kids party": PartyPopper,
-  wedding: Gem,
-};
+import { eventIcons } from "~/utils/eventIcons";
+import { statusColors } from "~/utils/statusColors";
 
 export default function HomePage() {
   const { toast } = useToast();
@@ -76,7 +41,7 @@ export default function HomePage() {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [lead, setLead] = useState<(typeof leads)[number] | null>(null);
 
-  const deleteLead = api.leads.delete.useMutation();
+  const deleteLead = api.leads.deleteLead.useMutation();
   const markAsSent = api.leads.sentLead.useMutation();
 
   return (
@@ -152,9 +117,7 @@ export default function HomePage() {
               const lead = row.original;
               const Component =
                 eventIcons[
-                  lead?.eventType?.activity! as
-                    | (typeof eventTypes.corporate)[number]
-                    | (typeof eventTypes)["social function"][number]
+                  lead?.eventType?.activity! as keyof typeof eventIcons
                 ] || Calendar;
 
               return (
@@ -201,18 +164,24 @@ export default function HomePage() {
               const lead = row.original;
               return (
                 <div className="space-y-1">
-                  <div className="flex items-center gap-3">
-                    <User2 size="14" className="text-blue-400" />
-                    {lead.contact?.firstName} {lead.contact?.lastName}
-                  </div>
-                  <div className="flex items-center gap-3 text-xs text-gray-400">
-                    <Mail size="14" className="text-purple-400" />{" "}
-                    {lead.contact?.email}
-                  </div>
-                  <div className="flex items-center gap-3 text-xs text-gray-400">
-                    <Phone size="14" className="text-emerald-400" />{" "}
-                    {lead.contact?.phoneNumber}
-                  </div>
+                  {lead.contact?.firstName && (
+                    <div className="flex items-center gap-3">
+                      <User2 size="14" className="text-blue-400" />
+                      {lead.contact?.firstName} {lead.contact?.lastName}
+                    </div>
+                  )}
+                  {lead.contact?.email && (
+                    <div className="flex items-center gap-3 text-xs text-gray-400">
+                      <Mail size="14" className="text-purple-400" />{" "}
+                      {lead.contact?.email}
+                    </div>
+                  )}
+                  {lead.contact?.phoneNumber && (
+                    <div className="flex items-center gap-3 text-xs text-gray-400">
+                      <Phone size="14" className="text-emerald-400" />{" "}
+                      {lead.contact?.phoneNumber}
+                    </div>
+                  )}
                 </div>
               );
             },
@@ -290,13 +259,23 @@ export default function HomePage() {
               const lead = row.original;
               return (
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
+                  <DropdownMenuTrigger
+                    asChild
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
+                  >
                     <Button variant="ghost" className="h-8 w-8 p-0">
                       <span className="sr-only">Open menu</span>
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
+                  <DropdownMenuContent
+                    align="end"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
+                  >
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                     <DropdownMenuItem>
                       <Link
@@ -317,7 +296,7 @@ export default function HomePage() {
                         onClick={() => {
                           deleteLead.mutate(lead.id, {
                             onSuccess: (data) => {
-                              toast({
+                              const t = toast({
                                 title: "Success",
                                 description: "Lead has been deleted",
                               });

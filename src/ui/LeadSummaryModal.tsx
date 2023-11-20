@@ -5,11 +5,17 @@ import type {
   EventDetails,
   Inclusion,
   LeadFormActivity,
+  EventType,
 } from "@prisma/client";
 import { forwardRef, useRef, useImperativeHandle } from "react";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { CalendarDate } from "./CalendarDate";
+import { Calendar, LucideIcon, X } from "lucide-react";
+import { statusColors } from "~/utils/statusColors";
+import { eventIcons } from "~/utils/eventIcons";
 import * as datefns from "date-fns";
+
+const MAX_CALENDAR_DAYS = 7;
 
 type Lead = LeadForm & {
   contact: Contact | null;
@@ -17,13 +23,15 @@ type Lead = LeadForm & {
   eventDetails: EventDetails[];
   inclusions: Inclusion[];
   activities: LeadFormActivity[];
+  eventType: EventType | null;
 };
 
 export const LeadSummaryModal = forwardRef<
   { showModal: () => void; close: () => void },
   { lead: Lead | null }
->(function ({ lead }, forwardRef) {
+>(({ lead }, forwardRef) => {
   const ref = useRef<HTMLDialogElement | null>(null);
+
   useImperativeHandle(
     forwardRef,
     () => {
@@ -41,6 +49,13 @@ export const LeadSummaryModal = forwardRef<
   if (!lead) {
     return null;
   }
+
+  const Icon = lead.eventType?.activity
+    ? eventIcons[lead.eventType?.activity as keyof typeof eventIcons]
+    : Calendar;
+
+  console.log(lead);
+
   return (
     <dialog
       ref={ref}
@@ -59,16 +74,62 @@ export const LeadSummaryModal = forwardRef<
       >
         <X />
       </Button>
-      <div className="flex h-full justify-between">
-        <div className="w-2/3 p-4">
-          <h1 className="text-2xl">{lead.contact?.firstName}'s Event</h1>
-          <p className="text-xs">{lead.contact?.email}</p>
-          <div className="text-right"></div>
+      <div className="space-y-4 p-4">
+        <h1 className="text-2xl">{lead.contact?.firstName}'s Event</h1>
+        <div className="flex">
+          {Array(MAX_CALENDAR_DAYS)
+            .fill(null)
+            .map((_, index) => {
+              let newDate = datefns.setWeek(
+                datefns.setDay(datefns.startOfDay(new Date()), index),
+                datefns.getWeek(lead.startDate)
+              );
+
+              const isSameWeek = datefns.isSameWeek(
+                lead.startDate,
+                lead.endDate
+              );
+              if (!isSameWeek) {
+                // shift days over so dates are visible
+                newDate = datefns.addDays(
+                  newDate,
+                  datefns.differenceInDays(lead.endDate, lead.startDate)
+                );
+              }
+
+              return (
+                <CalendarDate
+                  key={index}
+                  date={newDate}
+                  size="md"
+                  className={
+                    datefns.isWithinInterval(newDate, {
+                      start: datefns.startOfDay(lead.startDate),
+                      end: datefns.endOfDay(lead.endDate),
+                    })
+                      ? " bg-slate-200 font-bold"
+                      : ""
+                  }
+                />
+              );
+            })}
         </div>
-        <div className="w-1/3 bg-slate-100 p-4">
-          <p>Start Date: {datefns.format(lead.startDate, "MM/dd/yyyy")}</p>
-          <p>End Date: {datefns.format(lead.endDate, "MM/dd/yyyy")}</p>
+        <div>
+          <p>
+            {lead.contact?.firstName}
+            {lead.contact?.lastName ? ` ${lead.contact.lastName}` : ""}
+          </p>
+          <p>{lead.contact?.email}</p>
+          <p>Mobile: {lead.contact?.mobileNumber}</p>
+          <p>Tel: {lead.contact?.phoneNumber}</p>
         </div>
+        <div className="flex gap-2">
+          <Icon size={24} className="text-blue-400" />
+          <div className="capitalize">
+            {lead.eventType?.activity ?? "Other"}
+          </div>
+        </div>
+        {lead.eventTypeOther && <div>{lead.eventTypeOther}</div>}
       </div>
     </dialog>
   );
