@@ -22,6 +22,13 @@ export default function ProposalPage() {
 
   const lead = leadData[0];
   if (!lead) return null;
+
+  const rateConsumable = lead.inclusions.find(
+    (inclusion) => inclusion.name === "Rate is consumable of Food & Beverage"
+  );
+  const inclusions = lead.inclusions.filter(
+    (inclusion) => inclusion.name !== "Rate is consumable of Food & Beverage"
+  );
   return (
     <>
       <header className="fixed top-0 h-28 w-full bg-white">
@@ -222,11 +229,18 @@ export default function ProposalPage() {
                 <div>
                   <h2 className="font-bold">INCLUSION</h2>
                   <ul>
-                    {lead?.inclusions?.map((inclusion) => (
-                      <li key={inclusion.id}>
-                        <em>{inclusion.name}</em>
+                    {rateConsumable && (
+                      <li>
+                        <em>{rateConsumable.name}</em>
                       </li>
-                    ))}
+                    )}
+                    {inclusions
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map((inclusion) => (
+                        <li key={inclusion.id}>
+                          <em>{inclusion.name}</em>
+                        </li>
+                      ))}
                   </ul>
                 </div>
 

@@ -9,6 +9,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "~/server/db";
 import { compare } from "bcrypt";
 import { env } from "~/env.mjs";
+import { Role } from "@prisma/client";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -21,6 +22,7 @@ declare module "next-auth" {
     user: DefaultSession["user"] & {
       id: string;
       default?: true;
+      role: Role;
       // ...other properties
       // role: UserRole;
     };
@@ -124,6 +126,7 @@ export const authOptions: NextAuthOptions = {
           ...(env.DEFAULT_PASSWORD === user?.password && {
             default: true,
           }),
+          role: user?.role,
         },
       };
     },

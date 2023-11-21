@@ -255,13 +255,13 @@ export default function LeadPage() {
     defaultValues: {
       dateReceived: new Date(),
     },
-    values: leadFormData?.inclusions
-      ? {
-          inclusions: leadFormData.inclusions.filter((x) =>
-            inclusions.some((a) => a === x.name)
-          ),
-        }
-      : undefined,
+    values: {
+      salesAccountManager:
+        session?.user?.role === "salesManager" ? session.user : undefined,
+      inclusions: leadFormData?.inclusions?.filter((x) =>
+        inclusions.some((a) => a === x.name)
+      ),
+    },
   });
 
   useEffect(() => {
@@ -404,32 +404,16 @@ export default function LeadPage() {
               render={({ field }) => (
                 <FormItem className="space-y-3">
                   <FormLabel>Lead Type</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={(value) => {
-                        const leadType = leadFormData!.leadTypes.find(
-                          (type) => type.id === value
-                        );
-                        field.onChange(leadType);
-                      }}
-                      className="flex flex-wrap gap-8"
-                      value={formValues.leadType?.id}
-                    >
-                      {leadFormData?.leadTypes?.map((type) => (
-                        <FormItem
-                          key={type.id}
-                          className="flex items-center space-x-3 space-y-0"
-                        >
-                          <FormControl>
-                            <RadioGroupItem value={type.id} />
-                          </FormControl>
-                          <FormLabel className="font-normal capitalize">
-                            {type.name}
-                          </FormLabel>
-                        </FormItem>
-                      ))}
-                    </RadioGroup>
-                  </FormControl>
+                  <Combobox
+                    contentClassName="capitalize"
+                    triggerClassName="capitalize"
+                    items={leadFormData?.leadTypes ?? []}
+                    selectedItem={formValues.leadType}
+                    onChange={(selectedItem) => {
+                      form.setValue(`leadType`, selectedItem);
+                    }}
+                    placeholder="Select Lead Type"
+                  />
                   <FormMessage />
                 </FormItem>
               )}
@@ -862,6 +846,24 @@ export default function LeadPage() {
                     onChange={(date) => {
                       if (date) {
                         form.setValue("startDate", datefns.startOfDay(date));
+
+                        if (!formValues.eventLengthInDays) {
+                          form.setValue("eventLengthInDays", 1);
+                          form.setValue("eventDetails", [
+                            {
+                              date,
+                              startTime: "",
+                              endTime: "",
+                              pax: 0,
+                              roomSetup: undefined,
+                              mealReqs: [],
+                              functionRoom: undefined,
+                              remarks: "",
+                              rate: 0,
+                            },
+                          ]);
+                          form.setValue("endDate", datefns.endOfDay(date));
+                        }
                       }
                     }}
                     className="w-64"
