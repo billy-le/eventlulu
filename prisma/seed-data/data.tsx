@@ -23,6 +23,8 @@ export const functionRooms = [
   "meeting room I",
   "meeting room II",
   "meeting room III",
+  "eastwood café + bar",
+  "lobby lounge",
 ] as const;
 
 export const mealReqs = [
