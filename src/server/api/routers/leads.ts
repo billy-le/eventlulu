@@ -15,12 +15,14 @@ export const leadsRouter = createTRPCRouter({
     .input(
       z.object({
         leadTypeId: z.string().optional(),
+        eventTypeId: z.string().optional(),
       })
     )
     .query(async ({ ctx, input }) => {
       return await ctx.prisma.leadForm.count({
         where: {
           leadTypeId: input.leadTypeId,
+          eventTypeId: input.eventTypeId,
         },
       });
     }),

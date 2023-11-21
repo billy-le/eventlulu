@@ -226,13 +226,24 @@ export function LeadTypesForm() {
                     }
                   }}
                 />
-                <Button
-                  size="sm"
-                  className="bg-blue-400"
-                  onClick={handleCreate}
-                >
-                  Save
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    className="bg-blue-400"
+                    onClick={handleCreate}
+                  >
+                    Save
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="bg-red-400"
+                    onClick={() => {
+                      setIsCreating(false);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
               </div>
             )}
           </li>

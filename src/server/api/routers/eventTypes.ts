@@ -37,6 +37,7 @@ export const eventTypesRouter = createTRPCRouter({
           },
           data: {
             name: input.name,
+            activity: input.activity,
           },
         });
 

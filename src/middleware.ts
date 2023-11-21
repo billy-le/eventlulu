@@ -1,4 +1,3 @@
-import { getServerSession } from "next-auth";
 import { withAuth } from "next-auth/middleware";
 import { Role } from "@prisma/client";
 
@@ -11,10 +10,10 @@ export default withAuth(function middleware(req, event) {}, {
     authorized: async ({ req, token }) => {
       if (!token) return false;
       if (req.nextUrl.pathname.startsWith("/admin")) {
-        return (
+        const isAdmin =
           token.user?.role === Role.admin ||
-          token.user?.role === Role.salesManager
-        );
+          token.user?.role === Role.salesManager;
+        return isAdmin;
       }
       return true;
     },
