@@ -50,11 +50,8 @@ export const LeadSummaryModal = forwardRef<
     return null;
   }
 
-  const Icon = lead.eventType?.activity
-    ? eventIcons[lead.eventType?.activity as keyof typeof eventIcons]
-    : Calendar;
-
-  console.log(lead);
+  const Icon =
+    eventIcons[lead.eventType?.activity as keyof typeof eventIcons] ?? Calendar;
 
   return (
     <dialog

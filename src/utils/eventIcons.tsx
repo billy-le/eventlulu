@@ -12,6 +12,8 @@ import {
   Users,
   HeartHandshake,
   Utensils,
+  CandyCane,
+  Music,
 } from "lucide-react";
 
 export const eventIcons: Record<
@@ -30,4 +32,6 @@ export const eventIcons: Record<
   debut: Crown,
   "kids party": PartyPopper,
   wedding: Gem,
+  "christmas party": CandyCane,
+  prom: Music,
 };
