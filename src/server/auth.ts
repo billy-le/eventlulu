@@ -21,17 +21,18 @@ declare module "next-auth" {
   interface Session extends DefaultSession {
     user: DefaultSession["user"] & {
       id: string;
-      default?: true;
       role: Role;
-      // ...other properties
-      // role: UserRole;
     };
   }
+}
 
-  // interface User {
-  //   // ...other properties
-  //   // role: UserRole;
-  // }
+declare module "next-auth/jwt" {
+  interface JWT {
+    user?: {
+      id: string;
+      role: Role;
+    };
+  }
 }
 
 /**
@@ -69,8 +70,7 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials, req) {
-        if (!credentials?.password) return null;
-        if (!credentials?.email) return null;
+        if (!credentials?.password || !credentials?.email) return null;
 
         const user = await prisma.user.findUnique({
           where: {
@@ -103,30 +103,33 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ trigger, token, session, user, account, profile }) {
+      if (token.email) {
+        const user = await prisma.user.findUnique({
+          where: {
+            email: token.email,
+          },
+          select: {
+            id: true,
+            role: true,
+          },
+        });
+
+        if (user) {
+          token.user = user;
+        }
+      }
       if (trigger === "update" && session.name) {
         token.name = session.name;
       }
       return token;
     },
-    async session({ session }) {
-      // Send properties to the client, like an access_token and user id from a provider.
-      let user;
-      if (session.user.email) {
-        user = await prisma.user.findUnique({
-          where: {
-            email: session.user.email,
-          },
-        });
-      }
+    async session({ session, token }) {
       return {
         ...session,
         user: {
           ...session.user,
-          id: user?.id,
-          ...(env.DEFAULT_PASSWORD === user?.password && {
-            default: true,
-          }),
-          role: user?.role,
+          id: token?.user?.id,
+          role: token?.user?.role,
         },
       };
     },

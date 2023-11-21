@@ -60,8 +60,11 @@ import { EventStatus } from "@prisma/client";
 
 export default function HomePage() {
   const { toast } = useToast();
-  const { data: leads = [], refetch: refetchLeads } =
-    api.leads.getLeads.useQuery();
+  const {
+    data: leads = [],
+    refetch: refetchLeads,
+    isLoading,
+  } = api.leads.getLeads.useQuery();
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [lead, setLead] = useState<(typeof leads)[number] | null>(null);
   const [search, setSearch] = useState("");
@@ -74,6 +77,7 @@ export default function HomePage() {
   return (
     <DefaultLayout>
       <DataTable
+        isLoading={isLoading}
         searchInput={() => (
           <div className="flex gap-4">
             <Input

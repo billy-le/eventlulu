@@ -2,6 +2,9 @@ import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { z } from "zod";
 
 export const inclusionsRouter = createTRPCRouter({
+  getInclusions: protectedProcedure.query(({ ctx }) => {
+    return ctx.prisma.inclusion.findMany();
+  }),
   createInclusions: protectedProcedure
     .input(z.array(z.string()))
     .mutation(async ({ ctx, input }) => {
