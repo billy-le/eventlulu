@@ -11,6 +11,19 @@ const statuses = [
 ] as const;
 
 export const leadsRouter = createTRPCRouter({
+  getAffectedCount: protectedProcedure
+    .input(
+      z.object({
+        leadTypeId: z.string().optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      return await ctx.prisma.leadForm.count({
+        where: {
+          leadTypeId: input.leadTypeId,
+        },
+      });
+    }),
   getLeads: protectedProcedure
     .input(
       z

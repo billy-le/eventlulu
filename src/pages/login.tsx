@@ -92,9 +92,11 @@ export default function LoginPage() {
           role="presentation"
         />
         <div className="w-full max-w-lg rounded-lg bg-slate-800 px-8 py-12">
-          <h1 className="mb-10 bg-gradient-to-r from-purple-400 to-red-400 bg-clip-text text-center text-2xl font-bold uppercase leading-relaxed text-transparent">
-            EventLulu
-          </h1>
+          <div className="mb-10 text-center">
+            <h1 className="inline-block bg-gradient-to-r from-purple-400 to-red-400 bg-clip-text text-2xl font-bold uppercase leading-relaxed text-transparent">
+              EventLulu
+            </h1>
+          </div>
           <Form {...form}>
             <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
               <FormField

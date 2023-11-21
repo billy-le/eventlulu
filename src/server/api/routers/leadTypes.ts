@@ -3,7 +3,7 @@ import { z } from "zod";
 
 export const leadTypesRouter = createTRPCRouter({
   getLeadTypes: protectedProcedure.query(({ ctx }) => {
-    return ctx.prisma.leadType.findMany();
+    return ctx.prisma.leadType.findMany({ orderBy: { name: "asc" } });
   }),
   createLeadType: protectedProcedure
     .input(z.object({ name: z.string() }))
