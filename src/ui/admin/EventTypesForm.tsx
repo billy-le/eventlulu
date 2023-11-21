@@ -103,7 +103,7 @@ export function EventTypesForm() {
     updateEventType.mutate(
       {
         id: eventType.id,
-        name: selectedEventTypes[eventType.id]?.name,
+        name: selectedEventTypes[eventType.id]?.id,
         activity: activity ?? eventType.activity,
       },
       {
