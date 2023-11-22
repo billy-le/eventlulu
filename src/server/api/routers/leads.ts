@@ -37,29 +37,23 @@ export const leadsRouter = createTRPCRouter({
           }),
           ...(input.inclusionId && {
             inclusions: {
-              every: {
-                id: { equals: input.inclusionId },
+              some: {
+                id: input.inclusionId,
               },
             },
           }),
           eventDetails: {
-            every: {
+            some: {
               ...(input.functionRoomId && {
-                functionRoomId: {
-                  equals: input.functionRoomId,
-                  not: null,
-                },
+                functionRoomId: input.functionRoomId,
               }),
               ...(input.roomSetupId && {
-                roomSetupId: {
-                  equals: input.roomSetupId,
-                  not: null,
-                },
+                roomSetupId: input.roomSetupId,
               }),
               ...(input.mealReqId && {
                 mealReqs: {
-                  every: {
-                    id: { equals: input.mealReqId, not: undefined },
+                  some: {
+                    id: input.mealReqId,
                   },
                 },
               }),
