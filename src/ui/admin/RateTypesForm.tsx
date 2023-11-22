@@ -141,7 +141,6 @@ export function RateTypesForm() {
                           });
                         }
                       }}
-                      className="rounded-l-none border-l-0"
                     />
                   ) : (
                     <span className="capitalize">{rateType.name}</span>
@@ -234,7 +233,6 @@ export function RateTypesForm() {
                       setIsCreating(false);
                     }
                   }}
-                  className="rounded-l-none border-l-0"
                 />
 
                 <div className="flex gap-2">

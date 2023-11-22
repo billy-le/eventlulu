@@ -141,7 +141,6 @@ export function RoomSetupsForm() {
                           });
                         }
                       }}
-                      className="rounded-l-none border-l-0"
                     />
                   ) : (
                     <span className="capitalize">{setup.name}</span>
@@ -234,7 +233,6 @@ export function RoomSetupsForm() {
                       setIsCreating(false);
                     }
                   }}
-                  className="rounded-l-none border-l-0"
                 />
 
                 <div className="flex gap-2">
