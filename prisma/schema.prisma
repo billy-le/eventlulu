@@ -160,6 +160,7 @@ model RateType {
 model Inclusion {
     id        String     @id @default(cuid())
     name      String     @unique
+    preselect Boolean    @default(false)
     LeadForms LeadForm[]
 }
 

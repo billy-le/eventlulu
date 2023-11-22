@@ -135,6 +135,11 @@ export function LeadTypesForm() {
                       if (e.code === "Enter") {
                         handleSave(leadType);
                       }
+                      if (e.code === "Escape") {
+                        setEditIds((ids) => {
+                          return ids.filter((id) => id !== leadType.id);
+                        });
+                      }
                     }}
                   />
                 ) : (
@@ -223,6 +228,9 @@ export function LeadTypesForm() {
                   onKeyUp={(e) => {
                     if (e.code === "Enter") {
                       handleCreate();
+                    }
+                    if (e.code === "Escape") {
+                      setIsCreating(false);
                     }
                   }}
                 />

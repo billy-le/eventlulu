@@ -16,13 +16,55 @@ export const leadsRouter = createTRPCRouter({
       z.object({
         leadTypeId: z.string().optional(),
         eventTypeId: z.string().optional(),
+        functionRoomId: z.string().optional(),
+        roomSetupId: z.string().optional(),
+        mealReqId: z.string().optional(),
+        rateTypeId: z.string().optional(),
+        inclusionId: z.string().optional(),
       })
     )
     .query(async ({ ctx, input }) => {
       return await ctx.prisma.leadForm.count({
         where: {
-          leadTypeId: input.leadTypeId,
-          eventTypeId: input.eventTypeId,
+          ...(input.leadTypeId && {
+            leadTypeId: { equals: input.leadTypeId },
+          }),
+          ...(input.eventTypeId && {
+            eventTypeId: { equals: input.eventTypeId, not: null },
+          }),
+          ...(input.rateTypeId && {
+            rateTypeId: { equals: input.rateTypeId, not: null },
+          }),
+          ...(input.inclusionId && {
+            inclusions: {
+              every: {
+                id: { equals: input.inclusionId },
+              },
+            },
+          }),
+          eventDetails: {
+            every: {
+              ...(input.functionRoomId && {
+                functionRoomId: {
+                  equals: input.functionRoomId,
+                  not: null,
+                },
+              }),
+              ...(input.roomSetupId && {
+                roomSetupId: {
+                  equals: input.roomSetupId,
+                  not: null,
+                },
+              }),
+              ...(input.mealReqId && {
+                mealReqs: {
+                  every: {
+                    id: { equals: input.mealReqId, not: undefined },
+                  },
+                },
+              }),
+            },
+          },
         },
       });
     }),

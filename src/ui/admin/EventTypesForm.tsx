@@ -181,6 +181,11 @@ export function EventTypesForm() {
                           if (e.code === "Enter") {
                             handleSave(eventType);
                           }
+                          if (e.code === "Escape") {
+                            setEditIds((ids) =>
+                              ids.filter((id) => id !== eventType.id)
+                            );
+                          }
                         }}
                         className="rounded-l-none border-l-0"
                       />
@@ -284,6 +289,9 @@ export function EventTypesForm() {
                     onKeyUp={(e) => {
                       if (e.code === "Enter") {
                         handleCreate();
+                      }
+                      if (e.code === "Escape") {
+                        setIsCreating(false);
                       }
                     }}
                     className="rounded-l-none border-l-0"
