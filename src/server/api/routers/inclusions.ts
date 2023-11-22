@@ -24,7 +24,15 @@ export const inclusionsRouter = createTRPCRouter({
       return inclusions;
     }),
   updateInclusions: protectedProcedure
-    .input(z.array(z.object({ id: z.string(), name: z.string() })))
+    .input(
+      z.array(
+        z.object({
+          id: z.string(),
+          name: z.string().optional(),
+          preselect: z.boolean().optional(),
+        })
+      )
+    )
     .mutation(async ({ ctx, input }) => {
       let inclusions: {
         id: string;
@@ -38,6 +46,7 @@ export const inclusionsRouter = createTRPCRouter({
           },
           data: {
             name: item.name,
+            preselect: item.preselect,
           },
         });
         inclusions.push(inclusion);

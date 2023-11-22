@@ -114,7 +114,7 @@ export function LeadTypesForm() {
 
   return (
     <div>
-      <div className="max-w-md rounded-md border border-gray-300 p-4">
+      <div className="max-w-xl rounded-md border border-gray-300 p-4">
         <ul className="divide-y divide-solid divide-gray-300">
           {leadTypes.map((leadType) => {
             const isEditing = editIds.includes(leadType.id);

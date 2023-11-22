@@ -68,5 +68,3 @@ export const eventTypes = {
     "prom",
   ],
 } as const;
-
-export const inclusions = ["Rate is consumable of Food & Beverage"];

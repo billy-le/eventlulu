@@ -1,17 +1,18 @@
 "use client";
-import { z } from "zod";
-import * as datefns from "date-fns";
-import { api } from "~/utils/api";
 
+// core
+import { z } from "zod";
+import { api } from "~/utils/api";
+import { startOfDay, endOfDay, addDays, format as dateFormat } from "date-fns";
 import { useForm, useWatch, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { isCuid } from "@paralleldrive/cuid2";
-import { inclusions } from "prisma/seed-data/data";
 
+// components
 import {
   Form,
   FormControl,
@@ -22,7 +23,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
@@ -35,24 +35,11 @@ import {
 import { DatePicker } from "src/ui/DatePicker";
 import { DefaultLayout } from "~/layouts/default";
 import { Combobox } from "~/ui/Combobox";
-import { Plus, Trash, Edit } from "lucide-react";
+import { Plus, Trash } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "@/components/ui/popover";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+
+// interfaces
+import { EventType } from "@prisma/client";
 
 const nameId = z.object({
   id: z.string(),
@@ -125,12 +112,17 @@ const formSchema = z.object({
       })
     )
     .optional(),
-  inclusions: z.array(nameId).default([]),
+  inclusions: z
+    .array(
+      z.object({ id: z.string(), name: z.string(), preselect: z.boolean() })
+    )
+    .default([]),
 });
 
 function normalize(
   values: z.infer<typeof formSchema>
 ): z.infer<typeof formSchema> {
+  console.log(values.inclusions);
   return {
     ...values,
     dateReceived: values.dateReceived,
@@ -200,33 +192,26 @@ export default function LeadPage() {
   const leadId = router.query["leadId"];
   const isValidLeadId = !!leadId && isCuid(leadId as string);
   const { data: session } = useSession();
-  const { data: leadData = [] } = api.leads.getLeads.useQuery(
-    {
-      leadId: leadId as string,
-    },
-    {
-      refetchOnWindowFocus: false,
-      enabled: isValidLeadId,
-    }
-  );
+  const { data: leadData = [], isFetchedAfterMount } =
+    api.leads.getLeads.useQuery(
+      {
+        leadId: leadId as string,
+      },
+      {
+        refetchOnWindowFocus: false,
+        enabled: isValidLeadId,
+      }
+    );
   const createEventDetails = api.eventDetails.createEventDetails.useMutation();
   const updateEventDetails = api.eventDetails.updateEventDetails.useMutation();
   const deleteEventDetails = api.eventDetails.deleteEventDetails.useMutation();
   const createActivities = api.activities.createActivities.useMutation();
   const updateActivities = api.activities.updateActivities.useMutation();
-  const createInclusions = api.inclusions.createInclusions.useMutation();
-  const updateInclusions = api.inclusions.updateInclusions.useMutation();
-  const deleteInclusions = api.inclusions.deleteInclusions.useMutation();
-  const [incPopoverOpen, setIncPopoverOpen] = useState(false);
-  const [incUpdatePopoverOpen, setUpdateIncPopoverOpen] = useState<
-    string | null
-  >(null);
-  const incRef = useRef<HTMLInputElement | null>(null);
 
-  const { data: leadFormData, refetch: refetchLeadFormData } =
-    api.leads.getLeadFormData.useQuery(undefined, {
-      refetchOnWindowFocus: false,
-    });
+  const { data: leadFormData } = api.leads.getLeadFormData.useQuery(undefined, {
+    refetchOnWindowFocus: false,
+  });
+
   const lead = leadData[0];
   const { toast } = useToast();
 
@@ -258,9 +243,9 @@ export default function LeadPage() {
     values: {
       salesAccountManager:
         session?.user?.role === "salesManager" ? session.user : undefined,
-      inclusions: leadFormData?.inclusions?.filter((x) =>
-        inclusions.some((a) => a === x.name)
-      ),
+      inclusions:
+        leadFormData?.inclusions?.filter((inclusion) => inclusion.preselect) ??
+        [],
     },
   });
 
@@ -278,7 +263,7 @@ export default function LeadPage() {
             : lead.eventType
             ? {
                 id: lead.eventType.id,
-                name: lead.eventType.name,
+                name: lead.eventType.activity,
               }
             : undefined,
         })
@@ -336,6 +321,26 @@ export default function LeadPage() {
     }
     await mutateLead.mutateAsync(leadFormValues);
   }
+
+  const eventTypes: EventType[] = useMemo(() => {
+    return (
+      formValues.isCorporate
+        ? leadFormData?.eventTypes
+            ?.filter((type) => type.name === "corporate")
+            ?.map((type) => ({
+              ...type,
+              name: type.activity,
+            })) ?? []
+        : leadFormData?.eventTypes
+            ?.filter((type) => type.name === "social function")
+            ?.map((type) => ({
+              ...type,
+              name: type.activity,
+            })) ?? []
+    )
+      .sort((a, b) => a.activity.localeCompare(b.activity))
+      .concat({ id: "other", name: "other", activity: "other" });
+  }, [formValues.isCorporate, leadFormData?.eventTypes]);
 
   return (
     <DefaultLayout>
@@ -412,7 +417,7 @@ export default function LeadPage() {
                     onChange={(selectedItem) => {
                       form.setValue(`leadType`, selectedItem);
                     }}
-                    placeholder="Select Lead Type"
+                    placeholder="Select One"
                   />
                   <FormMessage />
                 </FormItem>
@@ -468,7 +473,10 @@ export default function LeadPage() {
                     <FormControl>
                       <Checkbox
                         checked={field.value}
-                        onCheckedChange={field.onChange}
+                        onCheckedChange={(checked) => {
+                          form.setValue("eventType", undefined);
+                          field.onChange(checked);
+                        }}
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
@@ -587,84 +595,49 @@ export default function LeadPage() {
                 <FormItem className="col-span-2">
                   <FormLabel>Event Type</FormLabel>
                   <FormControl>
-                    <RadioGroup
-                      onValueChange={(value) => {
-                        const eventType = leadFormData?.eventTypes.find(
-                          ({ id }) => id === value
-                        );
+                    <div className="flex gap-4">
+                      <Combobox
+                        items={eventTypes}
+                        selectedItem={formValues?.eventType}
+                        onChange={(selectedItem) => {
+                          if (selectedItem.id !== "other") {
+                            form.setValue("eventTypeOther", "");
+                          }
 
-                        if (value !== "other") {
-                          form.setValue("eventTypeOther", "");
-                        }
-
-                        field.onChange(
-                          value === "other"
-                            ? { id: "other", name: "other" }
-                            : eventType
-                        );
-                      }}
-                      value={field.value?.id}
-                      className="flex flex-wrap gap-8"
-                    >
-                      {formValues.isCorporate
-                        ? leadFormData?.eventTypes
-                            ?.filter((type) => type.name === "corporate")
-                            ?.map((eventType) => (
-                              <FormItem
-                                key={eventType.id}
-                                className="flex items-center space-x-3 space-y-0"
-                              >
-                                <FormControl>
-                                  <RadioGroupItem value={eventType.id} />
-                                </FormControl>
-                                <FormLabel className="capitalize">
-                                  {eventType.activity}
-                                </FormLabel>
-                              </FormItem>
-                            ))
-                        : leadFormData?.eventTypes
-                            ?.filter((type) => type.name === "social function")
-                            ?.map((eventType) => (
-                              <FormItem
-                                key={eventType.id}
-                                className="flex items-center space-x-3 space-y-0"
-                              >
-                                <FormControl>
-                                  <RadioGroupItem value={eventType.id} />
-                                </FormControl>
-                                <FormLabel className="capitalize">
-                                  {eventType.activity}
-                                </FormLabel>
-                              </FormItem>
-                            ))}
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="other" />
-                        </FormControl>
-                        <FormLabel>Other</FormLabel>
-                      </FormItem>
-                    </RadioGroup>
+                          field.onChange(
+                            selectedItem.id === "other"
+                              ? { id: "other", name: "other" }
+                              : selectedItem
+                          );
+                        }}
+                        placeholder="Select One"
+                        itemClassName="capitalize w-64"
+                        triggerClassName="capitalize w-64"
+                        contentClassName="w-64"
+                      />
+                      {formValues.eventType?.name === "other" && (
+                        <FormField
+                          control={form.control}
+                          name="eventTypeOther"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  placeholder="Please specify..."
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
-            {formValues.eventType?.name === "other" && (
-              <FormField
-                control={form.control}
-                name="eventTypeOther"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Please Specify</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
           </div>
           <div className="space-y-4 rounded border bg-slate-50 p-4">
             <div className="flex gap-4">
@@ -845,7 +818,7 @@ export default function LeadPage() {
                     date={formValues.startDate}
                     onChange={(date) => {
                       if (date) {
-                        form.setValue("startDate", datefns.startOfDay(date));
+                        form.setValue("startDate", startOfDay(date));
 
                         if (!formValues.eventLengthInDays) {
                           form.setValue("eventLengthInDays", 1);
@@ -862,7 +835,7 @@ export default function LeadPage() {
                               rate: 0,
                             },
                           ]);
-                          form.setValue("endDate", datefns.endOfDay(date));
+                          form.setValue("endDate", endOfDay(date));
                         }
                       }
                     }}
@@ -894,10 +867,7 @@ export default function LeadPage() {
                               >["eventDetails"] = [];
 
                               for (let i = 0; i < count; i++) {
-                                const date = datefns.addDays(
-                                  formValues.startDate!,
-                                  i
-                                );
+                                const date = addDays(formValues.startDate!, i);
                                 const event =
                                   formValues.eventDetails?.[i] ??
                                   formValues?.eventDetails?.[i - 1];
@@ -921,11 +891,8 @@ export default function LeadPage() {
 
                               form.setValue("eventDetails", events);
 
-                              const endDate = datefns.endOfDay(
-                                datefns.addDays(
-                                  formValues.startDate!,
-                                  count - 1
-                                )
+                              const endDate = endOfDay(
+                                addDays(formValues.startDate!, count - 1)
                               );
                               form.setValue("endDate", endDate);
                             } else {
@@ -947,7 +914,7 @@ export default function LeadPage() {
                 <FormItem>
                   <FormLabel>End Date:</FormLabel>
                   <FormControl>
-                    <p>{datefns.format(formValues.endDate, "MMMM d, yyyy")}</p>
+                    <p>{dateFormat(formValues.endDate, "MMMM d, yyyy")}</p>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -1144,6 +1111,51 @@ export default function LeadPage() {
             </Table>
           </div>
 
+          <div className="space-y-4 rounded border bg-slate-50 p-4">
+            <FormLabel>Inclusions</FormLabel>
+            <div className="space-y-1">
+              {isFetchedAfterMount &&
+                leadFormData?.inclusions?.map((inclusion) => (
+                  <FormItem
+                    key={inclusion.id}
+                    className="flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-3">
+                      <FormControl>
+                        <Checkbox
+                          checked={formValues.inclusions?.some(
+                            (inc) => inc?.id === inclusion.id
+                          )}
+                          defaultChecked={inclusion.preselect}
+                          onCheckedChange={(checked) => {
+                            const value = checked.valueOf();
+                            if (value) {
+                              form.setValue(
+                                "inclusions",
+                                formValues.inclusions?.concat(inclusion)
+                              );
+                            } else {
+                              form.setValue(
+                                "inclusions",
+                                formValues.inclusions?.filter(
+                                  (inc) => inc.id !== inclusion.id
+                                )
+                              );
+                            }
+                          }}
+                        />
+                      </FormControl>
+                      <div className="leading-none">
+                        <FormLabel className="text-xs">
+                          {inclusion.name}
+                        </FormLabel>
+                      </div>
+                    </div>
+                  </FormItem>
+                ))}
+            </div>
+          </div>
+
           <div className="rounded border bg-slate-50 p-4">
             Estimated Budget:
             <div className="flex gap-4">
@@ -1203,170 +1215,6 @@ export default function LeadPage() {
                   </FormItem>
                 )}
               />
-            </div>
-          </div>
-
-          <div className="space-y-4 rounded border bg-slate-50 p-4">
-            <div className="flex items-center justify-between">
-              <FormLabel>Inclusions</FormLabel>
-              <Popover
-                open={incPopoverOpen}
-                onOpenChange={(isOpen) => setIncPopoverOpen(isOpen)}
-              >
-                <PopoverTrigger asChild>
-                  <Button type="button" size="icon">
-                    <Plus />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent>
-                  <div className="flex items-center justify-center gap-4">
-                    <Input ref={incRef} />
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={() => {
-                        const value = incRef.current?.value;
-                        if (value) {
-                          createInclusions.mutate([value], {
-                            onSuccess: (inclusions) => {
-                              refetchLeadFormData();
-                              form.setValue("inclusions", [
-                                ...(formValues.inclusions ?? []),
-                                ...inclusions,
-                              ]);
-                              setIncPopoverOpen(false);
-                            },
-                          });
-                        }
-                      }}
-                    >
-                      Create
-                    </Button>
-                  </div>
-                </PopoverContent>
-              </Popover>
-            </div>
-            <div className="space-y-1">
-              {leadFormData?.inclusions?.map((inclusion) => (
-                <FormItem
-                  key={inclusion.id}
-                  className="flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-3">
-                    <FormControl>
-                      <Checkbox
-                        checked={formValues.inclusions?.some(
-                          (inc) => inc?.id === inclusion.id
-                        )}
-                        onCheckedChange={(checked) => {
-                          const value = checked.valueOf();
-                          if (value) {
-                            form.setValue(
-                              "inclusions",
-                              formValues.inclusions?.concat(inclusion)
-                            );
-                          } else {
-                            form.setValue(
-                              "inclusions",
-                              formValues.inclusions?.filter(
-                                (inc) => inc.id !== inclusion.id
-                              )
-                            );
-                          }
-                        }}
-                      />
-                    </FormControl>
-                    <div className="leading-none">
-                      <FormLabel className="text-xs">
-                        {inclusion.name}
-                      </FormLabel>
-                    </div>
-                  </div>
-                  <div className="flex gap-2 text-xs">
-                    <Popover
-                      open={incUpdatePopoverOpen === inclusion.id}
-                      onOpenChange={(isOpen) => {
-                        setUpdateIncPopoverOpen(isOpen ? inclusion.id : null);
-                      }}
-                    >
-                      <PopoverTrigger asChild>
-                        <Edit size="12" />
-                      </PopoverTrigger>
-                      <PopoverContent>
-                        <div className="flex items-center gap-4">
-                          <Input ref={incRef} defaultValue={inclusion.name} />
-                          <Button
-                            type="button"
-                            onClick={() => {
-                              const value = incRef.current?.value;
-                              if (value) {
-                                updateInclusions.mutate(
-                                  [{ id: inclusion.id, name: value }],
-                                  {
-                                    onSuccess: () => {
-                                      const incIndex =
-                                        formValues?.inclusions?.findIndex(
-                                          (inc) => inc.id === inclusion.id
-                                        ) ?? -1;
-                                      if (incIndex > -1) {
-                                        const copy = [
-                                          ...(formValues?.inclusions ?? []),
-                                        ];
-                                        copy[incIndex]!.name === value;
-                                        form.setValue("inclusions", copy);
-                                      }
-                                      refetchLeadFormData();
-                                      setUpdateIncPopoverOpen(null);
-                                    },
-                                  }
-                                );
-                              }
-                            }}
-                          >
-                            Update
-                          </Button>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                    <AlertDialog>
-                      <AlertDialogTrigger>
-                        <Trash size="12" className="text-destructive" />
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>
-                            Are you absolutely sure?
-                          </AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This action cannot be undone. This will permanently
-                            delete the inclusion, "{inclusion.name}".
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => {
-                              deleteInclusions.mutate([inclusion.id], {
-                                onSuccess: () => {
-                                  form.setValue(
-                                    "inclusions",
-                                    formValues.inclusions?.filter(
-                                      (inc) => inc.id !== inclusion.id
-                                    )
-                                  );
-                                  refetchLeadFormData();
-                                },
-                              });
-                            }}
-                          >
-                            Continue
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </FormItem>
-              ))}
             </div>
           </div>
 

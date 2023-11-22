@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Inclusion } from "@prisma/client";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 export function InclusionsForm() {
   const [editIds, setEditIds] = useState<string[]>([]);
@@ -94,6 +96,14 @@ export function InclusionsForm() {
     });
   }
 
+  function handleChecked(inclusion: Inclusion, checked: boolean) {
+    updateInclusions.mutate([{ id: inclusion.id, preselect: checked }], {
+      onSuccess: () => {
+        refetch();
+      },
+    });
+  }
+
   return (
     <div>
       <div className="max-w-xl rounded-md border border-gray-300 p-4">
@@ -107,6 +117,14 @@ export function InclusionsForm() {
                   key={inclusion.id}
                   className="flex items-center justify-between gap-4 py-2 first:pt-0"
                 >
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      defaultChecked={inclusion.preselect}
+                      onCheckedChange={(checked) => {
+                        handleChecked(inclusion, checked);
+                      }}
+                    />
+                  </div>
                   {isEditing ? (
                     <Input
                       ref={(el) => {
