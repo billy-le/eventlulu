@@ -143,10 +143,9 @@ export function InclusionsForm() {
                           });
                         }
                       }}
-                      className="rounded-l-none border-l-0"
                     />
                   ) : (
-                    <span className="capitalize">{inclusion.name}</span>
+                    <span className="w-full capitalize">{inclusion.name}</span>
                   )}
                   <span className="flex gap-2">
                     {isEditing ? (
@@ -236,7 +235,6 @@ export function InclusionsForm() {
                       setIsCreating(false);
                     }
                   }}
-                  className="rounded-l-none border-l-0"
                 />
 
                 <div className="flex gap-2">
