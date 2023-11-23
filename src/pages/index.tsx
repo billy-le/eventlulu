@@ -66,6 +66,11 @@ import { statusColors } from "~/utils/statusColors";
 import { EventStatus } from "@prisma/client";
 
 const parentEventTypes = ["corporate", "social function"];
+const filterKeyText = {
+  eventTypes: "Type",
+  activities: "Activity",
+  statuses: "Status",
+} as const;
 
 export default function HomePage() {
   const { toast } = useToast();
@@ -129,38 +134,60 @@ export default function HomePage() {
                       </DropdownMenuSubTrigger>
                       <DropdownMenuPortal>
                         <DropdownMenuSubContent>
-                          {parentEventTypes.map((eventType) => (
-                            <DropdownMenuItem
-                              key={eventType}
-                              onSelect={(e) => {
-                                e.preventDefault();
-                                setFilters((filters) => {
-                                  return {
-                                    ...filters,
-                                    eventTypes: filters.eventTypes.includes(
-                                      eventType
-                                    )
-                                      ? filters.eventTypes.filter(
-                                          (f) => f !== eventType
+                          {parentEventTypes.concat("other").map((eventType) => (
+                            <>
+                              {eventType === "other" && (
+                                <DropdownMenuSeparator />
+                              )}
+                              <DropdownMenuItem
+                                key={eventType}
+                                onSelect={(e) => {
+                                  e.preventDefault();
+                                  setFilters((filters) => {
+                                    if (eventType === "other") {
+                                      return {
+                                        ...filters,
+                                        eventTypes: filters.eventTypes.includes(
+                                          "other"
                                         )
-                                      : filters.eventTypes.concat(eventType),
-                                  };
-                                });
-                              }}
-                              className="capitalize"
-                            >
-                              <div className="flex items-center gap-2">
-                                <span>
-                                  {filters.eventTypes.includes(eventType) && (
-                                    <Check
-                                      size="16"
-                                      className="text-pink-400"
-                                    />
-                                  )}
-                                </span>
-                                {eventType}
-                              </div>
-                            </DropdownMenuItem>
+                                          ? []
+                                          : ["other"],
+                                        activities: [],
+                                      };
+                                    }
+
+                                    const withoutOther =
+                                      filters.eventTypes.filter(
+                                        (type) => type !== "other"
+                                      );
+
+                                    return {
+                                      ...filters,
+                                      eventTypes: withoutOther.includes(
+                                        eventType
+                                      )
+                                        ? withoutOther.filter(
+                                            (f) => f !== eventType
+                                          )
+                                        : withoutOther.concat(eventType),
+                                    };
+                                  });
+                                }}
+                                className="capitalize"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <span>
+                                    {filters.eventTypes.includes(eventType) && (
+                                      <Check
+                                        size="16"
+                                        className="text-pink-400"
+                                      />
+                                    )}
+                                  </span>
+                                  {eventType}
+                                </div>
+                              </DropdownMenuItem>
+                            </>
                           ))}
                         </DropdownMenuSubContent>
                       </DropdownMenuPortal>
@@ -279,11 +306,14 @@ export default function HomePage() {
               </Link>
             </div>
             <div className="mb-4 flex flex-wrap gap-2">
-              {Object.entries(filters).map(([key, values]) => {
+              {Object.entries(filters).map(([key, values], index) => {
                 if (!values.length) return null;
                 return values.map((value) => (
                   <Badge key={value} className="capitalize" variant="secondary">
-                    <span>{value}</span>
+                    <span className="mr-1 text-xs text-slate-500">
+                      {filterKeyText[key as keyof typeof filters]}:
+                    </span>
+                    <span className="mr-1">{value}</span>
                     <Button
                       variant="ghost"
                       type="button"

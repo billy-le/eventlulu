@@ -78,20 +78,32 @@ export const leadsRouter = createTRPCRouter({
         .optional()
     )
     .query(async ({ ctx, input }) => {
-      let where = {};
-      if (input?.leadId) {
-        where = {
-          id: input.leadId,
-        };
+      let eventTypeOther: string | undefined = undefined;
+
+      let eventTypes: string[] | undefined = undefined;
+      if (input?.eventTypes) {
+        eventTypeOther =
+          input.eventTypes.filter((type) => type === "other")?.[0] ?? "";
+        if (eventTypeOther) {
+          eventTypes = input.eventTypes.filter((type) => type !== "other");
+          if (!eventTypes.length) {
+            eventTypes = undefined;
+          }
+        }
       }
 
       const leads = await ctx.prisma.leadForm.findMany({
         where: {
           ...(input?.leadId && { id: input.leadId }),
-          ...(input?.eventTypes?.length && {
+          ...(eventTypeOther && {
+            eventTypeOther: {
+              not: null,
+            },
+          }),
+          ...(eventTypes?.length && {
             eventType: {
               name: {
-                in: input.eventTypes,
+                in: eventTypes,
               },
             },
           }),
