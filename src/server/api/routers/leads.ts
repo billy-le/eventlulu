@@ -80,7 +80,7 @@ export const leadsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       let eventTypeOther: string | undefined = undefined;
 
-      let eventTypes: string[] | undefined = undefined;
+      let eventTypes: string[] | undefined = input?.eventTypes;
       if (input?.eventTypes) {
         eventTypeOther =
           input.eventTypes.filter((type) => type === "other")?.[0] ?? "";
