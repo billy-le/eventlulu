@@ -56,6 +56,7 @@ import {
   FilterX,
   Eye,
   X,
+  ArrowRight,
 } from "lucide-react";
 import { LeadSummaryModal } from "~/ui/LeadSummaryModal";
 
@@ -349,11 +350,38 @@ export default function HomePage() {
             cell: ({ row }) => {
               const lead = row.original;
               return (
-                <div>
-                  {dateFormat(lead.startDate, "MMM d, yyyy")}
-                  {isSameDay(lead.startDate, lead.endDate)
-                    ? ""
-                    : ` - ${dateFormat(lead.endDate, "MMM d, yyyy")}`}
+                <div className="flex items-center gap-1">
+                  <div className="grid h-20 w-20 place-items-center rounded-md border border-slate-400 text-center">
+                    <div className="text-xs text-slate-700">
+                      {dateFormat(lead.startDate, "MMMM")}
+                    </div>
+                    <div className="text-xl font-bold text-slate-800">
+                      {dateFormat(lead.startDate, "d")}
+                    </div>
+                    <div className="text-xs text-slate-700">
+                      {dateFormat(lead.startDate, "yyyy")}
+                    </div>
+                  </div>
+                  {isSameDay(lead.startDate, lead.endDate) ? (
+                    ""
+                  ) : (
+                    <>
+                      <div>
+                        <ArrowRight />
+                      </div>
+                      <div className="grid h-20 w-20 place-items-center rounded-md border border-slate-400 text-center">
+                        <div className="text-xs text-slate-700">
+                          {dateFormat(lead.endDate, "MMMM")}
+                        </div>
+                        <div className="text-xl font-bold text-slate-800">
+                          {dateFormat(lead.endDate, "d")}
+                        </div>
+                        <div className="text-xs text-slate-700">
+                          {dateFormat(lead.endDate, "yyyy")}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               );
             },
@@ -480,7 +508,7 @@ export default function HomePage() {
                 <div
                   className={`rounded ${
                     statusColors[lead.status]
-                  } w-fit px-2 py-1 text-center text-xs uppercase`}
+                  } w-fit px-2 py-1 text-center text-xs font-bold uppercase`}
                 >
                   {lead.status}
                 </div>
@@ -497,7 +525,7 @@ export default function HomePage() {
                   onClick={() => column.toggleSorting(isAscending)}
                   className="space-x-2"
                 >
-                  <span>Last Proposal Sent Date</span>
+                  <span>Proposal Sent Date</span>
                   {isAscending ? (
                     <ArrowDown size="20" />
                   ) : (
@@ -508,13 +536,9 @@ export default function HomePage() {
             },
             cell: ({ row }) => {
               const lead = row.original;
-              return (
-                <div>
-                  {lead.lastDateSent
-                    ? dateFormat(lead.lastDateSent, "MMM d, yyyy")
-                    : ""}
-                </div>
-              );
+              return lead.lastDateSent ? (
+                <span>{dateFormat(lead.lastDateSent, "MMM d, yyyy")}</span>
+              ) : null;
             },
           },
           {
