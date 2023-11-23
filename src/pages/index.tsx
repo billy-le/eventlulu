@@ -251,7 +251,17 @@ export default function HomePage() {
                                 }));
                               }}
                             >
-                              {status}
+                              <div className="flex items-center gap-2">
+                                <span>
+                                  {filters.statuses.includes(status) && (
+                                    <Check
+                                      size="16"
+                                      className="text-pink-400"
+                                    />
+                                  )}
+                                </span>
+                                {status}
+                              </div>
                             </DropdownMenuItem>
                           ))}
                         </DropdownMenuSubContent>
