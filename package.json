@@ -11,7 +11,6 @@
     "dev:seed": "prisma db seed -- --environment development --seedCount 50"
   },
   "dependencies": {
-    "@faker-js/faker": "^8.0.2",
     "@hookform/resolvers": "^3.2.0",
     "@next-auth/prisma-adapter": "^1.0.7",
     "@paralleldrive/cuid2": "^2.2.2",
@@ -53,6 +52,7 @@
     "zod": "^3.22.1"
   },
   "devDependencies": {
+    "@faker-js/faker": "^8.0.2",
     "@types/bcrypt": "^5.0.0",
     "@types/eslint": "^8.37.0",
     "@types/node": "^18.17.5",

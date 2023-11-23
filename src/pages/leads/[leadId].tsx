@@ -3,7 +3,13 @@
 // core
 import { z } from "zod";
 import { api } from "~/utils/api";
-import { startOfDay, endOfDay, addDays, format as dateFormat } from "date-fns";
+import {
+  startOfDay,
+  endOfDay,
+  addDays,
+  isAfter,
+  format as dateFormat,
+} from "date-fns";
 import { useForm, useWatch, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/router";
@@ -283,6 +289,18 @@ export default function LeadPage() {
     if (leadFormValues.eventType?.id === "other") {
       leadFormValues.eventType = undefined;
     }
+
+    if (
+      !leadFormValues.endDate ||
+      isAfter(leadFormValues.startDate, leadFormValues.endDate)
+    ) {
+      toast({
+        title: "Invalid Start Date",
+        description: <span>Start Date cannot be after End Date</span>,
+      });
+      return;
+    }
+
     if (lead?.id) {
       const eventDetailsToDelete = lead.eventDetails
         .filter((d) => !leadFormValues.eventDetails.find((a) => a.id === d.id))

@@ -94,19 +94,21 @@ export const LeadSummaryModal = forwardRef<
                 );
               }
 
+              let isDayOf = false;
+
+              try {
+                isDayOf = datefns.isWithinInterval(newDate, {
+                  start: datefns.startOfDay(lead.startDate),
+                  end: datefns.endOfDay(lead.endDate),
+                });
+              } catch (err) {}
+
               return (
                 <CalendarDate
                   key={index}
                   date={newDate}
                   size="md"
-                  className={
-                    datefns.isWithinInterval(newDate, {
-                      start: datefns.startOfDay(lead.startDate),
-                      end: datefns.endOfDay(lead.endDate),
-                    })
-                      ? " bg-slate-200 font-bold"
-                      : ""
-                  }
+                  className={isDayOf ? " bg-slate-200 font-bold" : ""}
                 />
               );
             })}
