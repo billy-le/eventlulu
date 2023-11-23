@@ -31,20 +31,18 @@ interface DataTableProps<TData, TValue> {
   onNextClick?: () => Promise<undefined>;
   onPreviousClick?: () => Promise<undefined>;
   onRowClick?: (data: TData) => void;
-  actionButtons?: ReactElement[];
-  searchInput?: (table: TableType<TData>) => ReactElement;
   isLoading?: boolean;
+  actionsRow?: (table: TableType<TData>) => ReactElement;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
-  actionButtons,
   onNextClick,
   onPreviousClick,
   onRowClick,
-  searchInput: searchInput,
   isLoading,
+  actionsRow,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -66,16 +64,7 @@ export function DataTable<TData, TValue>({
 
   return (
     <>
-      <div className="mb-4 flex justify-between space-y-1.5">
-        {searchInput && searchInput(table)}
-        {actionButtons && (
-          <div className="flex gap-4">
-            {actionButtons.map((Button, index) => (
-              <React.Fragment key={index}>{Button}</React.Fragment>
-            ))}
-          </div>
-        )}
-      </div>
+      {actionsRow && actionsRow(table)}
       <div className="rounded-md border">
         <Table>
           <TableHeader>

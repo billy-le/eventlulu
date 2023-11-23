@@ -1,12 +1,17 @@
 "use client";
 
+// core
 import { api } from "~/utils/api";
-import * as datefns from "date-fns";
-
+import { isSameDay, format as dateFormat } from "date-fns";
+import { useRef, useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
 import Link from "next/link";
+
+// components
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DefaultLayout } from "~/layouts/default";
 import { DataTable } from "~/ui/DataTable";
+import { DefaultLayout } from "~/layouts/default";
 import {
   DropdownMenu,
   DropdownMenuItem,
@@ -50,91 +55,267 @@ import {
   Filter,
   FilterX,
   Eye,
+  X,
 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
-import { useRef, useState } from "react";
 import { LeadSummaryModal } from "~/ui/LeadSummaryModal";
+
+// helpers
 import { eventIcons } from "~/utils/eventIcons";
 import { statusColors } from "~/utils/statusColors";
 import { EventStatus } from "@prisma/client";
 
+const parentEventTypes = ["corporate", "social function"];
+
 export default function HomePage() {
   const { toast } = useToast();
+  const [filters, setFilters] = useState<{
+    eventTypes: string[];
+    activities: string[];
+    statuses: EventStatus[];
+  }>({
+    eventTypes: [],
+    activities: [],
+    statuses: [],
+  });
   const {
     data: leads = [],
     refetch: refetchLeads,
     isLoading,
-  } = api.leads.getLeads.useQuery();
+  } = api.leads.getLeads.useQuery({
+    activities: filters.activities,
+    eventTypes: filters.eventTypes,
+    statuses: filters.statuses,
+  });
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [lead, setLead] = useState<(typeof leads)[number] | null>(null);
   const [search, setSearch] = useState("");
-  const [filters, setFilters] = useState([]);
 
   const deleteLead = api.leads.deleteLead.useMutation();
   const markAsSent = api.leads.sentLead.useMutation();
   const changeStatus = api.leads.updateStatus.useMutation();
 
+  const { data: eventTypes = [] } = api.eventTypes.getEventTypes.useQuery();
+
   return (
     <DefaultLayout>
       <DataTable
         isLoading={isLoading}
-        searchInput={() => (
-          <div className="flex gap-4">
-            <Input
-              placeholder="Find by contact..."
-              value={search}
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                const value = event.target.value;
-                setSearch(value);
-              }}
-              className="max-w-sm"
-              type="search"
-            />
-            {/* <DropdownMenu>
-              <DropdownMenuTrigger asChild className="h-10">
-                <Button className="h-10 w-12 p-0">
-                  <span className="sr-only">Open Filter Menu</span>
-                  <Filter size="16" />
+        actionsRow={() => (
+          <>
+            <div className="mb-4 flex justify-between">
+              <div className="flex gap-4">
+                <Input
+                  placeholder="Find by contact..."
+                  value={search}
+                  onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                    const value = event.target.value;
+                    setSearch(value);
+                  }}
+                  className="max-w-sm"
+                  type="search"
+                />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild className="h-10">
+                    <Button className="h-10 w-12 p-0">
+                      <span className="sr-only">Open Filter Menu</span>
+                      <Filter size="16" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger>
+                        <span>Event Type</span>
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuPortal>
+                        <DropdownMenuSubContent>
+                          {parentEventTypes.map((eventType) => (
+                            <DropdownMenuItem
+                              key={eventType}
+                              onSelect={(e) => {
+                                e.preventDefault();
+                                setFilters((filters) => {
+                                  return {
+                                    ...filters,
+                                    eventTypes: filters.eventTypes.includes(
+                                      eventType
+                                    )
+                                      ? filters.eventTypes.filter(
+                                          (f) => f !== eventType
+                                        )
+                                      : filters.eventTypes.concat(eventType),
+                                  };
+                                });
+                              }}
+                              className="capitalize"
+                            >
+                              <div className="flex items-center gap-2">
+                                <span>
+                                  {filters.eventTypes.includes(eventType) && (
+                                    <Check
+                                      size="16"
+                                      className="text-pink-400"
+                                    />
+                                  )}
+                                </span>
+                                {eventType}
+                              </div>
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuSubContent>
+                      </DropdownMenuPortal>
+                    </DropdownMenuSub>
+                    {eventTypes.length > 0 && (
+                      <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>
+                          <span>Event Activity</span>
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuPortal>
+                          <DropdownMenuSubContent>
+                            {eventTypes
+                              .sort((a, b) =>
+                                a.activity.localeCompare(b.activity)
+                              )
+                              .map(({ name, activity }) => {
+                                let isDisabled = false;
+                                const pEventTypes = filters.eventTypes.filter(
+                                  (f) => f !== name
+                                );
+                                if (pEventTypes.length) {
+                                  isDisabled = true;
+                                }
+                                if (
+                                  filters.eventTypes.length ===
+                                  parentEventTypes.length
+                                ) {
+                                  isDisabled = false;
+                                }
+
+                                return (
+                                  <DropdownMenuItem
+                                    key={activity}
+                                    className="capitalize"
+                                    disabled={isDisabled}
+                                    onSelect={(e) => {
+                                      e.preventDefault();
+                                      setFilters((filters) => ({
+                                        ...filters,
+                                        activities: filters.activities.includes(
+                                          activity
+                                        )
+                                          ? filters.activities.filter(
+                                              (f) => f !== activity
+                                            )
+                                          : filters.activities.concat(activity),
+                                      }));
+                                    }}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <span>
+                                        {filters.activities.includes(
+                                          activity
+                                        ) && (
+                                          <Check
+                                            size="16"
+                                            className="text-pink-400"
+                                          />
+                                        )}
+                                      </span>
+                                      {activity}
+                                    </div>
+                                  </DropdownMenuItem>
+                                );
+                              })}
+                          </DropdownMenuSubContent>
+                        </DropdownMenuPortal>
+                      </DropdownMenuSub>
+                    )}
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger>
+                        <span>Status</span>
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuPortal>
+                        <DropdownMenuSubContent>
+                          {Object.values(EventStatus).map((status) => (
+                            <DropdownMenuItem
+                              key={status}
+                              className="capitalize"
+                              onSelect={(e) => {
+                                e.preventDefault();
+                                setFilters((filters) => ({
+                                  ...filters,
+                                  statuses: filters.statuses.includes(status)
+                                    ? filters.statuses.filter(
+                                        (f) => f !== status
+                                      )
+                                    : filters.statuses.concat(status),
+                                }));
+                              }}
+                            >
+                              {status}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuSubContent>
+                      </DropdownMenuPortal>
+                    </DropdownMenuSub>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              <Link href="/leads/create">
+                <Button type="button">
+                  <Plus size="18" className="mr-2" />
+                  New Lead
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
-                    <span>Event Type</span>
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuPortal>
-                    <DropdownMenuSubContent>
-                      <DropdownMenuItem>Corporate</DropdownMenuItem>
-                      <DropdownMenuItem>Social Function</DropdownMenuItem>
-                    </DropdownMenuSubContent>
-                  </DropdownMenuPortal>
-                </DropdownMenuSub>
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
-                    <span>Status</span>
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuPortal>
-                    <DropdownMenuSubContent>
-                      {Object.values(EventStatus).map((status) => (
-                        <DropdownMenuItem className="capitalize">
-                          {status}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuSubContent>
-                  </DropdownMenuPortal>
-                </DropdownMenuSub>
-              </DropdownMenuContent>
-            </DropdownMenu> */}
-          </div>
+              </Link>
+            </div>
+            <div className="mb-4 flex flex-wrap gap-2">
+              {Object.entries(filters).map(([key, values]) => {
+                if (!values.length) return null;
+                return values.map((value) => (
+                  <Badge key={value} className="capitalize" variant="secondary">
+                    <span>{value}</span>
+                    <Button
+                      variant="ghost"
+                      type="button"
+                      className="h-6 w-6 p-0 text-pink-500"
+                      onClick={() => {
+                        if (
+                          key === "eventTypes" &&
+                          filters.eventTypes.length > 1
+                        ) {
+                          const removeActivities = eventTypes.filter(
+                            (eventType) => eventType.name === value
+                          );
+                          const activities = filters.activities.filter(
+                            (activity) =>
+                              !removeActivities.find(
+                                (a) => a.activity === activity
+                              )
+                          );
+                          setFilters((filters) => ({
+                            ...filters,
+                            [key]: filters[key as keyof typeof filters].filter(
+                              (f) => f !== value
+                            ),
+                            activities,
+                          }));
+                        } else {
+                          setFilters((filters) => ({
+                            ...filters,
+                            [key]: filters[key as keyof typeof filters].filter(
+                              (f) => f !== value
+                            ),
+                          }));
+                        }
+                      }}
+                    >
+                      <X size="12" />
+                    </Button>
+                  </Badge>
+                ));
+              })}
+            </div>
+          </>
         )}
-        actionButtons={[
-          <Link href="/leads/create">
-            <Button type="button">
-              <Plus size="18" className="mr-2" />
-              New Lead
-            </Button>
-          </Link>,
-        ]}
         columns={[
           {
             accessorKey: "startDate",
@@ -157,13 +338,12 @@ export default function HomePage() {
             },
             cell: ({ row }) => {
               const lead = row.original;
-              const isSameDay = datefns.isSameDay(lead.startDate, lead.endDate);
               return (
                 <div>
-                  {datefns.format(lead.startDate, "MMM d, yyyy")}
-                  {isSameDay
+                  {dateFormat(lead.startDate, "MMM d, yyyy")}
+                  {isSameDay(lead.startDate, lead.endDate)
                     ? ""
-                    : ` - ${datefns.format(lead.endDate, "MMM d, yyyy")}`}
+                    : ` - ${dateFormat(lead.endDate, "MMM d, yyyy")}`}
                 </div>
               );
             },
@@ -321,7 +501,7 @@ export default function HomePage() {
               return (
                 <div>
                   {lead.lastDateSent
-                    ? datefns.format(lead.lastDateSent, "MMM d, yyyy")
+                    ? dateFormat(lead.lastDateSent, "MMM d, yyyy")
                     : ""}
                 </div>
               );
@@ -390,7 +570,7 @@ export default function HomePage() {
                                 .filter((status) => status !== lead.status)
                                 .map((status) => {
                                   return (
-                                    <DropdownMenuItem>
+                                    <DropdownMenuItem key={status}>
                                       <Button
                                         variant="ghost"
                                         className="h-auto p-0 font-normal"

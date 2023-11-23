@@ -128,7 +128,6 @@ const formSchema = z.object({
 function normalize(
   values: z.infer<typeof formSchema>
 ): z.infer<typeof formSchema> {
-  console.log(values.inclusions);
   return {
     ...values,
     dateReceived: values.dateReceived,
