@@ -13,6 +13,7 @@ import { calendarEventsRouter } from "~/server/api/routers/calendarEvents";
 import { leadTypesRouter } from "./routers/leadTypes";
 import { eventTypesRouter } from "./routers/eventTypes";
 import { rateTypesRouter } from "./routers/rateTypes";
+import { dashboardRouter } from "./routers/dashboard";
 
 /**
  * This is the primary router for your server.
@@ -33,6 +34,7 @@ export const appRouter = createTRPCRouter({
   leadTypes: leadTypesRouter,
   eventTypes: eventTypesRouter,
   rateTypes: rateTypesRouter,
+  dashboard: dashboardRouter,
 });
 
 // export type definition of API
