@@ -1,5 +1,5 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User } from "lucide-react";
+import { Calendar } from "lucide-react";
+import { eventIcons } from "~/utils/eventIcons";
 
 export function RecentLeads({ leads }: { leads: any[] }) {
   return (
@@ -19,16 +19,21 @@ export function RecentLeads({ leads }: { leads: any[] }) {
         );
         const total = budget + eventCosts;
 
+        const Icon =
+          eventIcons[lead.eventType.activity as keyof typeof eventIcons] ??
+          Calendar;
+
         return (
           <div key={lead.id} className="flex items-center">
-            <Avatar className="grid h-9 w-9 place-items-center bg-gradient-to-tr from-blue-400 to-pink-400">
-              <User className="text-slate-50" />
-            </Avatar>
+            <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-tr from-blue-300 to-pink-400">
+              <span className="sr-only">{lead.eventType.activity}</span>
+              <Icon className="text-white" size="20" />
+            </div>
             <div className="ml-4 space-y-1">
               <p className="text-sm font-medium leading-none">
                 {contact?.firstName ?? ""} {contact?.lastName ?? ""}
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 {contact?.email ?? ""}
               </p>
             </div>

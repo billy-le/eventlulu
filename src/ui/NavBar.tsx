@@ -4,6 +4,15 @@ import { signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { Role } from "@prisma/client";
+import { LogOut, User, PencilRuler } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuSeparator,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+} from "@/components/ui/dropdown-menu";
 
 const adminRoles = [Role.admin, Role.salesManager];
 
@@ -22,34 +31,68 @@ export function NavBar() {
             </Link>
           </div>
           <div className="flex-grow">
-            <ul className="flex items-center justify-end text-xs font-bold uppercase leading-snug text-white">
+            <ul className="flex items-center justify-end gap-4 text-sm font-bold uppercase leading-snug text-white">
               <li>
-                <Link className="px-3 py-2 hover:opacity-75" href="/leads">
+                <Link
+                  className="px-3 py-2 hover:rounded-md hover:ring-1 hover:ring-white"
+                  href="/leads"
+                >
                   Leads
                 </Link>
               </li>
-              {adminRoles.includes(session?.user?.role) && (
-                <li>
-                  <Link className="px-3 py-2 hover:opacity-75" href="/admin">
-                    Admin
-                  </Link>
-                </li>
-              )}
               <li>
-                <Link className="px-3 py-2 hover:opacity-75" href="/profile">
-                  Profile
-                </Link>
-              </li>
-
-              <li>
-                <Button
-                  className={cn(
-                    "px-3 py-2 text-xs font-bold uppercase leading-snug text-white hover:opacity-75"
-                  )}
-                  onClick={() => signOut({ callbackUrl: "/login" })}
-                >
-                  Sign out
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger>
+                    <Button className="h-10 w-10 rounded-full bg-gradient-to-tr from-purple-400 to-pink-400 p-0">
+                      <User className="text-slate-800" size="20" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem>
+                      <DropdownMenuLabel className="w-full p-0">
+                        <Link
+                          href="/profile"
+                          className="flex items-center justify-between"
+                        >
+                          <User size="20" className="text-slate-400" />
+                          Profile
+                        </Link>
+                      </DropdownMenuLabel>
+                    </DropdownMenuItem>
+                    {adminRoles.includes(session?.user?.role) && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem>
+                          <DropdownMenuLabel className="w-full p-0">
+                            <Link
+                              href="/admin"
+                              className="flex items-center justify-between"
+                            >
+                              <PencilRuler
+                                size="20"
+                                className="text-slate-400"
+                              />
+                              Admin
+                            </Link>
+                          </DropdownMenuLabel>
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>
+                      <Button
+                        variant="ghost"
+                        className={cn(
+                          "flex h-auto w-full items-center justify-between p-0"
+                        )}
+                        onClick={() => signOut({ callbackUrl: "/login" })}
+                      >
+                        <LogOut size="20" className="text-slate-400" />
+                        Sign out
+                      </Button>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </li>
             </ul>
           </div>

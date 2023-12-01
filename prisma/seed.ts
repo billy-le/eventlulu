@@ -7,7 +7,6 @@ import {
   roomSetups,
   eventTypes,
   leadTypes,
-  inclusions,
 } from "./seed-data/data";
 import { faker } from "@faker-js/faker";
 const {
@@ -135,17 +134,6 @@ async function main() {
       },
     });
     rateTypesArray.push(type);
-  }
-
-  for (const inclusion of inclusions) {
-    const leadType = await prisma.inclusion.upsert({
-      where: { name: inclusion },
-      update: {},
-      create: {
-        name: inclusion,
-      },
-    });
-    inclusionsArray.push(leadType);
   }
 
   switch (environment) {

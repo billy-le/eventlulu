@@ -298,11 +298,12 @@ export default function LeadsPage() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-              <Link href="/leads/create">
-                <Button type="button">
-                  <Plus size="18" className="mr-2" />
-                  New Lead
-                </Button>
+              <Link
+                href="/leads/create"
+                className="flex items-center rounded-md bg-black px-3 py-1 text-white"
+              >
+                <Plus size="18" className="mr-2" />
+                New Lead
               </Link>
             </div>
             <div className="mb-4 flex flex-wrap gap-2">
