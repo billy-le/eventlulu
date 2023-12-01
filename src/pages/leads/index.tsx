@@ -717,7 +717,7 @@ export default function LeadsPage() {
                         )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem>
-                          <Link href={`/proposals/${lead.id}`}>
+                          <Link href={`/proposals/${lead.id}`} target="__blank">
                             Generate Proposal
                           </Link>
                         </DropdownMenuItem>
@@ -784,7 +784,6 @@ export default function LeadsPage() {
         })}
       />
       <LeadSummaryModal ref={dialogRef} lead={lead} />
-      <AlertDialog></AlertDialog>
     </DefaultLayout>
   );
 }
