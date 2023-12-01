@@ -279,16 +279,23 @@ export const leadsRouter = createTRPCRouter({
             },
           });
         } else {
-          contact = await ctx.prisma.contact.create({
-            data: {
+          contact = await ctx.prisma.contact.findFirst({
+            where: {
               email: input.contact.email,
-              firstName: input.contact.firstName,
-              lastName: input.contact.lastName,
-              phoneNumber: input.contact.phoneNumber,
-              mobileNumber: input.contact.mobileNumber,
-              title: input.contact.title,
             },
           });
+          if (!contact) {
+            contact = await ctx.prisma.contact.create({
+              data: {
+                email: input.contact.email,
+                firstName: input.contact.firstName,
+                lastName: input.contact.lastName,
+                phoneNumber: input.contact.phoneNumber,
+                mobileNumber: input.contact.mobileNumber,
+                title: input.contact.title,
+              },
+            });
+          }
         }
 
         if (input.id) {

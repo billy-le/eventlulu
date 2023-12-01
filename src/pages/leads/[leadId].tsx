@@ -229,7 +229,7 @@ export default function LeadPage() {
             ? "Lead form has been created"
             : "Lead form has been updated",
       });
-      router.push("/");
+      router.push("/leads");
     },
     onError: () => {
       toast({

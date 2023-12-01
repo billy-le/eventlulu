@@ -23,6 +23,11 @@ export function NavBar() {
           </div>
           <div className="flex-grow">
             <ul className="flex items-center justify-end text-xs font-bold uppercase leading-snug text-white">
+              <li>
+                <Link className="px-3 py-2 hover:opacity-75" href="/leads">
+                  Leads
+                </Link>
+              </li>
               {adminRoles.includes(session?.user?.role) && (
                 <li>
                   <Link className="px-3 py-2 hover:opacity-75" href="/admin">
