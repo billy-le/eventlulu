@@ -192,7 +192,7 @@ export const dashboardRouter = createTRPCRouter({
           return acc + total;
         }, 0);
 
-        const previousPotentialRevenue = leads.reduce((acc, lead) => {
+        const previousPotentialRevenue = previousLeads.reduce((acc, lead) => {
           if (lead.status === "lost" || lead.status === "confirmed") return acc;
 
           let total = (lead.banquetsBudget ?? 0) + (lead.roomsBudget ?? 0);
