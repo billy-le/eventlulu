@@ -55,7 +55,6 @@ interface DateRangePickerProps {
 }
 
 const MODES = ["daily", "weekly", "monthly", "quarterly", "yearly"] as const;
-
 export type Mode = (typeof MODES)[number];
 export const modeWordMap: Record<Mode, string> = {
   daily: "day",

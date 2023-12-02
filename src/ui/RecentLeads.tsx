@@ -1,3 +1,5 @@
+"use client";
+
 import { Calendar } from "lucide-react";
 import { eventIcons } from "~/utils/eventIcons";
 import { getStatusIcon } from "~/utils/statusColors";

@@ -42,12 +42,21 @@ export default function DashboardPage() {
   const { data: session } = useSession();
 
   const {
-    data: dashboardStats,
+    data: dashboardStats = {
+      confirmedRevenue: 0,
+      eventsHappening: 0,
+      leadGenerationGrowth: 0,
+      leadsGenerated: 0,
+      potentialGrowth: 0,
+      potentialRevenue: 0,
+      revenueGrowth: 0,
+    },
     isLoading,
     isError,
   } = api.dashboard.getDashboardStats.useQuery({
     from: dateRange.from!,
     to: dateRange.to!,
+    mode: dateRange.mode,
   });
   const { data: leads } = api.leads.getLeads.useQuery({
     take: 5,
@@ -65,6 +74,28 @@ export default function DashboardPage() {
       setGreeting(`Good evening${userName ? `, ${userName}` : ""}`);
     }
   }, [session]);
+
+  const isConfirmedPositive = dashboardStats.revenueGrowth > 0;
+  const confirmedRevenueGrowth =
+    dashboardStats.revenueGrowth === 0
+      ? "0%"
+      : isConfirmedPositive
+      ? `+${dashboardStats.revenueGrowth}%`
+      : dashboardStats.revenueGrowth + "%";
+  const isLeadGenerationPositive = dashboardStats.leadGenerationGrowth > 0;
+  const leadGenerationGrowth =
+    dashboardStats.leadGenerationGrowth === 0
+      ? "0%"
+      : isLeadGenerationPositive
+      ? `+${dashboardStats.leadGenerationGrowth}%`
+      : dashboardStats.leadGenerationGrowth + "%";
+  const isPotentialRevenuePositive = dashboardStats.potentialGrowth > 0;
+  const potentialRevenueGrowth =
+    dashboardStats.potentialGrowth === 0
+      ? "0%"
+      : isPotentialRevenuePositive
+      ? `+${dashboardStats.potentialGrowth}%`
+      : dashboardStats.potentialGrowth + "%";
 
   return (
     <DefaultLayout>
@@ -94,7 +125,14 @@ export default function DashboardPage() {
                   {millify(dashboardStats?.confirmedRevenue ?? 0)}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  +20.1% from previous {modeWordMap[dateRange.mode]}
+                  <span
+                    className={
+                      isConfirmedPositive ? "text-green-500" : "text-red-400"
+                    }
+                  >
+                    {confirmedRevenueGrowth}
+                  </span>{" "}
+                  from previous {modeWordMap[dateRange.mode]}
                 </p>
               </CardContent>
             </Card>
@@ -110,7 +148,16 @@ export default function DashboardPage() {
                   +{dashboardStats?.leadsGenerated ?? 0}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  +180.1% from previous {modeWordMap[dateRange.mode]}
+                  <span
+                    className={
+                      isLeadGenerationPositive
+                        ? "text-green-500"
+                        : "text-red-400"
+                    }
+                  >
+                    {leadGenerationGrowth}
+                  </span>{" "}
+                  from previous from previous {modeWordMap[dateRange.mode]}
                 </p>
               </CardContent>
             </Card>
@@ -126,7 +173,16 @@ export default function DashboardPage() {
                   {millify(dashboardStats?.potentialRevenue ?? 0)}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  +19% from previous {modeWordMap[dateRange.mode]}
+                  <span
+                    className={
+                      isPotentialRevenuePositive
+                        ? "text-green-500"
+                        : "text-red-400"
+                    }
+                  >
+                    {potentialRevenueGrowth}
+                  </span>{" "}
+                  from previous {modeWordMap[dateRange.mode]}
                 </p>
               </CardContent>
             </Card>

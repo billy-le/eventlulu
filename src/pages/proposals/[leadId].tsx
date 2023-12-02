@@ -1,3 +1,5 @@
+"use client";
+
 import { api } from "~/utils/api";
 import { useRouter } from "next/router";
 import { format as dateFormat } from "date-fns";

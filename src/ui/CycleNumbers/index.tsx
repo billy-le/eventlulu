@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useRef } from "react";
 import styles from "./CycleNumbers.module.css";
 

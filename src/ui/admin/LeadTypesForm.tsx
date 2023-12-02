@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useRef, Ref, MutableRefObject, useEffect } from "react";
 
 import { api } from "~/utils/api";
