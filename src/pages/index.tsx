@@ -157,7 +157,7 @@ export default function DashboardPage() {
                   >
                     {leadGenerationGrowth}
                   </span>{" "}
-                  from previous from previous {modeWordMap[dateRange.mode]}
+                  from previous {modeWordMap[dateRange.mode]}
                 </p>
               </CardContent>
             </Card>
