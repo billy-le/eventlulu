@@ -1,16 +1,12 @@
 "use client";
 
-import { Metadata } from "next";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { DateRangePicker } from "~/ui/DateRangePicker";
+import { api } from "~/utils/api";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DateRangePicker } from "~/ui/DateRangePicker";
 import {
   DollarSign,
   Users,
@@ -21,11 +17,12 @@ import {
 import { DefaultLayout } from "~/layouts/default";
 import { CycleNumbers } from "~/ui/CycleNumbers";
 import { RecentLeads } from "~/ui/RecentLeads";
+import { DateRangeMode } from "~/ui/DateRangeMode";
 
-import { startOfMonth, startOfDay } from "date-fns";
-import { DateRange } from "react-day-picker";
-import { api } from "~/utils/api";
-import Link from "next/link";
+import { startOfMonth, startOfDay, endOfDay } from "date-fns";
+
+import type { DateRange } from "react-day-picker";
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -33,9 +30,10 @@ export const metadata: Metadata = {
 };
 
 export default function DashboardPage() {
+  const date = startOfDay(startOfMonth(new Date()));
   const [dateRange, setDateRange] = useState<DateRange>({
-    from: startOfDay(startOfMonth(new Date())),
-    to: new Date(),
+    from: date,
+    to: endOfDay(date),
   });
   const [greeting, setGreeting] = useState("");
   const [currency, setCurrency] = useState(new Intl.NumberFormat());
@@ -81,7 +79,7 @@ export default function DashboardPage() {
         <div className="flex-1 space-y-4">
           <div className="flex items-center justify-between space-y-2">
             <h2 className="text-3xl font-bold tracking-tight">{greeting}</h2>
-            <DateRangePicker
+            <DateRangeMode
               dateRange={dateRange}
               onDateChange={(dateRange) => {
                 if (dateRange) {
