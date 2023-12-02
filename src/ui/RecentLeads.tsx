@@ -1,7 +1,13 @@
 import { Calendar } from "lucide-react";
 import { eventIcons } from "~/utils/eventIcons";
+import { getStatusIcon } from "~/utils/statusColors";
+import type { RouterOutputs } from "~/server/api/root";
 
-export function RecentLeads({ leads }: { leads: any[] }) {
+export function RecentLeads({
+  leads,
+}: {
+  leads: RouterOutputs["leads"]["getLeads"];
+}) {
   return (
     <div className="space-y-8">
       {leads.map((lead) => {
@@ -20,19 +26,26 @@ export function RecentLeads({ leads }: { leads: any[] }) {
         const total = budget + eventCosts;
 
         const Icon =
-          eventIcons[lead.eventType.activity as keyof typeof eventIcons] ??
+          eventIcons[lead.eventType?.activity as keyof typeof eventIcons] ??
           Calendar;
 
         return (
           <div key={lead.id} className="flex items-center">
             <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-tr from-blue-300 to-pink-400">
-              <span className="sr-only">{lead.eventType.activity}</span>
+              <span className="sr-only">
+                {lead.eventType?.activity ?? "Other"}
+              </span>
               <Icon className="text-white" size="20" />
             </div>
             <div className="ml-4 space-y-1">
-              <p className="text-sm font-medium leading-none">
-                {contact?.firstName ?? ""} {contact?.lastName ?? ""}
-              </p>
+              <div className="flex gap-2">
+                <p className="text-sm font-medium leading-none">
+                  {contact?.firstName ?? ""} {contact?.lastName ?? ""}
+                </p>
+                {getStatusIcon[lead.status]({
+                  size: "14",
+                })}
+              </div>
               <p className="text-xs text-muted-foreground">
                 {contact?.email ?? ""}
               </p>

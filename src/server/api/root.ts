@@ -14,6 +14,7 @@ import { leadTypesRouter } from "./routers/leadTypes";
 import { eventTypesRouter } from "./routers/eventTypes";
 import { rateTypesRouter } from "./routers/rateTypes";
 import { dashboardRouter } from "./routers/dashboard";
+import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 
 /**
  * This is the primary router for your server.
@@ -39,3 +40,5 @@ export const appRouter = createTRPCRouter({
 
 // export type definition of API
 export type AppRouter = typeof appRouter;
+export type RouterInputs = inferRouterInputs<AppRouter>;
+export type RouterOutputs = inferRouterOutputs<AppRouter>;

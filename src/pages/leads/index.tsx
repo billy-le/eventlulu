@@ -48,12 +48,9 @@ import {
   User2,
   ArrowDown,
   ArrowUp,
-  AlertTriangle,
   Check,
-  Frown,
   Smartphone,
   Filter,
-  FilterX,
   Eye,
   X,
   ArrowRight,
@@ -62,7 +59,7 @@ import { LeadSummaryModal } from "~/ui/LeadSummaryModal";
 
 // helpers
 import { eventIcons } from "~/utils/eventIcons";
-import { statusColors } from "~/utils/statusColors";
+import { getStatusIcon, statusColors } from "~/utils/statusColors";
 import { EventStatus } from "@prisma/client";
 
 const parentEventTypes = ["corporate", "social function"];
@@ -666,13 +663,9 @@ export default function LeadsPage() {
                                           );
                                         }}
                                       >
-                                        {status === "confirmed" ? (
-                                          <Check className="mr-2 h-4 w-4 text-green-400" />
-                                        ) : status === "lost" ? (
-                                          <Frown className="mr-2 h-4 w-4 text-red-400" />
-                                        ) : (
-                                          <AlertTriangle className="mr-2 h-4 w-4 text-yellow-400" />
-                                        )}
+                                        {getStatusIcon[status]({
+                                          className: "mr-2 h-4 w-4",
+                                        })}
                                         <span className="capitalize">
                                           {status}
                                         </span>
