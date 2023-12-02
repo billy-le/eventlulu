@@ -1,6 +1,20 @@
 "use client";
 
 import { useState } from "react";
+
+// components
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, ArrowRight, Check, ChevronDown } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu";
+
+// helpers
+import { cn } from "@/lib/utils";
 import {
   format as dateFormat,
   startOfDay,
@@ -24,32 +38,32 @@ import {
   addQuarters,
   addYears,
 } from "date-fns";
-import { DateRange } from "react-day-picker";
 
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-
-import { CalendarIcon, ArrowLeft, ArrowRight, Check } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-} from "@/components/ui/dropdown-menu";
-
-const MODES = ["daily", "weekly", "monthly", "quarterly", "yearly"] as const;
-type Mode = (typeof MODES)[number];
-
+// types
+import type { DateRange } from "react-day-picker";
 interface DateRangePickerProps {
   dateRange: DateRange;
-  onDateChange: (date: DateRange) => void;
+  onDateChange: (data: {
+    from: DateRange["from"];
+    to: DateRange["to"];
+    mode: Mode;
+  }) => void;
   className?: string;
   disabled?: boolean;
   disableFuture?: boolean;
   disablePast?: boolean;
 }
+
+const MODES = ["daily", "weekly", "monthly", "quarterly", "yearly"] as const;
+
+export type Mode = (typeof MODES)[number];
+export const modeWordMap: Record<Mode, string> = {
+  daily: "day",
+  weekly: "week",
+  monthly: "month",
+  quarterly: "quarter",
+  yearly: "year",
+};
 
 export function DateRangeMode({
   dateRange,
@@ -67,6 +81,7 @@ export function DateRangeMode({
         onDateChange({
           from,
           to,
+          mode,
         });
         break;
       }
@@ -76,6 +91,7 @@ export function DateRangeMode({
         onDateChange({
           from,
           to,
+          mode,
         });
         break;
       }
@@ -85,6 +101,7 @@ export function DateRangeMode({
         onDateChange({
           from,
           to,
+          mode,
         });
         break;
       }
@@ -94,6 +111,7 @@ export function DateRangeMode({
         onDateChange({
           from,
           to,
+          mode,
         });
         break;
       }
@@ -103,6 +121,7 @@ export function DateRangeMode({
         onDateChange({
           from,
           to,
+          mode,
         });
         break;
       }
@@ -117,6 +136,7 @@ export function DateRangeMode({
         onDateChange({
           from,
           to,
+          mode,
         });
         break;
       }
@@ -126,6 +146,7 @@ export function DateRangeMode({
         onDateChange({
           from,
           to,
+          mode,
         });
         break;
       }
@@ -135,6 +156,7 @@ export function DateRangeMode({
         onDateChange({
           from,
           to,
+          mode,
         });
         break;
       }
@@ -146,6 +168,7 @@ export function DateRangeMode({
         onDateChange({
           from,
           to,
+          mode,
         });
         break;
       }
@@ -155,6 +178,7 @@ export function DateRangeMode({
         onDateChange({
           from,
           to,
+          mode,
         });
         break;
       }
@@ -169,6 +193,7 @@ export function DateRangeMode({
         onDateChange({
           from,
           to,
+          mode,
         });
         break;
       }
@@ -178,6 +203,7 @@ export function DateRangeMode({
         onDateChange({
           from,
           to,
+          mode,
         });
         break;
       }
@@ -187,6 +213,7 @@ export function DateRangeMode({
         onDateChange({
           from,
           to,
+          mode,
         });
         break;
       }
@@ -198,6 +225,7 @@ export function DateRangeMode({
         onDateChange({
           from,
           to,
+          mode,
         });
         break;
       }
@@ -207,68 +235,53 @@ export function DateRangeMode({
         onDateChange({
           from,
           to,
+          mode,
         });
         break;
       }
     }
   }
 
+  function renderDisplayDate(dateString: string) {
+    return (
+      <div className="grid">
+        <span className="text-[10px] capitalize text-slate-400">
+          {mode} <ChevronDown className="inline" size="12" />
+        </span>
+        <span className="text-sm">{dateString}</span>
+      </div>
+    );
+  }
+
   function getDisplayDate() {
     switch (mode) {
       case "daily": {
         const date = startOfDay(dateRange.from ?? new Date());
-
-        return (
-          <div className="grid">
-            <span className="text-[10px] text-slate-400">Daily</span>
-            <span className="text-sm">{dateFormat(date, "MMM do yyyy")}</span>
-          </div>
-        );
+        return renderDisplayDate(dateFormat(date, "MMM do yyyy"));
       }
       case "weekly": {
         const date = startOfWeek(dateRange.from ?? new Date());
-
-        return (
-          <div className="grid">
-            <span className="text-[10px] text-slate-400">Weekly</span>
-            <span className="text-sm">
-              {`${dateFormat(date, "MMM do")} - ${dateFormat(
-                endOfWeek(date),
-                "MMM do, yyyy"
-              )}`}
-            </span>
-          </div>
+        return renderDisplayDate(
+          `${dateFormat(date, "MMM do")} - ${dateFormat(
+            endOfWeek(date),
+            "MMM do, yyyy"
+          )}`
         );
       }
       case "monthly": {
         const date = startOfMonth(dateRange.from ?? new Date());
 
-        return (
-          <div className="grid">
-            <span className="text-[10px] text-slate-400">Monthly</span>
-            <span className="text-sm">{dateFormat(date, "MMMM yyyy")}</span>
-          </div>
-        );
+        return renderDisplayDate(dateFormat(date, "MMMM yyyy"));
       }
       case "quarterly": {
         const date = startOfQuarter(dateRange.from ?? new Date());
 
-        return (
-          <div className="grid">
-            <span className="text-[10px] text-slate-400">Quarterly</span>
-            <span className="text-sm">{dateFormat(date, "QQQ yyyy")}</span>
-          </div>
-        );
+        return renderDisplayDate(dateFormat(date, "QQQ yyyy"));
       }
       case "yearly": {
         const date = startOfYear(dateRange.from ?? new Date());
 
-        return (
-          <div className="grid">
-            <span className="text-[10px] text-slate-400">Yearly</span>
-            <span className="text-sm">{dateFormat(date, "yyyy")}</span>
-          </div>
-        );
+        return renderDisplayDate(dateFormat(date, "yyyy"));
       }
       default:
         return null;
@@ -293,10 +306,10 @@ export function DateRangeMode({
         <ArrowLeft />
       </Button>
       <DropdownMenu>
-        <DropdownMenuTrigger className="capitalize">
+        <DropdownMenuTrigger className="px-1 capitalize">
           {getDisplayDate()}
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-[200px]">
+        <DropdownMenuContent className={mode === "weekly" ? "w-72" : "w-60"}>
           {MODES.map((m) => {
             return (
               <DropdownMenuItem

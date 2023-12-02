@@ -1,28 +1,26 @@
 "use client";
 
 import { api } from "~/utils/api";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 
+// componesn
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DateRangePicker } from "~/ui/DateRangePicker";
-import {
-  DollarSign,
-  Users,
-  CalendarDays,
-  TrendingUp,
-  Plus,
-} from "lucide-react";
+import { Users, CalendarDays, TrendingUp, Plus } from "lucide-react";
 import { DefaultLayout } from "~/layouts/default";
 import { CycleNumbers } from "~/ui/CycleNumbers";
 import { RecentLeads } from "~/ui/RecentLeads";
-import { DateRangeMode } from "~/ui/DateRangeMode";
+import { DateRangeMode, modeWordMap } from "~/ui/DateRangeMode";
 
+// helpers
 import { startOfMonth, startOfDay, endOfDay } from "date-fns";
+import { millify } from "millify";
 
+// types
 import type { DateRange } from "react-day-picker";
 import type { Metadata } from "next";
+import type { Mode } from "~/ui/DateRangeMode";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -31,12 +29,16 @@ export const metadata: Metadata = {
 
 export default function DashboardPage() {
   const date = startOfDay(startOfMonth(new Date()));
-  const [dateRange, setDateRange] = useState<DateRange>({
+  const [dateRange, setDateRange] = useState<{
+    from: DateRange["from"];
+    to: DateRange["to"];
+    mode: Mode;
+  }>({
     from: date,
     to: endOfDay(date),
+    mode: "daily",
   });
   const [greeting, setGreeting] = useState("");
-  const [currency, setCurrency] = useState(new Intl.NumberFormat());
   const { data: session } = useSession();
 
   const {
@@ -64,20 +66,11 @@ export default function DashboardPage() {
     }
   }, [session]);
 
-  useEffect(() => {
-    setCurrency(
-      new Intl.NumberFormat(navigator.language, {
-        style: "currency",
-        currency: "PHP",
-      })
-    );
-  }, []);
-
   return (
     <DefaultLayout>
       <div className="flex-col md:flex">
         <div className="flex-1 space-y-4">
-          <div className="flex items-center justify-between space-y-2">
+          <div className="flex items-center justify-between">
             <h2 className="text-3xl font-bold tracking-tight">{greeting}</h2>
             <DateRangeMode
               dateRange={dateRange}
@@ -94,14 +87,14 @@ export default function DashboardPage() {
                 <CardTitle className="text-sm font-medium">
                   Confirmed Revenue
                 </CardTitle>
-                <DollarSign size="16" className="text-green-500" />
+                <span className="text-green-500">₱</span>
               </CardHeader>
               <CardContent>
                 <p className="text-xl font-bold">
-                  {currency.format(dashboardStats?.confirmedRevenue ?? 0)}
+                  {millify(dashboardStats?.confirmedRevenue ?? 0)}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  +20.1% from last month
+                  +20.1% from previous {modeWordMap[dateRange.mode]}
                 </p>
               </CardContent>
             </Card>
@@ -117,7 +110,7 @@ export default function DashboardPage() {
                   +{dashboardStats?.leadsGenerated ?? 0}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  +180.1% from last month
+                  +180.1% from previous {modeWordMap[dateRange.mode]}
                 </p>
               </CardContent>
             </Card>
@@ -130,10 +123,10 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-xl font-bold">
-                  {currency.format(dashboardStats?.potentialRevenue ?? 0)}
+                  {millify(dashboardStats?.potentialRevenue ?? 0)}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  +19% from last month
+                  +19% from previous {modeWordMap[dateRange.mode]}
                 </p>
               </CardContent>
             </Card>

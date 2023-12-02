@@ -22,16 +22,14 @@ export function NavBar() {
     <header>
       <nav className="bg-slate-900 py-3">
         <div className="container mx-auto flex h-10 flex-wrap items-center justify-between">
-          <div>
-            <Link
-              className="bg-gradient-to-r from-purple-400 to-red-400 bg-clip-text font-bold uppercase leading-relaxed text-transparent"
-              href="/"
-            >
-              EventLulu
-            </Link>
-          </div>
+          <Link
+            className="bg-gradient-to-r from-purple-400 to-red-400 bg-clip-text text-xl font-bold uppercase leading-relaxed text-transparent"
+            href="/"
+          >
+            EventLulu
+          </Link>
           <div className="flex-grow">
-            <ul className="flex items-center justify-end gap-4 text-sm font-bold uppercase leading-snug text-white">
+            <ul className="flex items-center justify-end gap-4 text-sm font-medium uppercase leading-snug text-white">
               <li>
                 <Link
                   className="px-3 py-2 hover:rounded-md hover:ring-1 hover:ring-white"
@@ -44,18 +42,18 @@ export function NavBar() {
                 <DropdownMenu>
                   <DropdownMenuTrigger>
                     <Button className="h-10 w-10 rounded-full bg-gradient-to-tr from-purple-400 to-pink-400 p-0">
-                      <User className="text-slate-800" size="20" />
+                      <User className="text-white" size="20" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent>
+                  <DropdownMenuContent className="w-44">
                     <DropdownMenuItem>
                       <DropdownMenuLabel className="w-full p-0">
                         <Link
                           href="/profile"
                           className="flex items-center justify-between"
                         >
-                          <User size="20" className="text-slate-400" />
                           Profile
+                          <User size="20" className="text-slate-400" />
                         </Link>
                       </DropdownMenuLabel>
                     </DropdownMenuItem>
@@ -68,11 +66,11 @@ export function NavBar() {
                               href="/admin"
                               className="flex items-center justify-between"
                             >
+                              Admin
                               <PencilRuler
                                 size="20"
                                 className="text-slate-400"
                               />
-                              Admin
                             </Link>
                           </DropdownMenuLabel>
                         </DropdownMenuItem>
@@ -87,8 +85,8 @@ export function NavBar() {
                         )}
                         onClick={() => signOut({ callbackUrl: "/login" })}
                       >
-                        <LogOut size="20" className="text-slate-400" />
                         Sign out
+                        <LogOut size="20" className="text-slate-400" />
                       </Button>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
