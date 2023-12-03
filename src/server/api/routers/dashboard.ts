@@ -1,23 +1,21 @@
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { z } from "zod";
 import {
-  subDays,
   subWeeks,
   subMonths,
   subQuarters,
   subYears,
-  startOfDay,
   startOfWeek,
   startOfMonth,
   startOfQuarter,
   startOfYear,
 } from "date-fns";
 
-function calcGrowthPercentage(previous: number, current: number) {
+function calcGrowthRate(previous: number, current: number) {
   return previous === current
     ? 0
     : previous > 0
-    ? parseFloat(((current / previous - 1) * 100).toFixed(2))
+    ? parseFloat((((current - previous) / previous) * 100).toFixed(2))
     : 100;
 }
 
@@ -27,15 +25,12 @@ export const dashboardRouter = createTRPCRouter({
       z.object({
         from: z.date(),
         to: z.date(),
-        mode: z.enum(["daily", "weekly", "monthly", "quarterly", "yearly"]),
+        mode: z.enum(["weekly", "monthly", "quarterly", "yearly"]),
       })
     )
     .query(async ({ ctx, input }) => {
       let prevDate: Date;
       switch (input.mode) {
-        case "daily":
-          prevDate = startOfDay(subDays(input.from, 1));
-          break;
         case "weekly":
           prevDate = startOfWeek(subWeeks(input.from, 1));
           break;
@@ -69,7 +64,7 @@ export const dashboardRouter = createTRPCRouter({
           },
         });
 
-        const leadGenerationGrowth = calcGrowthPercentage(
+        const leadGenerationGrowth = calcGrowthRate(
           previousLeadsGenerated,
           leadsGenerated
         );
@@ -166,7 +161,7 @@ export const dashboardRouter = createTRPCRouter({
           return acc + total;
         }, 0);
 
-        const revenueGrowth = calcGrowthPercentage(
+        const revenueGrowth = calcGrowthRate(
           previousConfirmedRevenue,
           confirmedRevenue
         );
@@ -213,7 +208,7 @@ export const dashboardRouter = createTRPCRouter({
           return acc + total;
         }, 0);
 
-        const potentialGrowth = calcGrowthPercentage(
+        const potentialGrowth = calcGrowthRate(
           previousPotentialRevenue,
           potentialRevenue
         );
@@ -221,6 +216,13 @@ export const dashboardRouter = createTRPCRouter({
         const eventsHappening = leads.filter(
           (lead) => lead.status === "confirmed"
         ).length;
+        const previousEventsHappening = previousLeads.filter(
+          (lead) => lead.status === "confirmed"
+        ).length;
+        const eventsGrowth = calcGrowthRate(
+          previousEventsHappening,
+          eventsHappening
+        );
 
         return {
           confirmedRevenue,
@@ -230,6 +232,7 @@ export const dashboardRouter = createTRPCRouter({
           leadGenerationGrowth,
           revenueGrowth,
           potentialGrowth,
+          eventsGrowth,
         };
       } catch (err) {
         return {
@@ -240,6 +243,7 @@ export const dashboardRouter = createTRPCRouter({
           leadGenerationGrowth: 0,
           revenueGrowth: 0,
           potentialGrowth: 0,
+          eventsGrowth: 0,
         };
       }
     }),

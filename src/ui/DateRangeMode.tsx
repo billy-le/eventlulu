@@ -17,8 +17,6 @@ import {
 import { cn } from "@/lib/utils";
 import {
   format as dateFormat,
-  startOfDay,
-  endOfDay,
   startOfWeek,
   endOfWeek,
   startOfMonth,
@@ -27,12 +25,10 @@ import {
   endOfQuarter,
   startOfYear,
   endOfYear,
-  subDays,
   subWeeks,
   subMonths,
   subQuarters,
   subYears,
-  addDays,
   addWeeks,
   addMonths,
   addQuarters,
@@ -48,16 +44,16 @@ interface DateRangePickerProps {
     to: DateRange["to"];
     mode: Mode;
   }) => void;
+  mode?: Mode;
   className?: string;
   disabled?: boolean;
   disableFuture?: boolean;
   disablePast?: boolean;
 }
 
-const MODES = ["daily", "weekly", "monthly", "quarterly", "yearly"] as const;
+const MODES = ["weekly", "monthly", "quarterly", "yearly"] as const;
 export type Mode = (typeof MODES)[number];
 export const modeWordMap: Record<Mode, string> = {
-  daily: "day",
   weekly: "week",
   monthly: "month",
   quarterly: "quarter",
@@ -65,25 +61,16 @@ export const modeWordMap: Record<Mode, string> = {
 };
 
 export function DateRangeMode({
+  mode: modeProp,
   dateRange,
   onDateChange,
   className,
 }: DateRangePickerProps) {
-  const [mode, setMode] = useState<Mode>("daily");
+  const [mode, setMode] = useState<Mode>(modeProp || "weekly");
 
   function onModeChange(mode: Mode) {
     setMode(mode);
     switch (mode) {
-      case "daily": {
-        const from = startOfDay(dateRange.from ?? new Date());
-        const to = endOfDay(from);
-        onDateChange({
-          from,
-          to,
-          mode,
-        });
-        break;
-      }
       case "weekly": {
         const from = startOfWeek(dateRange.from ?? new Date());
         const to = endOfWeek(from);
@@ -129,16 +116,6 @@ export function DateRangeMode({
 
   function onPrevClick() {
     switch (mode) {
-      case "daily": {
-        const from = startOfDay(subDays(dateRange.from ?? new Date(), 1));
-        const to = endOfDay(from);
-        onDateChange({
-          from,
-          to,
-          mode,
-        });
-        break;
-      }
       case "weekly": {
         const from = startOfWeek(subWeeks(dateRange.from ?? new Date(), 1));
         const to = endOfWeek(from);
@@ -186,16 +163,6 @@ export function DateRangeMode({
 
   function onNextClick() {
     switch (mode) {
-      case "daily": {
-        const from = startOfDay(addDays(dateRange.from ?? new Date(), 1));
-        const to = endOfDay(from);
-        onDateChange({
-          from,
-          to,
-          mode,
-        });
-        break;
-      }
       case "weekly": {
         const from = startOfWeek(addWeeks(dateRange.from ?? new Date(), 1));
         const to = endOfWeek(from);
@@ -254,10 +221,6 @@ export function DateRangeMode({
 
   function getDisplayDate() {
     switch (mode) {
-      case "daily": {
-        const date = startOfDay(dateRange.from ?? new Date());
-        return renderDisplayDate(dateFormat(date, "MMM do yyyy"));
-      }
       case "weekly": {
         const date = startOfWeek(dateRange.from ?? new Date());
         return renderDisplayDate(
