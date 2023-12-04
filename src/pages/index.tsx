@@ -27,7 +27,13 @@ export const metadata: Metadata = {
   description: "Example dashboard app built using the components.",
 };
 
-function getGrowthDisplay(growth: number) {
+function getGrowthDisplay(growth: number | null) {
+  if (growth === null) {
+    return {
+      isPositive: null,
+      growth: "no change",
+    };
+  }
   const isPositive = growth > 0;
   return {
     isPositive,
@@ -122,17 +128,30 @@ export default function DashboardPage() {
                   {millify(dashboardStats?.confirmedRevenue ?? 0)}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {confirmedRevenueGrowth.isPositive ? "up" : "down"}{" "}
-                  <span
-                    className={
-                      confirmedRevenueGrowth.isPositive
-                        ? "text-green-500"
-                        : "text-red-400"
-                    }
-                  >
-                    {confirmedRevenueGrowth.growth}
-                  </span>{" "}
-                  since last {modeWordMap[dateRange.mode]}
+                  {!isLoading ? (
+                    <>
+                      {" "}
+                      {confirmedRevenueGrowth.isPositive == null
+                        ? ""
+                        : confirmedRevenueGrowth.isPositive
+                        ? "up"
+                        : "down"}{" "}
+                      <span
+                        className={
+                          confirmedRevenueGrowth.isPositive == null
+                            ? ""
+                            : confirmedRevenueGrowth.isPositive
+                            ? "text-green-500"
+                            : "text-red-400"
+                        }
+                      >
+                        {confirmedRevenueGrowth.growth}
+                      </span>{" "}
+                      since last {modeWordMap[dateRange.mode]}
+                    </>
+                  ) : (
+                    "-"
+                  )}
                 </p>
               </CardContent>
             </Card>
@@ -148,17 +167,30 @@ export default function DashboardPage() {
                   +{dashboardStats?.leadsGenerated ?? 0}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {leadGenerationGrowth.isPositive ? "up" : "down"}{" "}
-                  <span
-                    className={
-                      leadGenerationGrowth.isPositive
-                        ? "text-green-500"
-                        : "text-red-400"
-                    }
-                  >
-                    {leadGenerationGrowth.growth}
-                  </span>{" "}
-                  since last {modeWordMap[dateRange.mode]}
+                  {!isLoading ? (
+                    <>
+                      {" "}
+                      {leadGenerationGrowth.isPositive === null
+                        ? ""
+                        : leadGenerationGrowth.isPositive
+                        ? "up"
+                        : "down"}{" "}
+                      <span
+                        className={
+                          leadGenerationGrowth.isPositive === null
+                            ? ""
+                            : leadGenerationGrowth.isPositive
+                            ? "text-green-500"
+                            : "text-red-400"
+                        }
+                      >
+                        {leadGenerationGrowth.growth}
+                      </span>{" "}
+                      since last {modeWordMap[dateRange.mode]}
+                    </>
+                  ) : (
+                    "-"
+                  )}
                 </p>
               </CardContent>
             </Card>
@@ -174,17 +206,29 @@ export default function DashboardPage() {
                   {millify(dashboardStats?.potentialRevenue ?? 0)}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {potentialRevenueGrowth.isPositive ? "up" : "down"}{" "}
-                  <span
-                    className={
-                      potentialRevenueGrowth.isPositive
-                        ? "text-green-500"
-                        : "text-red-400"
-                    }
-                  >
-                    {potentialRevenueGrowth.growth}
-                  </span>{" "}
-                  since last {modeWordMap[dateRange.mode]}
+                  {!isLoading ? (
+                    <>
+                      {potentialRevenueGrowth.isPositive === null
+                        ? ""
+                        : potentialRevenueGrowth.isPositive
+                        ? "up"
+                        : "down"}{" "}
+                      <span
+                        className={
+                          potentialRevenueGrowth.isPositive === null
+                            ? ""
+                            : potentialRevenueGrowth.isPositive
+                            ? "text-green-500"
+                            : "text-red-400"
+                        }
+                      >
+                        {potentialRevenueGrowth.growth}
+                      </span>{" "}
+                      since last {modeWordMap[dateRange.mode]}
+                    </>
+                  ) : (
+                    "-"
+                  )}
                 </p>
               </CardContent>
             </Card>
@@ -200,17 +244,29 @@ export default function DashboardPage() {
                   {dashboardStats?.eventsHappening ?? 0}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {eventsGrowth.isPositive ? "up" : "down"}{" "}
-                  <span
-                    className={
-                      eventsGrowth.isPositive
-                        ? "text-green-500"
-                        : "text-red-400"
-                    }
-                  >
-                    {eventsGrowth.growth}
-                  </span>{" "}
-                  since last {modeWordMap[dateRange.mode]}
+                  {!isLoading ? (
+                    <>
+                      {eventsGrowth.isPositive === null
+                        ? ""
+                        : eventsGrowth.isPositive
+                        ? "up"
+                        : "down"}{" "}
+                      <span
+                        className={
+                          eventsGrowth.isPositive === null
+                            ? ""
+                            : eventsGrowth.isPositive
+                            ? "text-green-500"
+                            : "text-red-400"
+                        }
+                      >
+                        {eventsGrowth.growth}
+                      </span>{" "}
+                      since last {modeWordMap[dateRange.mode]}
+                    </>
+                  ) : (
+                    "-"
+                  )}
                 </p>
               </CardContent>
             </Card>

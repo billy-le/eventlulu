@@ -13,7 +13,7 @@ import {
 
 function calcGrowthRate(previous: number, current: number) {
   return previous === current
-    ? 0
+    ? null
     : previous > 0
     ? parseFloat((((current - previous) / previous) * 100).toFixed(2))
     : 100;
