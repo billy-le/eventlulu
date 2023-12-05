@@ -578,44 +578,41 @@ export default function LeadsPage() {
               const lead = row.original;
               return (
                 <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    type="button"
-                    className="h-8 w-8 p-0"
-                    onClick={async () => {
-                      await generatePdf.mutateAsync(
-                        { leadId: lead.id },
-                        {
-                          onSuccess: async (pathToPdf) => {
-                            if (pathToPdf) {
-                              const element = document.createElement("a");
-                              element.setAttribute("href", `/${pathToPdf}`);
-                              element.setAttribute(
-                                "download",
-                                `${generateSubject(lead.eventType!, {
-                                  eventLengthInDays: lead.eventLengthInDays,
-                                  from: lead.startDate,
-                                  to: lead.endDate,
-                                })}.pdf`
-                              );
-                              element.style.display = "none";
-                              document.body.appendChild(element);
-
-                              element.click();
-                              document.body.removeChild(element);
-
-                              await cleanFile.mutateAsync({ path: pathToPdf });
-                            }
-                          },
-                        }
-                      );
-                    }}
+                  <Link
+                    href={`/proposals/${lead.id}`}
+                    className="grid h-8 w-8 items-center rounded p-0 hover:bg-slate-100"
+                    // onClick={async () => {
+                    //   await generatePdf.mutateAsync(
+                    //     { leadId: lead.id },
+                    //     {
+                    //       onSuccess: async (pathToPdf) => {
+                    //         if (pathToPdf) {
+                    //           const element = document.createElement("a");
+                    //           element.setAttribute("href", `/${pathToPdf}`);
+                    //           element.setAttribute(
+                    //             "download",
+                    //             `${generateSubject(lead.eventType!, {
+                    //               eventLengthInDays: lead.eventLengthInDays,
+                    //               from: lead.startDate,
+                    //               to: lead.endDate,
+                    //             })}.pdf`
+                    //           );
+                    //           element.style.display = "none";
+                    //           document.body.appendChild(element);
+                    //           element.click();
+                    //           document.body.removeChild(element);
+                    //           await cleanFile.mutateAsync({ path: pathToPdf });
+                    //         }
+                    //       },
+                    //     }
+                    //   );
+                    // }}
                     title="Generate PDF"
-                    disabled={generatePdf.isLoading}
+                    // disabled={generatePdf.isLoading}
                   >
                     <span className="sr-only">Generate Proposal</span>
-                    <HardDriveDownload size="16" />
-                  </Button>
+                    <HardDriveDownload size="16" className="mx-auto" />
+                  </Link>
                   <Button
                     variant="ghost"
                     type="button"
