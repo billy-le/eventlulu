@@ -54,6 +54,7 @@ import {
   Eye,
   X,
   ArrowRight,
+  HardDriveDownload,
 } from "lucide-react";
 import { LeadSummaryModal } from "~/ui/LeadSummaryModal";
 
@@ -61,6 +62,7 @@ import { LeadSummaryModal } from "~/ui/LeadSummaryModal";
 import { eventIcons } from "~/utils/eventIcons";
 import { getStatusIcon, statusColors } from "~/utils/statusColors";
 import { EventStatus } from "@prisma/client";
+import { generateBody, generateMailto, generateSubject } from "~/utils/mailto";
 
 const parentEventTypes = ["corporate", "social function"];
 const filterKeyText = {
@@ -92,12 +94,13 @@ export default function LeadsPage() {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [lead, setLead] = useState<(typeof leads)[number] | null>(null);
   const [search, setSearch] = useState("");
-
   const deleteLead = api.leads.deleteLead.useMutation();
   const markAsSent = api.leads.sentLead.useMutation();
   const changeStatus = api.leads.updateStatus.useMutation();
 
   const { data: eventTypes = [] } = api.eventTypes.getEventTypes.useQuery();
+  const generatePdf = api.generatePdfs.generateProposalForm.useMutation();
+  const cleanFile = api.generatePdfs.cleanFile.useMutation();
 
   return (
     <DefaultLayout>
@@ -579,6 +582,44 @@ export default function LeadsPage() {
                     variant="ghost"
                     type="button"
                     className="h-8 w-8 p-0"
+                    onClick={async () => {
+                      await generatePdf.mutateAsync(
+                        { leadId: lead.id },
+                        {
+                          onSuccess: async (pathToPdf) => {
+                            if (pathToPdf) {
+                              const element = document.createElement("a");
+                              element.setAttribute("href", `/${pathToPdf}`);
+                              element.setAttribute(
+                                "download",
+                                `${generateSubject(lead.eventType!, {
+                                  eventLengthInDays: lead.eventLengthInDays,
+                                  from: lead.startDate,
+                                  to: lead.endDate,
+                                })}.pdf`
+                              );
+                              element.style.display = "none";
+                              document.body.appendChild(element);
+
+                              element.click();
+                              document.body.removeChild(element);
+
+                              await cleanFile.mutateAsync({ path: pathToPdf });
+                            }
+                          },
+                        }
+                      );
+                    }}
+                    title="Generate PDF"
+                    disabled={generatePdf.isLoading}
+                  >
+                    <span className="sr-only">Generate Proposal</span>
+                    <HardDriveDownload size="16" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    className="h-8 w-8 p-0"
                     onClick={() => {
                       if (dialogRef.current) {
                         setLead(lead);
@@ -711,8 +752,20 @@ export default function LeadsPage() {
                         )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem>
-                          <Link href={`/proposals/${lead.id}`} target="__blank">
-                            Generate Proposal
+                          <Link
+                            href={`mailto:${generateMailto(
+                              lead.contact
+                            )}?subject=${generateSubject(lead.eventType!, {
+                              eventLengthInDays: lead.eventLengthInDays,
+                              from: lead.startDate,
+                              to: lead.endDate,
+                            })}&body=${generateBody({
+                              contact: lead.contact,
+                            })}`}
+                            target="__blank"
+                            rel="noopener noreferrer"
+                          >
+                            Send Email
                           </Link>
                         </DropdownMenuItem>
                         {/* <DropdownMenuItem>Generate Lead Form PDF</DropdownMenuItem> */}

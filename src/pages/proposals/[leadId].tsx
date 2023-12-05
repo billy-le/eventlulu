@@ -361,9 +361,9 @@ export default function ProposalPage() {
                   Richmonde Hotels by logging on to our website at{" "}
                   <a
                     href="https://www.richmondehotels.com.ph"
-                    className=" underline"
-                    target="__blank"
-                    rel="noreferrer"
+                    className="underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
                   >
                     www.richmondehotels.com.ph
                   </a>{" "}

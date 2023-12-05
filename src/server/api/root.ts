@@ -15,6 +15,7 @@ import { eventTypesRouter } from "./routers/eventTypes";
 import { rateTypesRouter } from "./routers/rateTypes";
 import { dashboardRouter } from "./routers/dashboard";
 import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
+import { generatePdfRouter } from "./routers/generatePdfs";
 
 /**
  * This is the primary router for your server.
@@ -36,6 +37,7 @@ export const appRouter = createTRPCRouter({
   eventTypes: eventTypesRouter,
   rateTypes: rateTypesRouter,
   dashboard: dashboardRouter,
+  generatePdfs: generatePdfRouter,
 });
 
 // export type definition of API
