@@ -590,21 +590,21 @@ export default function LeadsPage() {
                         {
                           onSuccess: async (pathToPdf) => {
                             if (pathToPdf) {
-                              // const element = document.createElement("a");
-                              // element.setAttribute("href", `/${pathToPdf}`);
-                              // element.setAttribute(
-                              //   "download",
-                              //   `${generateSubject(lead.eventType!, {
-                              //     eventLengthInDays: lead.eventLengthInDays,
-                              //     from: lead.startDate,
-                              //     to: lead.endDate,
-                              //   })}.pdf`
-                              // );
-                              // element.style.display = "none";
-                              // document.body.appendChild(element);
-                              // element.click();
-                              // document.body.removeChild(element);
-                              // await cleanFile.mutateAsync({ path: pathToPdf });
+                              const element = document.createElement("a");
+                              element.setAttribute("href", `/${pathToPdf}`);
+                              element.setAttribute(
+                                "download",
+                                `${generateSubject(lead.eventType!, {
+                                  eventLengthInDays: lead.eventLengthInDays,
+                                  from: lead.startDate,
+                                  to: lead.endDate,
+                                })}.pdf`
+                              );
+                              element.style.display = "none";
+                              document.body.appendChild(element);
+                              element.click();
+                              document.body.removeChild(element);
+                              await cleanFile.mutateAsync({ path: pathToPdf });
                             }
                           },
                         }

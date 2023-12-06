@@ -72,6 +72,11 @@ export const generatePdfRouter = createTRPCRouter({
         .fontSize(8)
         .font(fontReg);
 
+      const doesProposalDirExists = fs.existsSync("public/proposals");
+      if (!doesProposalDirExists) {
+        await fs.promises.mkdir("public/proposals");
+      }
+
       const pathToPdf = `proposals/${input.leadId}.pdf`;
 
       doc.lineGap(1.15);
