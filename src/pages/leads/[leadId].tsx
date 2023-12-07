@@ -41,7 +41,7 @@ import {
 import { DatePicker } from "src/ui/DatePicker";
 import { DefaultLayout } from "~/layouts/default";
 import { Combobox } from "~/ui/Combobox";
-import { Plus, Trash } from "lucide-react";
+import { Calendar, CalendarDays, Plus, Trash } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 
 // interfaces
@@ -827,7 +827,7 @@ export default function LeadPage() {
             )}
           </div>
           <div className="space-y-4 rounded border bg-slate-50 p-4">
-            <div className="flex gap-4">
+            <div className="flex gap-8">
               <FormItem>
                 <FormLabel>Event Start Date:</FormLabel>
                 <FormControl>
@@ -932,7 +932,9 @@ export default function LeadPage() {
                 <FormItem>
                   <FormLabel>End Date:</FormLabel>
                   <FormControl>
-                    <p>{dateFormat(formValues.endDate, "MMMM d, yyyy")}</p>
+                    <p className="grid h-10 place-items-center">
+                      {dateFormat(formValues.endDate, "MMMM d, yyyy")}
+                    </p>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -992,16 +994,15 @@ export default function LeadPage() {
                       className={index % 2 === 0 ? "bg-gray-100" : ""}
                     >
                       <TableCell className="space-y-2 align-top">
-                        <DatePicker
-                          className="w-[240px]"
-                          date={formValues.eventDetails?.[index]?.date}
-                          onChange={(date) => {
-                            if (date) {
-                              form.setValue(`eventDetails.${index}.date`, date);
-                            }
-                          }}
-                          disabled
-                        />
+                        <p className="font-semibold underline">
+                          <CalendarDays className="mr-2 inline-block text-blue-400" />
+                          {formValues?.eventDetails?.[index].date &&
+                            dateFormat(
+                              formValues?.eventDetails?.[index].date,
+                              "MMMM d, yyyy"
+                            )}
+                        </p>
+
                         <div className="flex gap-4">
                           <div className="flex-grow space-y-1">
                             <FormLabel>Start Time</FormLabel>
