@@ -5,16 +5,17 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 
-// componesn
+// components
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, CalendarDays, TrendingUp, Plus } from "lucide-react";
 import { DefaultLayout } from "~/layouts/default";
 import { CycleNumbers } from "~/ui/CycleNumbers";
 import { RecentLeads } from "~/ui/RecentLeads";
 import { DateRangeMode, modeWordMap } from "~/ui/DateRangeMode";
+import { Overview } from "~/ui/Overview";
 
 // helpers
-import { startOfMonth, startOfWeek, endOfWeek } from "date-fns";
+import { startOfMonth, endOfMonth } from "date-fns";
 import { millify } from "millify";
 
 // types
@@ -42,15 +43,15 @@ function getGrowthDisplay(growth: number | null) {
 }
 
 export default function DashboardPage() {
-  const date = startOfWeek(startOfMonth(new Date()));
+  const date = startOfMonth(new Date());
   const [dateRange, setDateRange] = useState<{
     from: DateRange["from"];
     to: DateRange["to"];
     mode: Mode;
   }>({
     from: date,
-    to: endOfWeek(date),
-    mode: "weekly",
+    to: endOfMonth(date),
+    mode: "monthly",
   });
   const [greeting, setGreeting] = useState("");
   const { data: session } = useSession();
@@ -130,7 +131,6 @@ export default function DashboardPage() {
                 <p className="text-xs text-muted-foreground">
                   {!isLoading ? (
                     <>
-                      {" "}
                       {confirmedRevenueGrowth.isPositive == null
                         ? ""
                         : confirmedRevenueGrowth.isPositive
@@ -276,7 +276,9 @@ export default function DashboardPage() {
               <CardHeader>
                 <CardTitle>Overview</CardTitle>
               </CardHeader>
-              <CardContent className="pl-2">{/* <Overview /> */}</CardContent>
+              <CardContent className="pl-2">
+                <Overview />
+              </CardContent>
             </Card>
             <Card className="col-span-3">
               <CardHeader>

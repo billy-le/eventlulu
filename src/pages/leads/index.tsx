@@ -5,6 +5,7 @@ import { api } from "~/utils/api";
 import { isSameDay, format as dateFormat } from "date-fns";
 import { useRef, useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { useRouter } from "next/router";
 import Link from "next/link";
 
 // components
@@ -72,6 +73,7 @@ const filterKeyText = {
 } as const;
 
 export default function LeadsPage() {
+  const router = useRouter();
   const { toast } = useToast();
   const [filters, setFilters] = useState<{
     eventTypes: string[];
@@ -579,7 +581,7 @@ export default function LeadsPage() {
               return (
                 <div className="flex gap-2">
                   <Button
-                    // href={`/proposals/${lead.id}`}
+                    // href={}
                     // className="grid h-8 w-8 items-center rounded p-0 hover:bg-slate-100"
                     variant="ghost"
                     size="icon"
@@ -590,21 +592,22 @@ export default function LeadsPage() {
                         {
                           onSuccess: async (pathToPdf) => {
                             if (pathToPdf) {
-                              const element = document.createElement("a");
-                              element.setAttribute("href", `/${pathToPdf}`);
-                              element.setAttribute(
-                                "download",
-                                `${generateSubject(lead.eventType!, {
-                                  eventLengthInDays: lead.eventLengthInDays,
-                                  from: lead.startDate,
-                                  to: lead.endDate,
-                                })}.pdf`
-                              );
-                              element.style.display = "none";
-                              document.body.appendChild(element);
-                              element.click();
-                              document.body.removeChild(element);
-                              await cleanFile.mutateAsync({ path: pathToPdf });
+                              // const element = document.createElement("a");
+                              // element.setAttribute("href", `/${pathToPdf}`);
+                              // element.setAttribute(
+                              //   "download",
+                              //   `${generateSubject(lead.eventType!, {
+                              //     eventLengthInDays: lead.eventLengthInDays,
+                              //     from: lead.startDate,
+                              //     to: lead.endDate,
+                              //   })}.pdf`
+                              // );
+                              // element.style.display = "none";
+                              // document.body.appendChild(element);
+                              // element.click();
+                              // document.body.removeChild(element);
+                              // await cleanFile.mutateAsync({ path: pathToPdf });
+                              router.push(`/proposals/${lead.id}`);
                             }
                           },
                         }
