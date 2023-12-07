@@ -49,6 +49,7 @@
     "react-day-picker": "^8.8.0",
     "react-dom": "18.2.0",
     "react-hook-form": "^7.45.4",
+    "sharp": "^0.33.0",
     "superjson": "^1.13.1",
     "tailwind-merge": "^1.14.0",
     "tailwindcss-animate": "^1.0.7",
@@ -80,5 +81,9 @@
   },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+  },
+  "engines": {
+    "node": "^20.6.1",
+    "npm": "^9.8.1"
   }
 }
