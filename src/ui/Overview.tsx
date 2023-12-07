@@ -114,14 +114,10 @@ export function Overview({
                 const insideDay = isSameMonth(day.date, internalDate);
                 const tentativeCount = tentatives.filter((t) =>
                   isSameDay(t, day.date)
-                );
+                ).length;
                 const confirmedCount = confirms.filter((c) =>
                   isSameDay(c, day.date)
-                );
-                const counts = [
-                  confirmedCount.length,
-                  tentativeCount.length,
-                ].filter((x) => x);
+                ).length;
 
                 return (
                   <div
@@ -134,22 +130,24 @@ export function Overview({
                     <div className="text-right">
                       {dateFormat(day.date, "d")}
                     </div>
-                    {counts.length > 0 && (
-                      <div className="absolute bottom-1 flex gap-2">
-                        {counts.map((count, i) => (
-                          <div
-                            className={`grid h-6 w-6 place-items-center rounded-full text-xs shadow-sm ${
-                              i == 0 ? "bg-green-200" : "bg-yellow-200"
-                            }`}
-                            aria-label={
-                              i === 0 ? `Confirmed Events` : "Tentative Events"
-                            }
-                          >
-                            {count}
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    <div className="absolute bottom-1 flex gap-2">
+                      {confirmedCount > 0 && (
+                        <div
+                          className="grid h-6 w-6 place-items-center rounded-full bg-green-200 text-xs shadow-sm"
+                          aria-label="Confirmed Events"
+                        >
+                          {confirmedCount}
+                        </div>
+                      )}
+                      {tentativeCount > 0 && (
+                        <div
+                          className="grid h-6 w-6 place-items-center rounded-full bg-yellow-200 text-xs shadow-sm"
+                          aria-label="Tentative Events"
+                        >
+                          {tentativeCount}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
               },
