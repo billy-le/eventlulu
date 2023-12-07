@@ -74,6 +74,8 @@ export const leadsRouter = createTRPCRouter({
           eventTypes: z.array(z.string()).optional(),
           activities: z.array(z.string()).optional(),
           statuses: z.array(z.nativeEnum(EventStatus)).optional(),
+          from: z.date().optional(),
+          to: z.date().optional(),
         })
         .optional()
     )
@@ -119,6 +121,10 @@ export const leadsRouter = createTRPCRouter({
               in: input.statuses,
             },
           }),
+          startDate: {
+            gte: input?.from,
+            lte: input?.to,
+          },
         },
         include: {
           contact: true,

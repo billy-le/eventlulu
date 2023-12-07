@@ -37,14 +37,17 @@ import {
 
 // types
 import type { DateRange } from "react-day-picker";
+export type DateRangeData = DateRange & {
+  mode: Mode;
+};
+
 interface DateRangePickerProps {
-  dateRange: DateRange;
+  dateRange: DateRangeData;
   onDateChange: (data: {
     from: DateRange["from"];
     to: DateRange["to"];
     mode: Mode;
   }) => void;
-  mode?: Mode;
   className?: string;
   disabled?: boolean;
   disableFuture?: boolean;
@@ -61,12 +64,11 @@ export const modeWordMap: Record<Mode, string> = {
 };
 
 export function DateRangeMode({
-  mode: modeProp,
   dateRange,
   onDateChange,
   className,
 }: DateRangePickerProps) {
-  const [mode, setMode] = useState<Mode>(modeProp || "weekly");
+  const [mode, setMode] = useState<Mode>(dateRange.mode || "weekly");
 
   function onModeChange(mode: Mode) {
     setMode(mode);
