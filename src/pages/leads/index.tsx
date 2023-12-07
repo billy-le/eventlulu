@@ -5,7 +5,6 @@ import { api } from "~/utils/api";
 import { isSameDay, format as dateFormat } from "date-fns";
 import { useRef, useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { useRouter } from "next/router";
 import Link from "next/link";
 
 // components
@@ -73,7 +72,6 @@ const filterKeyText = {
 } as const;
 
 export default function LeadsPage() {
-  const router = useRouter();
   const { toast } = useToast();
   const [filters, setFilters] = useState<{
     eventTypes: string[];
@@ -101,8 +99,6 @@ export default function LeadsPage() {
   const changeStatus = api.leads.updateStatus.useMutation();
 
   const { data: eventTypes = [] } = api.eventTypes.getEventTypes.useQuery();
-  const generatePdf = api.generatePdfs.generateProposalForm.useMutation();
-  const cleanFile = api.generatePdfs.cleanFile.useMutation();
 
   return (
     <DefaultLayout>
@@ -580,45 +576,15 @@ export default function LeadsPage() {
               const lead = row.original;
               return (
                 <div className="flex gap-2">
-                  <Button
-                    // href={}
-                    // className="grid h-8 w-8 items-center rounded p-0 hover:bg-slate-100"
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 p-0"
-                    onClick={async () => {
-                      await generatePdf.mutateAsync(
-                        { leadId: lead.id },
-                        {
-                          onSuccess: async (pathToPdf) => {
-                            if (pathToPdf) {
-                              // const element = document.createElement("a");
-                              // element.setAttribute("href", `/${pathToPdf}`);
-                              // element.setAttribute(
-                              //   "download",
-                              //   `${generateSubject(lead.eventType!, {
-                              //     eventLengthInDays: lead.eventLengthInDays,
-                              //     from: lead.startDate,
-                              //     to: lead.endDate,
-                              //   })}.pdf`
-                              // );
-                              // element.style.display = "none";
-                              // document.body.appendChild(element);
-                              // element.click();
-                              // document.body.removeChild(element);
-                              // await cleanFile.mutateAsync({ path: pathToPdf });
-                              router.push(`/proposals/${lead.id}`);
-                            }
-                          },
-                        }
-                      );
-                    }}
+                  <Link
+                    href={`/proposals/${lead.id}`}
+                    className="grid h-8 w-8 items-center rounded p-0 hover:bg-slate-100"
                     title="Generate PDF"
-                    disabled={generatePdf.isLoading}
+                    target="_blank"
                   >
                     <span className="sr-only">Generate Proposal</span>
-                    <HardDriveDownload size="16" />
-                  </Button>
+                    <HardDriveDownload size="16" className="mx-auto" />
+                  </Link>
                   <Button
                     variant="ghost"
                     type="button"
@@ -629,6 +595,7 @@ export default function LeadsPage() {
                         dialogRef.current.showModal();
                       }
                     }}
+                    title="View Summary"
                   >
                     <span className="sr-only">View Lead Summary</span>
                     <Eye size="16" />

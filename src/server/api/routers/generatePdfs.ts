@@ -1,5 +1,4 @@
 import fs from "node:fs";
-import path from "node:path";
 import { PDFDocumentWithTables } from "~/utils/pdfDocumentWithTables";
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
@@ -74,11 +73,6 @@ export const generatePdfRouter = createTRPCRouter({
         .font(fontReg);
 
       const doesProposalDirExists = fs.existsSync("public/proposals");
-      console.log({
-        dirname: __dirname,
-        cwd: process.cwd(),
-        resolve: path.resolve(__dirname),
-      });
       if (!doesProposalDirExists) {
         await fs.promises.mkdir("public/proposals");
       }
