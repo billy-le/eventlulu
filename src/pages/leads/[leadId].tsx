@@ -853,6 +853,14 @@ export default function LeadPage() {
                             },
                           ]);
                           form.setValue("endDate", endOfDay(date));
+                        } else if (formValues.eventDetails?.length) {
+                          const eventDetails = formValues.eventDetails.map(
+                            (e, i) => ({
+                              ...e,
+                              date: addDays(date, i),
+                            })
+                          );
+                          form.setValue("eventDetails", eventDetails);
                         }
                       }
                     }}
