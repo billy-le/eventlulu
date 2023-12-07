@@ -93,14 +93,6 @@ export function Overview({
               row: "w-full flex divide-x divide-x-slate-300",
             }}
             className="p-0"
-            modifiers={{
-              tentatives,
-              confirms,
-            }}
-            modifiersClassNames={{
-              tentatives: "bg-yellow-200",
-              confirms: "bg-green-200",
-            }}
             month={internalDate}
             disableNavigation={
               dateRange.mode === "weekly" || dateRange.mode === "monthly"

@@ -284,7 +284,7 @@ export default function LeadPage() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const leadFormValues = normalize(formValues);
+    let leadFormValues = normalize(formValues);
     if (leadFormValues.eventType?.id === "other") {
       leadFormValues.eventType = undefined;
     }
@@ -877,7 +877,8 @@ export default function LeadPage() {
                           onChange: (e) => {
                             const count = !!e.target.value
                               ? parseInt(e.target.value, 10)
-                              : 0;
+                              : 1;
+
                             if (count) {
                               let events: z.infer<
                                 typeof formSchema
@@ -999,6 +1000,7 @@ export default function LeadPage() {
                               form.setValue(`eventDetails.${index}.date`, date);
                             }
                           }}
+                          disabled
                         />
                         <div className="flex gap-4">
                           <div className="flex-grow space-y-1">
