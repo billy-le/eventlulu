@@ -1,39 +1,23 @@
-import {
-  endOfDay,
-  endOfMonth,
-  endOfWeek,
-  getDaysInMonth,
-  startOfDay,
-  startOfMonth,
-  startOfWeek,
-  format as dateFormat,
-} from "date-fns";
-
-const CALENDAR_DAYS = 42;
+import { Calendar } from "@/components/ui/calendar";
 
 export function Overview() {
-  const today = new Date();
-  const daysOfWeek = new Array(7)
-    .fill(null)
-    .map((_, d) =>
-      new Date(2001, 0, d).toLocaleString("en", { weekday: "short" })
-    );
-
-  const calStart = startOfMonth(today);
-  const calEnd = endOfMonth(today);
-
-  return null;
-
   return (
     <>
-      <div className="divide grid grid-cols-7 divide-slate-300">
-        {daysOfWeek.map((day) => (
-          <div key={day} className="grid w-20 place-items-center ">
-            {day}
-          </div>
-        ))}
-      </div>
-      <div className="divide grid grid-cols-7 divide-slate-300"></div>
+      <Calendar
+        defaultMonth={new Date()}
+        classNames={{
+          head_row:
+            "border-b border-slate-300 divide-x divide-x-slate-300 w-full flex",
+          head_cell: "w-full",
+          caption_start: "w-full",
+          cell: "w-full",
+          day: "relative w-full text-left h-20",
+          tbody: "divide-y divide-y-slate-300",
+          table: "ring-1 ring-slate-300 w-full",
+          row: "w-full flex divide-x divide-x-slate-300",
+        }}
+        className="p-0"
+      />
     </>
   );
 }

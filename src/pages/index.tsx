@@ -7,12 +7,26 @@ import Link from "next/link";
 
 // components
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, CalendarDays, TrendingUp, Plus } from "lucide-react";
+import {
+  Users,
+  CalendarDays,
+  TrendingUp,
+  Plus,
+  ChevronDown,
+} from "lucide-react";
 import { DefaultLayout } from "~/layouts/default";
 import { CycleNumbers } from "~/ui/CycleNumbers";
 import { RecentLeads } from "~/ui/RecentLeads";
 import { DateRangeMode, modeWordMap } from "~/ui/DateRangeMode";
 import { Overview } from "~/ui/Overview";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuContent,
+} from "@/components/ui/dropdown-menu";
+import { Check } from "lucide-react";
 
 // helpers
 import { startOfMonth, endOfMonth } from "date-fns";
@@ -27,6 +41,8 @@ export const metadata: Metadata = {
   title: "Dashboard",
   description: "Example dashboard app built using the components.",
 };
+
+const overviewItems = ["calendar", "trends", "stats"] as const;
 
 function getGrowthDisplay(growth: number | null) {
   if (growth === null) {
@@ -54,6 +70,8 @@ export default function DashboardPage() {
     mode: "monthly",
   });
   const [greeting, setGreeting] = useState("");
+  const [overview, setOverview] =
+    useState<(typeof overviewItems)[number]>("calendar");
   const { data: session } = useSession();
 
   const {
@@ -75,7 +93,7 @@ export default function DashboardPage() {
     mode: dateRange.mode,
   });
   const { data: leads } = api.leads.getLeads.useQuery({
-    take: 5,
+    take: 8,
     orderBy: [{ createDate: "desc" }],
   });
 
@@ -274,10 +292,35 @@ export default function DashboardPage() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
             <Card className="col-span-4">
               <CardHeader>
-                <CardTitle>Overview</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Overview</CardTitle>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="flex items-center gap-2 rounded-md px-2 py-1 capitalize ring-1 ring-slate-200">
+                      {overview}
+                      <ChevronDown size="20" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      {overviewItems.map((item) => (
+                        <DropdownMenuItem
+                          className="capitalize"
+                          onClick={() => {
+                            if (item !== overview) {
+                              setOverview(item);
+                            }
+                          }}
+                        >
+                          {item}
+                          {item === overview && (
+                            <Check className="ml-2 text-purple-400" size="20" />
+                          )}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </CardHeader>
-              <CardContent className="pl-2">
-                <Overview />
+              <CardContent>
+                {overview === "calendar" && <Overview />}
               </CardContent>
             </Card>
             <Card className="col-span-3">
