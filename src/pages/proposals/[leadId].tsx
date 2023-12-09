@@ -172,7 +172,7 @@ export default function ProposalPage() {
                               ),
                               "h:mm a"
                             )
-                          : "0";
+                          : "TBD";
                         const endTime = detail.endTime
                           ? dateFormat(
                               new Date(
@@ -184,7 +184,7 @@ export default function ProposalPage() {
                               ),
                               "h:mm a"
                             )
-                          : "0";
+                          : "TBD";
 
                         return (
                           <tr key={detail.id}>
