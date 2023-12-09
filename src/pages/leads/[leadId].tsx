@@ -493,6 +493,9 @@ export default function LeadPage() {
                         onCheckedChange={(checked) => {
                           form.setValue("eventType", undefined);
                           field.onChange(checked);
+                          if (!checked) {
+                            form.setValue("company", undefined);
+                          }
                         }}
                       />
                     </FormControl>
