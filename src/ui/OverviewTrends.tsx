@@ -156,7 +156,7 @@ export function OverviewTrends({
         dateRange.mode === "weekly"
           ? dateFormat(date, "EEEE")
           : dateRange.mode === "monthly"
-          ? dateFormat(date, "Md")
+          ? dateFormat(date, "M/d")
           : dateRange.mode === "quarterly"
           ? dateFormat(date, "MMMM")
           : dateFormat(date, "MMM"),
