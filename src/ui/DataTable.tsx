@@ -60,6 +60,7 @@ export function DataTable<TData, TValue>({
       sorting,
       columnFilters,
     },
+    autoResetPageIndex: false,
   });
 
   return (
