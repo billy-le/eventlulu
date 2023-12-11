@@ -138,7 +138,7 @@ export function OverviewCalendar({
                                     start,
                                     end,
                                   }) ? (
-                                    <div className="relative grid place-items-center">
+                                    <div className="relative ml-2 grid place-items-center">
                                       <div className="absolute h-2 w-2 rounded-full bg-green-400"></div>
                                       <div className="absolute h-2 w-2 animate-ping rounded-full bg-green-600"></div>
                                     </div>

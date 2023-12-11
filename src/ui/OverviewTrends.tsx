@@ -138,20 +138,12 @@ export function OverviewTrends({
     let dates = [];
     switch (dateRange.mode) {
       case "weekly":
-        for (let i = dateRange.from!; i < dateRange.to!; i = addDays(i, 1)) {
-          dates.push(i);
-        }
-        break;
       case "monthly":
         for (let i = dateRange.from!; i < dateRange.to!; i = addDays(i, 1)) {
           dates.push(i);
         }
         break;
       case "quarterly":
-        for (let i = dateRange.from!; i < dateRange.to!; i = addMonths(i, 1)) {
-          dates.push(i);
-        }
-        break;
       case "yearly":
         for (let i = dateRange.from!; i < dateRange.to!; i = addMonths(i, 1)) {
           dates.push(i);
@@ -164,7 +156,7 @@ export function OverviewTrends({
         dateRange.mode === "weekly"
           ? dateFormat(date, "EEEE")
           : dateRange.mode === "monthly"
-          ? dateFormat(date, "d")
+          ? dateFormat(date, "Md")
           : dateRange.mode === "quarterly"
           ? dateFormat(date, "MMMM")
           : dateFormat(date, "MMM"),
