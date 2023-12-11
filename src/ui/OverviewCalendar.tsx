@@ -95,7 +95,7 @@ export function OverviewCalendar({
                       </div>
                     </PopoverTrigger>
                     <PopoverPortal>
-                      <PopoverContent className="max-h-60 w-40 overflow-y-auto rounded-md bg-white p-2 shadow-md">
+                      <PopoverContent className="max-h-60 w-60 overflow-y-auto rounded-md bg-white p-2 shadow-md">
                         <ul className="space-y-2">
                           {confirmedCount.map((confirmed) => {
                             const eventDetail = confirmed.eventDetails.find(

@@ -71,7 +71,10 @@ function getRevenueGrowthData(
     case "weekly":
     case "monthly":
       return leads
-        .filter((lead) => isSameDay(lead.startDate, date))
+        .filter(
+          (lead) =>
+            isSameDay(lead.startDate, date) && lead.status === "confirmed"
+        )
         .reduce((sum, lead) => {
           const banRoomBudget =
             (lead.banquetsBudget ?? 0) + (lead.roomsBudget ?? 0);
@@ -88,7 +91,10 @@ function getRevenueGrowthData(
     case "quarterly":
     case "yearly":
       return leads
-        .filter((lead) => isSameMonth(lead.startDate, date))
+        .filter(
+          (lead) =>
+            isSameMonth(lead.startDate, date) && lead.status === "confirmed"
+        )
         .reduce((sum, lead) => {
           const banRoomBudget =
             (lead.banquetsBudget ?? 0) + (lead.roomsBudget ?? 0);
