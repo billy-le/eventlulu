@@ -20,6 +20,7 @@ import {
   isWithinInterval,
   formatDistanceToNow,
   isBefore,
+  endOfDay,
 } from "date-fns";
 import type { RouterOutputs } from "~/utils/api";
 import type { DateRangeData } from "./DateRangeMode";
@@ -73,7 +74,7 @@ function renderEventList({
           className="flex flex-col items-center justify-center p-2 text-xs"
         >
           <p className="flex items-center gap-1">
-            <span>{event.contact?.firstName}</span>
+            <span className="underline">{event.contact?.firstName}</span>
             {event.status === "confirmed" &&
             isWithinInterval(new Date(), {
               start,
@@ -84,6 +85,7 @@ function renderEventList({
                 <div className="absolute h-2 w-2 animate-ping rounded-full bg-green-600"></div>
               </div>
             ) : (
+              isSameDay(new Date(), day) &&
               isBefore(new Date(), start) && (
                 <span className="text-gray-400">
                   -{" "}
@@ -179,7 +181,8 @@ export function OverviewCalendar({
                     <PopoverPortal>
                       <PopoverContent className="max-h-60 w-48 overflow-y-auto rounded-md bg-white shadow-md">
                         <ul className="divide-y-slate-200 divide-y">
-                          {isAfter(new Date(), day.date) && (
+                          {(isAfter(new Date(), endOfDay(day.date)) ||
+                            isBefore(new Date(), day.date)) && (
                             <li className="p-2 text-center text-sm text-slate-400">
                               {formatDistanceToNow(day.date, {
                                 addSuffix: true,
