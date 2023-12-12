@@ -40,7 +40,7 @@ CREATE TABLE "User" (
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
     "phoneNumber" TEXT,
-    "role" "Role" NOT NULL,
+    "roles" "Role"[] DEFAULT ARRAY['user']::"Role"[],
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -115,7 +115,6 @@ CREATE TABLE "EventDetails" (
     "leadFormId" TEXT,
     "roomSetupId" TEXT,
     "functionRoomId" TEXT,
-    "rateTypeId" TEXT,
 
     CONSTRAINT "EventDetails_pkey" PRIMARY KEY ("id")
 );
@@ -153,6 +152,15 @@ CREATE TABLE "RateType" (
 );
 
 -- CreateTable
+CREATE TABLE "Inclusion" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "preselect" BOOLEAN NOT NULL DEFAULT false,
+
+    CONSTRAINT "Inclusion_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "LeadFormActivity" (
     "id" TEXT NOT NULL,
     "updateDate" TIMESTAMP(3) NOT NULL,
@@ -172,6 +180,9 @@ CREATE TABLE "Organization" (
     "phoneNumber" TEXT,
     "address1" TEXT,
     "address2" TEXT,
+    "city" TEXT,
+    "province" TEXT,
+    "postalCode" TEXT,
 
     CONSTRAINT "Organization_pkey" PRIMARY KEY ("id")
 );
@@ -191,6 +202,12 @@ CREATE TABLE "Contact" (
 
 -- CreateTable
 CREATE TABLE "_EventDetailsToMealReq" (
+    "A" TEXT NOT NULL,
+    "B" TEXT NOT NULL
+);
+
+-- CreateTable
+CREATE TABLE "_InclusionToLeadForm" (
     "A" TEXT NOT NULL,
     "B" TEXT NOT NULL
 );
@@ -229,6 +246,9 @@ CREATE UNIQUE INDEX "MealReq_name_key" ON "MealReq"("name");
 CREATE UNIQUE INDEX "RateType_name_key" ON "RateType"("name");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Inclusion_name_key" ON "Inclusion"("name");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Organization_name_key" ON "Organization"("name");
 
 -- CreateIndex
@@ -240,20 +260,17 @@ CREATE UNIQUE INDEX "_EventDetailsToMealReq_AB_unique" ON "_EventDetailsToMealRe
 -- CreateIndex
 CREATE INDEX "_EventDetailsToMealReq_B_index" ON "_EventDetailsToMealReq"("B");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "_InclusionToLeadForm_AB_unique" ON "_InclusionToLeadForm"("A", "B");
+
+-- CreateIndex
+CREATE INDEX "_InclusionToLeadForm_B_index" ON "_InclusionToLeadForm"("B");
+
 -- AddForeignKey
 ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "LeadForm" ADD CONSTRAINT "LeadForm_updatedById_fkey" FOREIGN KEY ("updatedById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "LeadForm" ADD CONSTRAINT "LeadForm_leadTypeId_fkey" FOREIGN KEY ("leadTypeId") REFERENCES "LeadType"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "LeadForm" ADD CONSTRAINT "LeadForm_salesAccountManagerId_fkey" FOREIGN KEY ("salesAccountManagerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "LeadForm" ADD CONSTRAINT "LeadForm_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "Organization"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -265,25 +282,42 @@ ALTER TABLE "LeadForm" ADD CONSTRAINT "LeadForm_contactId_fkey" FOREIGN KEY ("co
 ALTER TABLE "LeadForm" ADD CONSTRAINT "LeadForm_eventTypeId_fkey" FOREIGN KEY ("eventTypeId") REFERENCES "EventType"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "EventDetails" ADD CONSTRAINT "EventDetails_roomSetupId_fkey" FOREIGN KEY ("roomSetupId") REFERENCES "RoomSetup"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "LeadForm" ADD CONSTRAINT "LeadForm_leadTypeId_fkey" FOREIGN KEY ("leadTypeId") REFERENCES "LeadType"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "LeadForm" ADD CONSTRAINT "LeadForm_rateTypeId_fkey" FOREIGN KEY ("rateTypeId") REFERENCES "RateType"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "LeadForm" ADD CONSTRAINT "LeadForm_salesAccountManagerId_fkey" FOREIGN KEY ("salesAccountManagerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "LeadForm" ADD CONSTRAINT "LeadForm_updatedById_fkey" FOREIGN KEY ("updatedById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "EventDetails" ADD CONSTRAINT "EventDetails_functionRoomId_fkey" FOREIGN KEY ("functionRoomId") REFERENCES "FunctionRoom"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "EventDetails" ADD CONSTRAINT "EventDetails_rateTypeId_fkey" FOREIGN KEY ("rateTypeId") REFERENCES "RateType"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "EventDetails" ADD CONSTRAINT "EventDetails_leadFormId_fkey" FOREIGN KEY ("leadFormId") REFERENCES "LeadForm"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "LeadFormActivity" ADD CONSTRAINT "LeadFormActivity_updatedById_fkey" FOREIGN KEY ("updatedById") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "EventDetails" ADD CONSTRAINT "EventDetails_roomSetupId_fkey" FOREIGN KEY ("roomSetupId") REFERENCES "RoomSetup"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "LeadFormActivity" ADD CONSTRAINT "LeadFormActivity_leadFormId_fkey" FOREIGN KEY ("leadFormId") REFERENCES "LeadForm"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "LeadFormActivity" ADD CONSTRAINT "LeadFormActivity_updatedById_fkey" FOREIGN KEY ("updatedById") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "_EventDetailsToMealReq" ADD CONSTRAINT "_EventDetailsToMealReq_A_fkey" FOREIGN KEY ("A") REFERENCES "EventDetails"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "_EventDetailsToMealReq" ADD CONSTRAINT "_EventDetailsToMealReq_B_fkey" FOREIGN KEY ("B") REFERENCES "MealReq"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "_InclusionToLeadForm" ADD CONSTRAINT "_InclusionToLeadForm_A_fkey" FOREIGN KEY ("A") REFERENCES "Inclusion"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "_InclusionToLeadForm" ADD CONSTRAINT "_InclusionToLeadForm_B_fkey" FOREIGN KEY ("B") REFERENCES "LeadForm"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "User" DROP COLUMN "role";
