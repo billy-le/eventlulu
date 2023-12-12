@@ -464,7 +464,7 @@ export const leadsRouter = createTRPCRouter({
     try {
       const salesManagers = await ctx.prisma.user.findMany({
         where: {
-          role: "salesManager",
+          roles: { has: "salesManager" },
         },
       });
       const functionRooms = await ctx.prisma.functionRoom.findMany();

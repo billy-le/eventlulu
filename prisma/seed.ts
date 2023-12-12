@@ -157,7 +157,7 @@ async function main() {
           email: "user@example.com",
           name: "user",
           password: process.env.DEFAULT_PASSWORD!,
-          role: "salesManager",
+          roles: ["admin", "salesManager"],
           phoneNumber: phone.number(),
         },
       });
@@ -168,18 +168,23 @@ async function main() {
         const isCorporate = datatype.boolean();
         const isLiveIn = datatype.boolean();
         const eventLengthInDays = number.int({ min: 1, max: 5 });
-        const startDate = date.soon();
+        const startDate = date.soon({ days: 180, refDate: now });
         const endDate = datefns.addDays(startDate, eventLengthInDays - 1);
         const contactFirstName = person.firstName();
         const contactLastName = person.lastName();
+        const email = internet.email({
+          firstName: contactFirstName,
+          lastName: contactLastName,
+          provider: "example.com",
+        });
 
-        const contact = await prisma.contact.create({
-          data: {
-            email: internet.email({
-              firstName: contactFirstName,
-              lastName: contactLastName,
-              provider: "example.com",
-            }),
+        const contact = await prisma.contact.upsert({
+          where: {
+            email,
+          },
+          update: {},
+          create: {
+            email,
             firstName: contactFirstName,
             lastName: contactLastName,
             phoneNumber: phone.number(),
@@ -190,9 +195,14 @@ async function main() {
 
         let company;
         if (isCorporate) {
-          company = await prisma.organization.create({
-            data: {
-              name: fakerCompany.name(),
+          const companyName = fakerCompany.name();
+          company = await prisma.organization.upsert({
+            where: {
+              name: companyName,
+            },
+            update: {},
+            create: {
+              name: companyName,
               phoneNumber: phone.number(),
               address1: location.streetAddress(),
               address2: location.secondaryAddress(),

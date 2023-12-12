@@ -10,10 +10,7 @@ export default withAuth(function middleware(req, event) {}, {
     authorized: async ({ req, token }) => {
       if (!token) return false;
       if (req.nextUrl.pathname.startsWith("/admin")) {
-        const isAdmin =
-          token.user?.role === Role.admin ||
-          token.user?.role === Role.salesManager;
-        return isAdmin;
+        return token.user?.roles?.includes("admin") ?? false;
       }
       return true;
     },

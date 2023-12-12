@@ -40,12 +40,12 @@ model User {
     email               String             @unique
     password            String
     phoneNumber         String?
-    role                Role
+    roles               Role[]             @default(value: [user])
     accounts            Account[]
-    sessions            Session[]
+    salesAccountManager LeadForm[]         @relation("salesAccountManager")
+    updatedBy           LeadForm[]         @relation("updatedBy")
     LeadFormActivity    LeadFormActivity[]
-    salesAccountManager LeadForm[]         @relation(name: "salesAccountManager")
-    updatedBy           LeadForm[]         @relation(name: "updatedBy")
+    sessions            Session[]
 }
 
 model VerificationToken {
@@ -60,30 +60,20 @@ model LeadForm {
     id                       String             @id @default(cuid())
     createDate               DateTime           @default(now())
     updateDate               DateTime           @updatedAt
-    updatedBy                User?              @relation(name: "updatedBy", fields: [updatedById], references: [id])
-    leadType                 LeadType           @relation(fields: [leadTypeId], references: [id])
     dateReceived             DateTime
     lastDateSent             DateTime?
     status                   EventStatus        @default(tentative)
     isCorporate              Boolean            @default(false)
     isLiveIn                 Boolean            @default(false)
-    salesAccountManager      User               @relation(fields: [salesAccountManagerId], references: [id], name: "salesAccountManager")
     onSiteDate               DateTime?
     startDate                DateTime
     endDate                  DateTime
     eventLengthInDays        Int
-    company                  Organization?      @relation(name: "company", fields: [companyId], references: [id])
-    contact                  Contact            @relation(fields: [contactId], references: [id])
-    eventType                EventType?         @relation(fields: [eventTypeId], references: [id])
     eventTypeOther           String?
     roomTotal                Int?
     roomType                 String?
     roomArrivalDate          DateTime?
     roomDepartureDate        DateTime?
-    eventDetails             EventDetails[]
-    activities               LeadFormActivity[]
-    rateType                 RateType?          @relation(fields: [rateTypeId], references: [id])
-    inclusions               Inclusion[]
     banquetsBudget           Int?
     roomsBudget              Int?
     otherHotelConsiderations String?
@@ -95,12 +85,16 @@ model LeadForm {
     rateTypeId               String?
     companyId                String?
     updatedById              String?
-}
-
-enum EventStatus {
-    tentative
-    lost
-    confirmed
+    eventDetails             EventDetails[]
+    company                  Organization?      @relation("company", fields: [companyId], references: [id])
+    contact                  Contact            @relation(fields: [contactId], references: [id])
+    eventType                EventType?         @relation(fields: [eventTypeId], references: [id])
+    leadType                 LeadType           @relation(fields: [leadTypeId], references: [id])
+    rateType                 RateType?          @relation(fields: [rateTypeId], references: [id])
+    salesAccountManager      User               @relation("salesAccountManager", fields: [salesAccountManagerId], references: [id])
+    updatedBy                User?              @relation("updatedBy", fields: [updatedById], references: [id])
+    activities               LeadFormActivity[]
+    inclusions               Inclusion[]        @relation("InclusionToLeadForm")
 }
 
 model LeadType {
@@ -123,14 +117,14 @@ model EventDetails {
     endTime        String?
     pax            Int?
     remarks        String?
-    roomSetup      RoomSetup?    @relation(fields: [roomSetupId], references: [id])
-    mealReqs       MealReq[]
-    functionRoom   FunctionRoom? @relation(fields: [functionRoomId], references: [id])
     rate           Int?
-    LeadForm       LeadForm?     @relation(fields: [leadFormId], references: [id])
     leadFormId     String?
     roomSetupId    String?
     functionRoomId String?
+    functionRoom   FunctionRoom? @relation(fields: [functionRoomId], references: [id])
+    LeadForm       LeadForm?     @relation(fields: [leadFormId], references: [id])
+    roomSetup      RoomSetup?    @relation(fields: [roomSetupId], references: [id])
+    mealReqs       MealReq[]     @relation("EventDetailsToMealReq")
 }
 
 model FunctionRoom {
@@ -148,7 +142,7 @@ model RoomSetup {
 model MealReq {
     id           String         @id @default(cuid())
     name         String         @unique
-    EventDetails EventDetails[]
+    EventDetails EventDetails[] @relation("EventDetailsToMealReq")
 }
 
 model RateType {
@@ -161,19 +155,19 @@ model Inclusion {
     id        String     @id @default(cuid())
     name      String     @unique
     preselect Boolean    @default(false)
-    LeadForms LeadForm[]
+    LeadForms LeadForm[] @relation("InclusionToLeadForm")
 }
 
 model LeadFormActivity {
     id             String    @id @default(cuid())
     updateDate     DateTime  @updatedAt
     date           DateTime
-    updatedBy      User      @relation(fields: [updatedById], references: [id])
     clientFeedback String?
     nextTraceDate  DateTime?
     updatedById    String
-    LeadForm       LeadForm? @relation(fields: [leadFormId], references: [id])
     leadFormId     String?
+    LeadForm       LeadForm? @relation(fields: [leadFormId], references: [id])
+    updatedBy      User      @relation(fields: [updatedById], references: [id])
 }
 
 model Organization {
@@ -185,7 +179,7 @@ model Organization {
     city        String?
     province    String?
     postalCode  String?
-    company     LeadForm[] @relation(name: "company")
+    company     LeadForm[] @relation("company")
 }
 
 model Contact {
@@ -197,6 +191,12 @@ model Contact {
     phoneNumber  String?
     mobileNumber String?
     LeadForm     LeadForm[]
+}
+
+enum EventStatus {
+    tentative
+    lost
+    confirmed
 }
 
 enum Role {

@@ -16,8 +16,6 @@ import {
   DropdownMenuContent,
 } from "@/components/ui/dropdown-menu";
 
-const adminRoles = [Role.admin, Role.salesManager];
-
 export function NavBar() {
   const { data: session } = useSession();
   return (
@@ -59,7 +57,7 @@ export function NavBar() {
                         </Link>
                       </DropdownMenuLabel>
                     </DropdownMenuItem>
-                    {adminRoles.includes(session?.user?.role) && (
+                    {session?.user?.roles?.includes("admin") && (
                       <>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem>

@@ -246,8 +246,9 @@ export default function LeadPage() {
       dateReceived: new Date(),
     },
     values: {
-      salesAccountManager:
-        session?.user?.role === "salesManager" ? session.user : undefined,
+      salesAccountManager: session?.user?.roles?.includes("salesManager")
+        ? session.user
+        : undefined,
       inclusions:
         leadFormData?.inclusions?.filter((inclusion) => inclusion.preselect) ??
         [],
