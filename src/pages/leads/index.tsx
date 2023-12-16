@@ -8,7 +8,6 @@ import { useToast } from "@/components/ui/use-toast";
 import Link from "next/link";
 
 // components
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "~/ui/DataTable";
 import { DefaultLayout } from "~/layouts/default";
@@ -48,28 +47,20 @@ import {
   User2,
   ArrowDown,
   ArrowUp,
-  Check,
   Smartphone,
-  Filter,
   Eye,
-  X,
   ArrowRight,
   HardDriveDownload,
 } from "lucide-react";
 import { LeadSummaryModal } from "~/ui/LeadSummaryModal";
+import { LeadFilterButton } from "~/ui/LeadFilterButton";
+import { LeadFilterPills } from "~/ui/LeadFilterPills";
 
 // helpers
 import { eventIcons } from "~/utils/eventIcons";
 import { getStatusIcon, statusColors } from "~/utils/statusColors";
 import { EventStatus } from "@prisma/client";
 import { generateBody, generateMailto, generateSubject } from "~/utils/mailto";
-
-const parentEventTypes = ["corporate", "social function"];
-const filterKeyText = {
-  eventTypes: "Type",
-  activities: "Activity",
-  statuses: "Status",
-} as const;
 
 export default function LeadsPage() {
   const { toast } = useToast();
@@ -118,183 +109,11 @@ export default function LeadsPage() {
                   className="max-w-sm"
                   type="search"
                 />
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild className="h-10">
-                    <Button className="h-10 w-12 p-0">
-                      <span className="sr-only">Open Filter Menu</span>
-                      <Filter size="16" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuSub>
-                      <DropdownMenuSubTrigger>
-                        <span>Event Type</span>
-                      </DropdownMenuSubTrigger>
-                      <DropdownMenuPortal>
-                        <DropdownMenuSubContent>
-                          {parentEventTypes.concat("other").map((eventType) => (
-                            <>
-                              {eventType === "other" && (
-                                <DropdownMenuSeparator />
-                              )}
-                              <DropdownMenuItem
-                                key={eventType}
-                                onSelect={(e) => {
-                                  e.preventDefault();
-                                  setFilters((filters) => {
-                                    if (eventType === "other") {
-                                      return {
-                                        ...filters,
-                                        eventTypes: filters.eventTypes.includes(
-                                          "other"
-                                        )
-                                          ? []
-                                          : ["other"],
-                                        activities: [],
-                                      };
-                                    }
-
-                                    const withoutOther =
-                                      filters.eventTypes.filter(
-                                        (type) => type !== "other"
-                                      );
-
-                                    return {
-                                      ...filters,
-                                      eventTypes: withoutOther.includes(
-                                        eventType
-                                      )
-                                        ? withoutOther.filter(
-                                            (f) => f !== eventType
-                                          )
-                                        : withoutOther.concat(eventType),
-                                    };
-                                  });
-                                }}
-                                className="capitalize"
-                              >
-                                <div className="flex items-center gap-2">
-                                  <span>
-                                    {filters.eventTypes.includes(eventType) && (
-                                      <Check
-                                        size="16"
-                                        className="text-pink-400"
-                                      />
-                                    )}
-                                  </span>
-                                  {eventType}
-                                </div>
-                              </DropdownMenuItem>
-                            </>
-                          ))}
-                        </DropdownMenuSubContent>
-                      </DropdownMenuPortal>
-                    </DropdownMenuSub>
-                    {eventTypes.length > 0 && (
-                      <DropdownMenuSub>
-                        <DropdownMenuSubTrigger>
-                          <span>Event Activity</span>
-                        </DropdownMenuSubTrigger>
-                        <DropdownMenuPortal>
-                          <DropdownMenuSubContent>
-                            {eventTypes
-                              .sort((a, b) =>
-                                a.activity.localeCompare(b.activity)
-                              )
-                              .map(({ name, activity }) => {
-                                let isDisabled = false;
-                                const pEventTypes = filters.eventTypes.filter(
-                                  (f) => f !== name
-                                );
-                                if (pEventTypes.length) {
-                                  isDisabled = true;
-                                }
-                                if (
-                                  filters.eventTypes.length ===
-                                  parentEventTypes.length
-                                ) {
-                                  isDisabled = false;
-                                }
-
-                                return (
-                                  <DropdownMenuItem
-                                    key={activity}
-                                    className="capitalize"
-                                    disabled={isDisabled}
-                                    onSelect={(e) => {
-                                      e.preventDefault();
-                                      setFilters((filters) => ({
-                                        ...filters,
-                                        activities: filters.activities.includes(
-                                          activity
-                                        )
-                                          ? filters.activities.filter(
-                                              (f) => f !== activity
-                                            )
-                                          : filters.activities.concat(activity),
-                                      }));
-                                    }}
-                                  >
-                                    <div className="flex items-center gap-2">
-                                      <span>
-                                        {filters.activities.includes(
-                                          activity
-                                        ) && (
-                                          <Check
-                                            size="16"
-                                            className="text-pink-400"
-                                          />
-                                        )}
-                                      </span>
-                                      {activity}
-                                    </div>
-                                  </DropdownMenuItem>
-                                );
-                              })}
-                          </DropdownMenuSubContent>
-                        </DropdownMenuPortal>
-                      </DropdownMenuSub>
-                    )}
-                    <DropdownMenuSub>
-                      <DropdownMenuSubTrigger>
-                        <span>Status</span>
-                      </DropdownMenuSubTrigger>
-                      <DropdownMenuPortal>
-                        <DropdownMenuSubContent>
-                          {Object.values(EventStatus).map((status) => (
-                            <DropdownMenuItem
-                              key={status}
-                              className="capitalize"
-                              onSelect={(e) => {
-                                e.preventDefault();
-                                setFilters((filters) => ({
-                                  ...filters,
-                                  statuses: filters.statuses.includes(status)
-                                    ? filters.statuses.filter(
-                                        (f) => f !== status
-                                      )
-                                    : filters.statuses.concat(status),
-                                }));
-                              }}
-                            >
-                              <div className="flex items-center gap-2">
-                                <span>
-                                  {filters.statuses.includes(status) && (
-                                    <Check
-                                      size="16"
-                                      className="text-pink-400"
-                                    />
-                                  )}
-                                </span>
-                                {status}
-                              </div>
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuSubContent>
-                      </DropdownMenuPortal>
-                    </DropdownMenuSub>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <LeadFilterButton
+                  filters={filters}
+                  setFilters={setFilters}
+                  eventTypes={eventTypes}
+                />
               </div>
               <Link
                 href="/leads/create"
@@ -304,56 +123,11 @@ export default function LeadsPage() {
                 New Lead
               </Link>
             </div>
-            <div className="mb-4 flex flex-wrap gap-2">
-              {Object.entries(filters).map(([key, values], index) => {
-                if (!values.length) return null;
-                return values.map((value) => (
-                  <Badge key={value} className="capitalize" variant="secondary">
-                    <span className="mr-1 text-xs text-slate-500">
-                      {filterKeyText[key as keyof typeof filters]}:
-                    </span>
-                    <span className="mr-1">{value}</span>
-                    <Button
-                      variant="ghost"
-                      type="button"
-                      className="h-6 w-6 p-0 text-pink-500"
-                      onClick={() => {
-                        if (
-                          key === "eventTypes" &&
-                          filters.eventTypes.length > 1
-                        ) {
-                          const removeActivities = eventTypes.filter(
-                            (eventType) => eventType.name === value
-                          );
-                          const activities = filters.activities.filter(
-                            (activity) =>
-                              !removeActivities.find(
-                                (a) => a.activity === activity
-                              )
-                          );
-                          setFilters((filters) => ({
-                            ...filters,
-                            [key]: filters[key as keyof typeof filters].filter(
-                              (f) => f !== value
-                            ),
-                            activities,
-                          }));
-                        } else {
-                          setFilters((filters) => ({
-                            ...filters,
-                            [key]: filters[key as keyof typeof filters].filter(
-                              (f) => f !== value
-                            ),
-                          }));
-                        }
-                      }}
-                    >
-                      <X size="12" />
-                    </Button>
-                  </Badge>
-                ));
-              })}
-            </div>
+            <LeadFilterPills
+              filters={filters}
+              setFilters={setFilters}
+              eventTypes={eventTypes}
+            />
           </>
         )}
         columns={[

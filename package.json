@@ -37,6 +37,7 @@
     "@trpc/server": "^10.34.0",
     "bcrypt": "^5.1.1",
     "class-variance-authority": "^0.7.0",
+    "cleave-zen": "^0.0.15",
     "clsx": "^2.0.0",
     "cmdk": "^0.2.0",
     "date-fns": "^2.30.0",
@@ -84,7 +85,7 @@
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
   },
   "engines": {
-    "node": "^20.6.1",
-    "npm": "^9.8.1"
+    "node": ">=20.6.1",
+    "npm": ">=9.8.1"
   }
 }

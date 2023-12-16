@@ -83,6 +83,9 @@ dependencies:
   class-variance-authority:
     specifier: ^0.7.0
     version: 0.7.0
+  cleave-zen:
+    specifier: ^0.0.15
+    version: 0.0.15
   clsx:
     specifier: ^2.0.0
     version: 2.0.0
@@ -2424,6 +2427,10 @@ packages:
     resolution: {integrity: sha512-jFI8IQw4hczaL4ALINxqLEXQbWcNjoSkloa4IaufXCJr6QawJyw7tuRysRsrE8w2p/4gGaxKIt/hX3qz/IbD1A==}
     dependencies:
       clsx: 2.0.0
+    dev: false
+
+  /cleave-zen@0.0.15:
+    resolution: {integrity: sha512-WZ4T6v6pWiYelgy9eyMj3+DQjwC2V3PASUxS3oPAEg2T7BaWhXNuVsSVd36Tftti12V4ytSYlBkGhLT2lAkEug==}
     dev: false
 
   /client-only@0.0.1:
