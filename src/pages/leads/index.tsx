@@ -2,10 +2,17 @@
 
 // core
 import { api } from "~/utils/api";
-import { isSameDay, format as dateFormat } from "date-fns";
+import {
+  isSameDay,
+  format as dateFormat,
+  isValid as isValidDate,
+  startOfDay,
+  endOfDay,
+} from "date-fns";
 import { useRef, useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import Link from "next/link";
+import { useRouter } from "next/router";
 
 // components
 import { Button } from "@/components/ui/button";
@@ -61,18 +68,50 @@ import { eventIcons } from "~/utils/eventIcons";
 import { getStatusIcon, statusColors } from "~/utils/statusColors";
 import { EventStatus } from "@prisma/client";
 import { generateBody, generateMailto, generateSubject } from "~/utils/mailto";
+import type { DateRange } from "react-day-picker";
+
+export type LeadsPageFilters = {
+  eventTypes: string[];
+  activities: string[];
+  statuses: EventStatus[];
+  dateRange: DateRange[];
+};
 
 export default function LeadsPage() {
+  const router = useRouter();
   const { toast } = useToast();
-  const [filters, setFilters] = useState<{
-    eventTypes: string[];
-    activities: string[];
-    statuses: EventStatus[];
-  }>({
-    eventTypes: [],
-    activities: [],
-    statuses: [],
+  const [filters, setFilters] = useState<LeadsPageFilters>(() => {
+    const eventStatuses = Object.keys(EventStatus) as EventStatus[];
+    let validStatuses: EventStatus[] = [];
+    let validDate: Date | undefined = undefined;
+    const { query } = router;
+    if (query.status) {
+      validStatuses = (
+        Array.isArray(query.status) ? query.status : query.status.split(",")
+      ).filter((status) =>
+        eventStatuses.includes(status as EventStatus)
+      ) as EventStatus[];
+    }
+    if (query.date && typeof query.date === "string") {
+      const date = new Date(query.date);
+      if (isValidDate(date)) {
+        validDate = date;
+      }
+    }
+
+    return {
+      eventTypes: [],
+      activities: [],
+      statuses: validStatuses,
+      dateRange: [
+        {
+          from: validDate ? startOfDay(validDate) : undefined,
+          to: validDate ? endOfDay(validDate) : undefined,
+        },
+      ],
+    };
   });
+
   const {
     data: leads = [],
     refetch: refetchLeads,
@@ -81,6 +120,8 @@ export default function LeadsPage() {
     activities: filters.activities,
     eventTypes: filters.eventTypes,
     statuses: filters.statuses,
+    from: filters.dateRange[0]?.from,
+    to: filters.dateRange[0]?.to,
   });
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [lead, setLead] = useState<(typeof leads)[number] | null>(null);
@@ -88,7 +129,6 @@ export default function LeadsPage() {
   const deleteLead = api.leads.deleteLead.useMutation();
   const markAsSent = api.leads.sentLead.useMutation();
   const changeStatus = api.leads.updateStatus.useMutation();
-
   const { data: eventTypes = [] } = api.eventTypes.getEventTypes.useQuery();
 
   return (
@@ -165,12 +205,10 @@ export default function LeadsPage() {
                       {dateFormat(lead.startDate, "yyyy")}
                     </div>
                   </div>
-                  {isSameDay(lead.startDate, lead.endDate) ? (
-                    ""
-                  ) : (
+                  {isSameDay(lead.startDate, lead.endDate) ? null : (
                     <>
                       <div>
-                        <ArrowRight />
+                        <ArrowRight role="presentation" />
                       </div>
                       <div className="grid h-20 w-20 place-items-center rounded-md border border-slate-400 text-center">
                         <div className="text-xs text-slate-700">

@@ -21,6 +21,7 @@ import { EventStatus } from "@prisma/client";
 // interfaces
 import type React from "react";
 import type { RouterOutputs } from "~/utils/api";
+import type { LeadsPageFilters } from "~/pages/leads";
 
 const parentEventTypes = ["corporate", "social function"];
 
@@ -29,18 +30,8 @@ export function LeadFilterButton({
   setFilters,
   eventTypes,
 }: {
-  filters: {
-    eventTypes: string[];
-    activities: string[];
-    statuses: EventStatus[];
-  };
-  setFilters: React.Dispatch<
-    React.SetStateAction<{
-      eventTypes: string[];
-      activities: string[];
-      statuses: EventStatus[];
-    }>
-  >;
+  filters: LeadsPageFilters;
+  setFilters: React.Dispatch<React.SetStateAction<LeadsPageFilters>>;
   eventTypes: RouterOutputs["eventTypes"]["getEventTypes"];
 }) {
   return (

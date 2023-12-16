@@ -3,7 +3,7 @@
 import { Calendar } from "lucide-react";
 import { eventIcons } from "~/utils/eventIcons";
 import { getStatusIcon } from "~/utils/statusColors";
-import type { RouterOutputs } from "~/server/api/root";
+import type { RouterOutputs } from "~/utils/api";
 
 export function RecentLeads({
   leads,

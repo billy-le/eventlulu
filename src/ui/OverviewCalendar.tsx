@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import Link from "next/link";
 
 // components
 import { Calendar } from "@/components/ui/calendar";
@@ -8,6 +9,7 @@ import {
   PopoverContent,
   PopoverPortal,
 } from "@radix-ui/react-popover";
+import { ArrowRight } from "lucide-react";
 
 // helpers
 import {
@@ -22,6 +24,9 @@ import {
   isBefore,
   endOfDay,
 } from "date-fns";
+import { EventStatus } from "@prisma/client";
+
+// types
 import type { RouterOutputs } from "~/utils/api";
 import type { DateRangeData } from "./DateRangeMode";
 
@@ -39,10 +44,8 @@ function renderEventList({
           b.eventDetails[0]?.startTime ?? ""
         ) ?? -1
     )
-    .map((event) => {
-      const eventDetail = event.eventDetails.find((d) =>
-        isSameDay(d.date, day)
-      );
+    .map((lead) => {
+      const eventDetail = lead.eventDetails.find((d) => isSameDay(d.date, day));
       const start = new Date(eventDetail?.date!);
       let end: Date | undefined = new Date(eventDetail?.date!);
 
@@ -52,6 +55,7 @@ function renderEventList({
       end.setMilliseconds(0);
       const [shours, sminutes] = eventDetail?.startTime?.split(":") ?? [];
       const [ehours, eminutes] = eventDetail?.endTime?.split(":") ?? [];
+
       if (shours) {
         start.setHours(parseInt(shours, 10));
       }
@@ -70,12 +74,12 @@ function renderEventList({
 
       return (
         <li
-          key={event.id}
+          key={lead.id}
           className="flex flex-col items-center justify-center p-2 text-xs"
         >
-          <p className="flex items-center gap-1">
-            <span className="underline">{event.contact?.firstName}</span>
-            {event.status === "confirmed" &&
+          <div className="flex items-center gap-1">
+            <span className="underline">{lead.contact?.firstName}</span>
+            {lead.status === "confirmed" &&
             isWithinInterval(new Date(), {
               start,
               end,
@@ -86,7 +90,8 @@ function renderEventList({
               </div>
             ) : (
               isSameDay(new Date(), day) &&
-              isBefore(new Date(), start) && (
+              isBefore(new Date(), start) &&
+              lead.status === "confirmed" && (
                 <span className="text-gray-400">
                   -{" "}
                   {formatDistanceToNow(start, {
@@ -95,7 +100,7 @@ function renderEventList({
                 </span>
               )
             )}
-          </p>
+          </div>
           {eventDetail?.functionRoom && (
             <p className="capitalize">{eventDetail.functionRoom.name}</p>
           )}
@@ -181,14 +186,35 @@ export function OverviewCalendar({
                     <PopoverPortal>
                       <PopoverContent className="max-h-60 w-48 overflow-y-auto rounded-md bg-white shadow-md">
                         <ul className="divide-y-slate-200 divide-y">
-                          {(isAfter(new Date(), endOfDay(day.date)) ||
-                            isBefore(new Date(), day.date)) && (
-                            <li className="p-2 text-center text-sm text-slate-400">
-                              {formatDistanceToNow(day.date, {
-                                addSuffix: true,
-                              })}
-                            </li>
-                          )}
+                          <li className="flex items-center justify-between p-2 ">
+                            <span className="text-sm text-slate-400">
+                              {(isAfter(new Date(), endOfDay(day.date)) ||
+                                isBefore(new Date(), day.date)) &&
+                                formatDistanceToNow(day.date, {
+                                  addSuffix: true,
+                                })}
+                            </span>
+                            <Link
+                              href={{
+                                pathname: "/leads",
+                                query: {
+                                  status: EventStatus.confirmed,
+                                  date: dateFormat(day.date, "yyyy-MM-dd"),
+                                },
+                              }}
+                              className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-700 hover:underline"
+                            >
+                              <span>View All</span>
+                              <ArrowRight
+                                aria-label={`view confirmed events on ${dateFormat(
+                                  day.date,
+                                  "MM-dd-yyyy"
+                                )}`}
+                                size="16"
+                                className="inline-block"
+                              />
+                            </Link>
+                          </li>
                           {renderEventList({
                             leads: confirmedEvents,
                             day: day.date,
@@ -209,6 +235,28 @@ export function OverviewCalendar({
                     <PopoverPortal>
                       <PopoverContent className="max-h-60 w-48 overflow-y-auto rounded-md bg-white shadow-md">
                         <ul className="divide-y-slate-200 divide-y">
+                          <li className="flex items-center justify-end p-2">
+                            <Link
+                              href={{
+                                pathname: "/leads",
+                                query: {
+                                  status: EventStatus.tentative,
+                                  date: dateFormat(day.date, "yyyy-MM-dd"),
+                                },
+                              }}
+                              className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-700 hover:underline"
+                            >
+                              <span>View All</span>
+                              <ArrowRight
+                                aria-label={`view tentative events on ${dateFormat(
+                                  day.date,
+                                  "MM-dd-yyyy"
+                                )}`}
+                                size="16"
+                                className="inline-block"
+                              />
+                            </Link>
+                          </li>
                           {renderEventList({
                             leads: tentativeEvents,
                             day: day.date,

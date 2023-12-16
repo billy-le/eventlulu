@@ -383,7 +383,7 @@ export default function LeadPage() {
               variant: "destructive",
             });
           })}
-          className="relative mx-auto space-y-10"
+          className="relative mx-auto max-w-5xl space-y-10"
         >
           <div className="space-y-4 rounded border bg-slate-50 p-4">
             <div className="flex gap-4">
