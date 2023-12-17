@@ -247,4 +247,48 @@ export const dashboardRouter = createTRPCRouter({
         };
       }
     }),
+  getDashboardOverview: protectedProcedure
+    .input(
+      z.object({
+        from: z.date().optional(),
+        to: z.date().optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const leads = await ctx.prisma.leadForm.findMany({
+        where: {
+          startDate: {
+            gte: input.from,
+            lte: input.to,
+          },
+        },
+        select: {
+          id: true,
+          createDate: true,
+          status: true,
+          startDate: true,
+          endDate: true,
+          rateType: true,
+          roomsBudget: true,
+          banquetsBudget: true,
+          contact: {
+            select: {
+              firstName: true,
+            },
+          },
+          eventDetails: {
+            select: {
+              date: true,
+              functionRoom: true,
+              startTime: true,
+              endTime: true,
+              rate: true,
+              pax: true,
+            },
+          },
+        },
+      });
+
+      return leads;
+    }),
 });

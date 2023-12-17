@@ -35,7 +35,7 @@ function renderEventList({
   leads,
 }: {
   day: Date;
-  leads: RouterOutputs["leads"]["getLeads"];
+  leads: RouterOutputs["dashboard"]["getDashboardOverview"];
 }) {
   return leads
     .sort(
@@ -116,7 +116,7 @@ export function OverviewCalendar({
   leads,
   dateRange,
 }: {
-  leads: RouterOutputs["leads"]["getLeads"];
+  leads: RouterOutputs["dashboard"]["getDashboardOverview"];
   dateRange: DateRangeData;
 }) {
   useEffect(() => {

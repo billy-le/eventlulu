@@ -71,10 +71,9 @@ export default function DashboardPage() {
     take: 8,
     orderBy: [{ createDate: "desc" }],
   });
-  const { data: overviewLeads } = api.leads.getLeads.useQuery({
+  const { data: overviewLeads } = api.dashboard.getDashboardOverview.useQuery({
     from: dateRange.from,
     to: dateRange.to,
-    orderBy: [{ startDate: "asc" }],
   });
 
   useEffect(() => {

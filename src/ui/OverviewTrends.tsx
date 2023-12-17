@@ -25,13 +25,14 @@ import {
 import type { DateRangeData } from "./DateRangeMode";
 import type { RouterOutputs } from "~/utils/api";
 import type { TrendItem } from "./Overview";
+import type { EventStatus } from "@prisma/client";
 import millify from "millify";
 
 function getStatusCountData(
   date: Date,
   mode: DateRangeData["mode"],
-  status: RouterOutputs["leads"]["getLeads"][number]["status"],
-  leads: RouterOutputs["leads"]["getLeads"]
+  status: EventStatus,
+  leads: RouterOutputs["dashboard"]["getDashboardOverview"]
 ) {
   switch (mode) {
     case "weekly":
@@ -50,7 +51,7 @@ function getStatusCountData(
 function getLeadGenerationData(
   date: Date,
   mode: DateRangeData["mode"],
-  leads: RouterOutputs["leads"]["getLeads"]
+  leads: RouterOutputs["dashboard"]["getDashboardOverview"]
 ) {
   switch (mode) {
     case "weekly":
@@ -65,7 +66,7 @@ function getLeadGenerationData(
 function getRevenueGrowthData(
   date: Date,
   mode: DateRangeData["mode"],
-  leads: RouterOutputs["leads"]["getLeads"]
+  leads: RouterOutputs["dashboard"]["getDashboardOverview"]
 ) {
   switch (mode) {
     case "weekly":
@@ -137,7 +138,7 @@ export function OverviewTrends({
   dateRange,
 }: {
   trend: TrendItem;
-  leads: RouterOutputs["leads"]["getLeads"];
+  leads: RouterOutputs["dashboard"]["getDashboardOverview"];
   dateRange: DateRangeData;
 }) {
   const data = useMemo(() => {

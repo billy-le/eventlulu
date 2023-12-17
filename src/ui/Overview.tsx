@@ -28,7 +28,7 @@ export function Overview({
   leads,
   className,
 }: {
-  leads: RouterOutputs["leads"]["getLeads"];
+  leads: RouterOutputs["dashboard"]["getDashboardOverview"];
   dateRange: DateRangeData;
   className?: string;
 }) {

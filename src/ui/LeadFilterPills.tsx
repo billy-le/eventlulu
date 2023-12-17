@@ -35,8 +35,6 @@ export function LeadFilterPills({
     return Object.entries(filters);
   }, [filters]);
 
-  console.log(filterEntries);
-
   if (!filterEntries.filter(([, arr]) => arr.length).length) {
     return null;
   }
@@ -112,10 +110,7 @@ export function LeadFilterPills({
                   onClick={() => {
                     setFilters((filters) => ({
                       ...filters,
-                      dateRange: filters.dateRange.filter(
-                        (date) =>
-                          date.from !== value.from && date.to !== value.to
-                      ),
+                      dateRange: [],
                     }));
                   }}
                 >
