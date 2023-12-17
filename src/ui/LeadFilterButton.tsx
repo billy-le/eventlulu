@@ -22,6 +22,9 @@ import { EventStatus } from "@prisma/client";
 import type React from "react";
 import type { RouterOutputs } from "~/utils/api";
 import type { LeadsPageFilters } from "~/pages/leads";
+import { DatePicker } from "./DatePicker";
+import { DateRangePicker } from "./DateRangePicker";
+import { endOfDay, startOfDay } from "date-fns";
 
 const parentEventTypes = ["corporate", "social function"];
 
@@ -176,6 +179,31 @@ export function LeadFilterButton({
                   </div>
                 </DropdownMenuItem>
               ))}
+            </DropdownMenuSubContent>
+          </DropdownMenuPortal>
+        </DropdownMenuSub>
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger>
+            <span>Date Range</span>
+          </DropdownMenuSubTrigger>
+          <DropdownMenuPortal>
+            <DropdownMenuSubContent>
+              <DateRangePicker
+                dateRange={filters.dateRange[0]}
+                onDateChange={(dateRange) => {
+                  if (dateRange?.from) {
+                    setFilters({
+                      ...filters,
+                      dateRange: [
+                        {
+                          from: startOfDay(dateRange.from),
+                          to: endOfDay(dateRange?.to ?? dateRange.from),
+                        },
+                      ],
+                    });
+                  }
+                }}
+              />
             </DropdownMenuSubContent>
           </DropdownMenuPortal>
         </DropdownMenuSub>

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 
 // helpers
-import { format as dateFormat } from "date-fns";
+import { format as dateFormat, isSameDay } from "date-fns";
 
 // interfaces
 import type { RouterOutputs } from "~/utils/api";
@@ -96,7 +96,14 @@ export function LeadFilterPills({
                   {filterKeyText[key as keyof LeadsPageFilters]}:
                 </span>
                 <span className="mr-1">
-                  {dateFormat(value.from, "MM/dd/yyyy")}
+                  {value.to && isSameDay(value.from, value.to)
+                    ? dateFormat(value.from, "LLL dd, y")
+                    : value.to
+                    ? `${dateFormat(value.from, "LLL dd, y")} - ${dateFormat(
+                        value.to,
+                        "LLL dd, y"
+                      )}`
+                    : dateFormat(value.from, "LLL dd, y")}
                 </span>
                 <Button
                   variant="ghost"

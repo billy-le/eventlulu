@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { format as dateFormat } from "date-fns";
+import { format as dateFormat, isSameDay } from "date-fns";
 import { DateRange, SelectRangeEventHandler } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
@@ -15,7 +15,7 @@ import {
 import { CalendarIcon } from "lucide-react";
 
 interface DateRangePickerProps {
-  dateRange: DateRange;
+  dateRange: DateRange | undefined;
   onDateChange: SelectRangeEventHandler;
   className?: string;
 }
@@ -37,15 +37,17 @@ export function DateRangePicker({
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {dateRange.from ? (
-              dateRange.to ? (
+            {dateRange?.to && dateRange?.from ? (
+              isSameDay(dateRange.to, dateRange.from) ? (
+                dateFormat(dateRange.from, "LLL dd, y")
+              ) : (
                 <>
                   {dateFormat(dateRange.from, "LLL dd, y")} -{" "}
                   {dateFormat(dateRange.to, "LLL dd, y")}
                 </>
-              ) : (
-                dateFormat(dateRange.from, "LLL dd, y")
               )
+            ) : dateRange?.from ? (
+              dateFormat(dateRange.from, "LLL dd, y")
             ) : (
               <span>Pick a date</span>
             )}
@@ -55,7 +57,7 @@ export function DateRangePicker({
           <Calendar
             initialFocus
             mode="range"
-            defaultMonth={dateRange.from}
+            defaultMonth={dateRange?.from}
             selected={dateRange}
             onSelect={onDateChange}
             numberOfMonths={2}

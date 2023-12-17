@@ -163,7 +163,7 @@ export const leadsRouter = createTRPCRouter({
           inclusions: true,
         },
         take: input?.take,
-        orderBy: input?.orderBy ?? [{ updateDate: "desc" }],
+        orderBy: input?.orderBy ?? [{ createDate: "desc" }],
         ...(input?.cursorId && {
           cursor: {
             id: input.cursorId,
