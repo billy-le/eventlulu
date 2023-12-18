@@ -291,4 +291,10 @@ export const dashboardRouter = createTRPCRouter({
 
       return leads;
     }),
+
+  /**
+   * TODO - add getOverviewStats - avg/mean time to send proposals, avg/mean time to confirmation, avg time to lost,
+   * avg/mean event duration in hours/days, revenue per event per day, most popular event type, number of repeat clients,
+   * number of new clients,
+   */
 });

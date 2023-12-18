@@ -1,5 +1,8 @@
 "use client";
 
+// core
+import React from "react";
+
 // components
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +22,6 @@ import { Check, Filter } from "lucide-react";
 import { EventStatus } from "@prisma/client";
 
 // interfaces
-import type React from "react";
 import type { RouterOutputs } from "~/utils/api";
 import type { LeadsPageFilters } from "~/pages/leads";
 import { DatePicker } from "./DatePicker";
@@ -53,10 +55,9 @@ export function LeadFilterButton({
           <DropdownMenuPortal>
             <DropdownMenuSubContent>
               {parentEventTypes.concat("other").map((eventType) => (
-                <>
+                <React.Fragment key={eventType}>
                   {eventType === "other" && <DropdownMenuSeparator />}
                   <DropdownMenuItem
-                    key={eventType}
                     onSelect={(e) => {
                       e.preventDefault();
                       setFilters((filters) => {
@@ -93,7 +94,7 @@ export function LeadFilterButton({
                       {eventType}
                     </div>
                   </DropdownMenuItem>
-                </>
+                </React.Fragment>
               ))}
             </DropdownMenuSubContent>
           </DropdownMenuPortal>

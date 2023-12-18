@@ -286,6 +286,7 @@ export default function LeadPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     let leadFormValues = normalize(formValues);
+
     if (leadFormValues.eventType?.id === "other") {
       leadFormValues.eventType = undefined;
     }
@@ -898,9 +899,11 @@ export default function LeadPage() {
 
                               for (let i = 0; i < count; i++) {
                                 const date = addDays(formValues.startDate!, i);
-                                const event =
-                                  formValues.eventDetails?.[i] ??
-                                  formValues?.eventDetails?.[i - 1];
+                                let event = formValues.eventDetails?.[i];
+                                if (!event) {
+                                  event = formValues.eventDetails?.[i - 1];
+                                  event!.id = undefined;
+                                }
 
                                 events.push({
                                   ...(event?.id && {
