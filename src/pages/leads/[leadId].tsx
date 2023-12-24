@@ -866,6 +866,13 @@ export default function LeadPage() {
                             })
                           );
                           form.setValue("eventDetails", eventDetails);
+                          form.setValue(
+                            "endDate",
+                            addDays(
+                              endOfDay(date),
+                              formValues.eventLengthInDays - 1
+                            )
+                          );
                         }
                       }
                     }}
