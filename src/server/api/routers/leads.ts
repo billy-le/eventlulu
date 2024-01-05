@@ -301,6 +301,20 @@ export const leadsRouter = createTRPCRouter({
                 title: input.contact.title,
               },
             });
+          } else if (contact) {
+            await ctx.prisma.contact.update({
+              where: {
+                id: contact.id,
+              },
+              data: {
+                email: input.contact.email,
+                firstName: input.contact.firstName,
+                lastName: input.contact.lastName,
+                phoneNumber: input.contact.phoneNumber,
+                mobileNumber: input.contact.mobileNumber,
+                title: input.contact.title,
+              },
+            });
           }
         }
 
