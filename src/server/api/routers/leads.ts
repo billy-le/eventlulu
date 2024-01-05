@@ -273,7 +273,6 @@ export const leadsRouter = createTRPCRouter({
           contact = await ctx.prisma.contact.update({
             where: {
               id: input.contact.id,
-              email: input.contact.email,
             },
             data: {
               firstName: input.contact.firstName,
