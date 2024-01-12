@@ -9,6 +9,7 @@ import {
   addDays,
   isAfter,
   format as dateFormat,
+  compareAsc,
 } from "date-fns";
 import { useForm, useWatch, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -41,7 +42,7 @@ import {
 import { DatePicker } from "src/ui/DatePicker";
 import { DefaultLayout } from "~/layouts/default";
 import { Combobox } from "~/ui/Combobox";
-import { Calendar, CalendarDays, Plus, Trash } from "lucide-react";
+import { CalendarDays, Plus, Trash } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 
 // interfaces
@@ -168,18 +169,20 @@ function normalize(
           },
         }
       : { company: undefined }),
-    eventDetails: values.eventDetails?.map((event) => ({
-      ...event,
-      date: event.date,
-      pax: event.pax ?? undefined,
-      remarks: event.remarks ?? undefined,
-      startTime: event.startTime ?? undefined,
-      endTime: event.endTime ?? undefined,
-      rate: event.rate ?? undefined,
-      functionRoom: event.functionRoom ?? undefined,
-      roomSetup: event.roomSetup ?? undefined,
-      mealReqs: event.mealReqs,
-    })),
+    eventDetails: values.eventDetails
+      ?.sort((eventA, eventB) => compareAsc(eventA.date, eventB.date))
+      ?.map((event) => ({
+        ...event,
+        date: event.date,
+        pax: event.pax ?? undefined,
+        remarks: event.remarks ?? undefined,
+        startTime: event.startTime ?? undefined,
+        endTime: event.endTime ?? undefined,
+        rate: event.rate ?? undefined,
+        functionRoom: event.functionRoom ?? undefined,
+        roomSetup: event.roomSetup ?? undefined,
+        mealReqs: event.mealReqs,
+      })),
     activities: values.activities?.map((activity) => ({
       ...activity,
       updatedBy: activity.updatedBy,

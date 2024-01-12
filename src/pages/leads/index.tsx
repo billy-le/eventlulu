@@ -68,6 +68,8 @@ import { eventIcons } from "~/utils/eventIcons";
 import { getStatusIcon, statusColors } from "~/utils/statusColors";
 import { EventStatus } from "@prisma/client";
 import { generateBody, generateMailto, generateSubject } from "~/utils/mailto";
+import { millify } from "millify";
+
 import type { DateRange } from "react-day-picker";
 
 export type LeadsPageFilters = {
@@ -192,36 +194,118 @@ export default function LeadsPage() {
             },
             cell: ({ row }) => {
               const lead = row.original;
+
               return (
-                <div className="flex items-center gap-1">
-                  <div className="grid h-20 w-20 place-items-center rounded-md border border-slate-400 text-center">
-                    <div className="text-xs text-slate-700">
-                      {dateFormat(lead.startDate, "MMMM")}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-1">
+                    <div className="grid h-20 w-20 place-items-center rounded-md border border-slate-400 text-center">
+                      <div className="text-xs text-slate-700">
+                        {dateFormat(lead.startDate, "MMMM")}
+                      </div>
+                      <div className="text-xl font-bold text-slate-800">
+                        {dateFormat(lead.startDate, "d")}
+                      </div>
+                      <div className="text-xs text-slate-700">
+                        {dateFormat(lead.startDate, "yyyy")}
+                      </div>
                     </div>
-                    <div className="text-xl font-bold text-slate-800">
-                      {dateFormat(lead.startDate, "d")}
-                    </div>
-                    <div className="text-xs text-slate-700">
-                      {dateFormat(lead.startDate, "yyyy")}
-                    </div>
+                    {isSameDay(lead.startDate, lead.endDate) ? (
+                      <div className="ml-2 w-28">
+                        {lead.eventDetails.map((detail) => {
+                          let startTime: string;
+                          let endTime: string;
+
+                          if (detail.startTime) {
+                            const date = new Date(detail.date);
+                            const [hours, minutes] =
+                              detail.startTime.split(":");
+                            date.setHours(+hours!);
+                            date.setMinutes(+minutes!);
+                            startTime = dateFormat(date, "h:mm aa");
+                          }
+                          if (detail.endTime) {
+                            const date = new Date(detail.date);
+                            const [hours, minutes] = detail.endTime.split(":");
+                            date.setHours(+hours!);
+                            date.setMinutes(+minutes!);
+                            endTime = dateFormat(date, "h:mm aa");
+                          }
+
+                          return (
+                            <div key={detail.id}>
+                              {startTime! && (
+                                <div className="text-xs text-gray-600">
+                                  {startTime}
+                                  {endTime! && ` - ${endTime}`}
+                                </div>
+                              )}
+                              <div className="capitalize">
+                                {detail.functionRoom?.name ?? ""}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <>
+                        <div>
+                          <ArrowRight role="presentation" />
+                        </div>
+                        <div className="grid h-20 w-20 place-items-center rounded-md border border-slate-400 text-center">
+                          <div className="text-xs text-slate-700">
+                            {dateFormat(lead.endDate, "MMMM")}
+                          </div>
+                          <div className="text-xl font-bold text-slate-800">
+                            {dateFormat(lead.endDate, "d")}
+                          </div>
+                          <div className="text-xs text-slate-700">
+                            {dateFormat(lead.endDate, "yyyy")}
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
-                  {isSameDay(lead.startDate, lead.endDate) ? null : (
-                    <>
-                      <div>
-                        <ArrowRight role="presentation" />
-                      </div>
-                      <div className="grid h-20 w-20 place-items-center rounded-md border border-slate-400 text-center">
-                        <div className="text-xs text-slate-700">
-                          {dateFormat(lead.endDate, "MMMM")}
-                        </div>
-                        <div className="text-xl font-bold text-slate-800">
-                          {dateFormat(lead.endDate, "d")}
-                        </div>
-                        <div className="text-xs text-slate-700">
-                          {dateFormat(lead.endDate, "yyyy")}
-                        </div>
-                      </div>
-                    </>
+                  {!isSameDay(lead.startDate, lead.endDate) && (
+                    <div className="space-y-3">
+                      {lead.eventDetails.map((detail) => {
+                        let startTime: string;
+                        let endTime: string;
+
+                        if (detail.startTime) {
+                          const date = new Date(detail.date);
+                          const [hours, minutes] = detail.startTime.split(":");
+                          date.setHours(+hours!);
+                          date.setMinutes(+minutes!);
+                          startTime = dateFormat(date, "MMM do, h:mm aa");
+                        }
+                        if (detail.endTime) {
+                          const date = new Date(detail.date);
+                          const [hours, minutes] = detail.endTime.split(":");
+                          date.setHours(+hours!);
+                          date.setMinutes(+minutes!);
+                          endTime = dateFormat(date, "h:mm aa");
+                        }
+
+                        return (
+                          <div key={detail.id} className="capitalize">
+                            {detail.functionRoom && (
+                              <>
+                                <div className="text-xs text-gray-600">
+                                  {startTime! && <span>{startTime}</span>}
+                                  {endTime! && (
+                                    <span>
+                                      {" - "}
+                                      {endTime}
+                                    </span>
+                                  )}
+                                </div>
+                                <div>{detail.functionRoom.name}</div>
+                              </>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
               );
@@ -305,20 +389,52 @@ export default function LeadsPage() {
                 ] || Calendar;
 
               return (
-                <div className="flex items-center gap-3">
-                  <Component size="24" className="text-blue-400" />
-                  <div>
-                    <div className="capitalize">
-                      {lead.eventType?.name === "corporate"
-                        ? lead.company?.name ?? ""
-                        : lead.eventType?.name === "social function"
-                        ? ""
-                        : lead.eventTypeOther ?? ""}
-                    </div>
-                    <div className="text-xs capitalize text-gray-400">
-                      {lead.eventType?.activity ?? "Other"}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Component size="24" className="text-blue-400" />
+                    <div>
+                      <div className="capitalize">
+                        {lead.eventType?.name === "corporate"
+                          ? lead.company?.name ?? ""
+                          : lead.eventType?.name === "social function"
+                          ? ""
+                          : lead.eventTypeOther ?? ""}
+                      </div>
+                      <div className="text-xs capitalize text-gray-400">
+                        {lead.eventType?.activity ?? "Other"}
+                      </div>
                     </div>
                   </div>
+                </div>
+              );
+            },
+          },
+          {
+            accessorKey: "revenue",
+            header: () => {
+              return (
+                <span className="whitespace-nowrap">Approximate Revenue</span>
+              );
+            },
+            cell: ({ row }) => {
+              const lead = row.original;
+              const otherBudgets =
+                (lead.banquetsBudget || 0) + (lead.roomsBudget || 0);
+              const revenue = lead.eventDetails.reduce((sum, event) => {
+                let rate = 0;
+                if (lead.rateType?.name === "per person") {
+                  rate = (event.rate || 0) * (event.pax || 0);
+                } else {
+                  rate = event.rate || 0;
+                }
+
+                return sum + rate;
+              }, 0);
+
+              return (
+                <div className="text-center text-3xl">
+                  <span className="text-green-400">₱</span>
+                  {millify(revenue + otherBudgets)}
                 </div>
               );
             },
@@ -366,7 +482,7 @@ export default function LeadsPage() {
                   onClick={() => column.toggleSorting(isAscending)}
                   className="space-x-2"
                 >
-                  <span>Proposal Sent Date</span>
+                  <span className="whitespace-nowrap">Proposal Sent Date</span>
                   {isAscending ? (
                     <ArrowDown size="20" />
                   ) : (

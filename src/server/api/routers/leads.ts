@@ -134,6 +134,9 @@ export const leadsRouter = createTRPCRouter({
               mealReqs: true,
               roomSetup: true,
             },
+            orderBy: {
+              date: "asc",
+            },
           },
           activities: {
             include: {
