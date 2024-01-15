@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-
+import currency from "currency.js";
 import {
   XAxis,
   YAxis,
@@ -118,12 +118,17 @@ function CustomTooltip({
   label,
 }: TooltipProps<string, string> & {}) {
   if (active && payload && payload.length) {
+    console.log(payload);
     return (
       <div className="w-32 border border-blue-200 bg-white p-2 shadow-sm">
         <p>{label}</p>
         <p>
           <span className="text-green-500">₱</span>
-          {parseInt(payload[0]!.value!, 10)?.toLocaleString()}
+          {millify(parseInt(payload[0]!.value!, 10))}
+        </p>
+        <p>
+          <span className="text-blue-300">+</span>
+          {millify(payload[0]!.payload.revenuePerDate)}
         </p>
       </div>
     );
@@ -158,25 +163,61 @@ export function OverviewTrends({
         break;
     }
 
-    return dates.map((date) => ({
-      name:
-        dateRange.mode === "weekly"
-          ? dateFormat(date, "EEEE")
-          : dateRange.mode === "monthly"
-          ? dateFormat(date, "M/d")
-          : dateRange.mode === "quarterly"
-          ? dateFormat(date, "MMMM")
-          : dateFormat(date, "MMM"),
-      statusCount: {
-        confirmed: getStatusCountData(date, dateRange.mode, "confirmed", leads)
+    const datee = dates.map((date) => {
+      const revenueGrowth = getRevenueGrowthData(date, dateRange.mode, leads);
+      return {
+        name:
+          dateRange.mode === "weekly"
+            ? dateFormat(date, "EEEE")
+            : dateRange.mode === "monthly"
+            ? dateFormat(date, "M/d")
+            : dateRange.mode === "quarterly"
+            ? dateFormat(date, "MMMM")
+            : dateFormat(date, "MMM"),
+        statusCount: {
+          confirmed: getStatusCountData(
+            date,
+            dateRange.mode,
+            "confirmed",
+            leads
+          ).length,
+          tentative: getStatusCountData(
+            date,
+            dateRange.mode,
+            "tentative",
+            leads
+          ).length,
+          lost: getStatusCountData(date, dateRange.mode, "lost", leads).length,
+        },
+        leadGeneration: getLeadGenerationData(date, dateRange.mode, leads)
           .length,
-        tentative: getStatusCountData(date, dateRange.mode, "tentative", leads)
-          .length,
-        lost: getStatusCountData(date, dateRange.mode, "lost", leads).length,
-      },
-      leadGeneration: getLeadGenerationData(date, dateRange.mode, leads).length,
-      revenueGrowth: getRevenueGrowthData(date, dateRange.mode, leads),
-    }));
+        revenueGrowth,
+        revenuePerDate: revenueGrowth,
+      };
+    });
+
+    const trends: typeof datee = [];
+
+    datee.forEach((trend, i) => {
+      if (i === 0) {
+        trends.push(trend);
+        return;
+      }
+      const t1 = currency(trends[i - 1]!.revenueGrowth);
+      const t2 = currency(trend.revenueGrowth);
+
+      trends.push({
+        ...trend,
+        revenueGrowth: t1.add(t2).value,
+      });
+
+      return {
+        ...trend,
+        revenueGrowth: t1.value,
+      };
+    });
+
+    return trends;
   }, [leads, dateRange]);
 
   return (
@@ -187,7 +228,7 @@ export function OverviewTrends({
         <YAxis
           tickFormatter={
             trend === "revenue growth"
-              ? (value, index) => {
+              ? (value: string) => {
                   return millify(parseInt(value, 10));
                 }
               : undefined
