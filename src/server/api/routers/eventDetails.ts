@@ -44,6 +44,7 @@ export const eventDetailsRouter = createTRPCRouter({
         });
         eventDetails.push(detail);
       }
+
       return eventDetails;
     }),
   updateEventDetails: protectedProcedure
@@ -66,7 +67,9 @@ export const eventDetailsRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       let eventDetails = [];
       const filteredEventDetails = input.filter((x) => x.id);
+      console.log(filteredEventDetails.length);
       for (let event of filteredEventDetails) {
+        console.log({ event });
         const prior = await ctx.prisma.eventDetails.findUnique({
           where: { id: event.id },
           include: {
@@ -103,10 +106,11 @@ export const eventDetailsRouter = createTRPCRouter({
           },
         });
 
-        eventDetails.push(eventDetail);
+        console.log(eventDetail);
 
-        return eventDetails;
+        eventDetails.push(eventDetail);
       }
+      return eventDetails;
     }),
   deleteEventDetails: protectedProcedure
     .input(z.array(z.string()))
