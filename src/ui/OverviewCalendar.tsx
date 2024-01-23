@@ -178,7 +178,7 @@ export function OverviewCalendar({
                 {confirmedEvents.length > 0 && (
                   <Popover>
                     <PopoverTrigger>
-                      <div className="grid h-6 w-6 place-items-center rounded-full bg-green-200 text-xs shadow-sm">
+                      <div className="grid h-5 w-5 place-items-center rounded-full bg-green-200 text-xs text-slate-500 shadow-sm">
                         <span className="sr-only">view confirmed events</span>
                         {confirmedEvents.length}
                       </div>
@@ -227,7 +227,7 @@ export function OverviewCalendar({
                 {tentativeEvents.length > 0 && (
                   <Popover>
                     <PopoverTrigger>
-                      <div className="grid h-6 w-6 place-items-center rounded-full bg-yellow-200 text-xs shadow-sm">
+                      <div className="grid h-5 w-5 place-items-center rounded-full bg-yellow-200 text-xs text-slate-500 shadow-sm">
                         <span className="sr-only">view tentative events</span>
                         {tentativeEvents.length}
                       </div>

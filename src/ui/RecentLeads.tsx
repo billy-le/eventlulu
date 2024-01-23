@@ -1,15 +1,39 @@
 "use client";
 
+import { useState } from "react";
+import { api } from "~/utils/api";
+
+// components
 import { Calendar } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+
+// helpers
 import { eventIcons } from "~/utils/eventIcons";
 import { getStatusIcon } from "~/utils/statusColors";
+
+// types
 import type { RouterOutputs } from "~/utils/api";
+import type { EventStatus } from "@prisma/client";
 
 export function RecentLeads({
   leads,
 }: {
   leads: RouterOutputs["leads"]["getLeads"];
 }) {
+  const [openId, setIsOpenId] = useState<string | null>(null);
+  const utils = api.useContext();
+
+  const { mutate: updateStatus } = api.leads.updateStatus.useMutation({
+    onSettled: () => {
+      utils.leads.invalidate();
+    },
+  });
+
   return (
     <div className="space-y-8">
       {leads.map((lead) => {
@@ -44,9 +68,49 @@ export function RecentLeads({
                 <p className="text-sm font-medium leading-none">
                   {contact?.firstName ?? ""} {contact?.lastName ?? ""}
                 </p>
-                {getStatusIcon[lead.status]({
-                  size: "14",
-                })}
+                <Popover open={openId === lead.id}>
+                  <PopoverTrigger
+                    onClick={() => {
+                      setIsOpenId(lead.id);
+                    }}
+                  >
+                    {getStatusIcon[lead.status]({
+                      size: "14",
+                    })}
+                  </PopoverTrigger>
+                  <PopoverContent
+                    side="right"
+                    className="w-fit rounded-full p-0"
+                    onInteractOutside={() => {
+                      setIsOpenId(null);
+                    }}
+                  >
+                    <div className="flex gap-1">
+                      {Object.entries(getStatusIcon)
+                        .filter(([key]) => key != lead.status)
+                        .map(([key, Icon]) => (
+                          <Button
+                            key={key}
+                            onClick={() => {
+                              updateStatus({
+                                id: lead.id,
+                                status: key as EventStatus,
+                              });
+                              setIsOpenId(null);
+                            }}
+                            size="icon"
+                            variant="ghost"
+                            className="rounded-full"
+                          >
+                            <span className="sr-only">
+                              change status to {key}
+                            </span>
+                            <Icon size={16} />
+                          </Button>
+                        ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
               <p className="text-xs text-muted-foreground">
                 {contact?.email ?? ""}
