@@ -34,6 +34,10 @@ export function RecentLeads({
     },
   });
 
+  function closePopover() {
+    setIsOpenId(null);
+  }
+
   return (
     <div className="space-y-8">
       {leads.map((lead) => {
@@ -74,6 +78,7 @@ export function RecentLeads({
                       setIsOpenId(lead.id);
                     }}
                   >
+                    <span className="sr-only">change status</span>
                     {getStatusIcon[lead.status]({
                       size: "14",
                     })}
@@ -81,9 +86,10 @@ export function RecentLeads({
                   <PopoverContent
                     side="right"
                     className="w-fit rounded-full p-0"
-                    onInteractOutside={() => {
-                      setIsOpenId(null);
-                    }}
+                    onInteractOutside={closePopover}
+                    onEscapeKeyDown={closePopover}
+                    onPointerDownOutside={closePopover}
+                    onFocusOutside={closePopover}
                   >
                     <div className="flex gap-1">
                       {Object.entries(getStatusIcon)
