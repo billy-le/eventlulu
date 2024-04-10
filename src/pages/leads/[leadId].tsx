@@ -1348,13 +1348,19 @@ export default function LeadPage() {
             </Table>
           </div>
 
-          {session?.user && (
-            <div className="sticky bottom-0 bg-white py-4">
-              <Button type="submit" className="ml-auto block">
-                Save
-              </Button>
-            </div>
-          )}
+          <div className="sticky bottom-0 flex justify-end gap-4 bg-white py-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={(e) => {
+                e.preventDefault();
+                router.back();
+              }}
+            >
+              Cancel
+            </Button>
+            {session?.user && <Button type="submit">Save</Button>}
+          </div>
         </form>
       </Form>
     </DefaultLayout>

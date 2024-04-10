@@ -76,7 +76,13 @@ export default function HomePage() {
   return (
     <>
       <Head>
-        <meta name="description" content={"Log into EventLulu"} />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta
+          name="description"
+          content={
+            "Give an one-of-a-kind experience by tailoring every aspect of your clients' events by using a fast and modern approach to hotel event management."
+          }
+        />
         <link rel="icon" href="/favicon.ico" />
         <link
           rel="apple-touch-icon"
@@ -255,7 +261,7 @@ export default function HomePage() {
         </section>
       </main>
       <footer>
-        <p className="text-center text-xs text-neutral-400">
+        <p className="py-6 text-center text-xs text-neutral-400">
           This is a demo app created by{" "}
           <Link href="https://billyle.dev" className="text-neutral-700">
             Billy Le
