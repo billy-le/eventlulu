@@ -6,7 +6,7 @@ import {
 import { z } from "zod";
 
 export const leadTypesRouter = createTRPCRouter({
-  publicProcedure: protectedProcedure.query(({ ctx }) => {
+  getLeadTypes: publicProcedure.query(({ ctx }) => {
     return ctx.prisma.leadType.findMany({ orderBy: { name: "asc" } });
   }),
   createLeadType: protectedProcedure
