@@ -11,7 +11,7 @@ import { MealReqsForm } from "~/ui/admin/MealReqsForm";
 import { RateTypesForm } from "~/ui/admin/RateTypesForm";
 import { InclusionsForm } from "~/ui/admin/InclusionsForm";
 
-export default function ProfilePage() {
+export default function AdminPage() {
   return (
     <DefaultLayout>
       <Tabs defaultValue="lead-types">
