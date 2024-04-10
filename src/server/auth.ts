@@ -41,9 +41,6 @@ declare module "next-auth/jwt" {
  * @see https://next-auth.js.org/configuration/options
  */
 export const authOptions: NextAuthOptions = {
-  pages: {
-    signIn: "/",
-  },
   session: {
     strategy: "jwt",
     // Seconds - How long until an idle session expires and is no longer valid.
