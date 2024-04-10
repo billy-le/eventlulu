@@ -1,8 +1,12 @@
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  publicProcedure,
+} from "~/server/api/trpc";
 import { z } from "zod";
 
 export const roomSetupsRouter = createTRPCRouter({
-  getRoomSetups: protectedProcedure.query(({ ctx }) => {
+  getRoomSetups: publicProcedure.query(({ ctx }) => {
     return ctx.prisma.roomSetup.findMany();
   }),
   createRoomSetup: protectedProcedure

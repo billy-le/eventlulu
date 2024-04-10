@@ -113,7 +113,7 @@ const formSchema = z.object({
       z.object({
         id: z.string().optional(),
         date: z.date(),
-        updatedBy: z.object({ id: z.string(), name: z.string() }),
+        updatedBy: z.object({ id: z.string(), name: z.string() }).nullable(),
         clientFeedback: z.string().optional(),
         nextTraceDate: z.date().optional(),
       })
@@ -1277,7 +1277,7 @@ export default function LeadPage() {
                       onClick={() => {
                         activities.append({
                           date: new Date(),
-                          updatedBy: session!.user,
+                          updatedBy: session?.user,
                           clientFeedback: "",
                           nextTraceDate: undefined,
                         });
@@ -1348,11 +1348,13 @@ export default function LeadPage() {
             </Table>
           </div>
 
-          <div className="sticky bottom-0 bg-white py-4">
-            <Button type="submit" className="ml-auto block">
-              Save
-            </Button>
-          </div>
+          {session?.user && (
+            <div className="sticky bottom-0 bg-white py-4">
+              <Button type="submit" className="ml-auto block">
+                Save
+              </Button>
+            </div>
+          )}
         </form>
       </Form>
     </DefaultLayout>

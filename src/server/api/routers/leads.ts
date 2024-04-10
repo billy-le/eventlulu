@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  publicProcedure,
+} from "~/server/api/trpc";
 import { Contact, Organization, EventStatus } from "@prisma/client";
 
 const nameId = z.object({ id: z.string(), name: z.string() });
@@ -11,7 +15,7 @@ const statuses = [
 ] as const;
 
 export const leadsRouter = createTRPCRouter({
-  getAffectedCount: protectedProcedure
+  getAffectedCount: publicProcedure
     .input(
       z.object({
         leadTypeId: z.string().optional(),
@@ -62,7 +66,7 @@ export const leadsRouter = createTRPCRouter({
         },
       });
     }),
-  getLeads: protectedProcedure
+  getLeads: publicProcedure
     .input(
       z
         .object({
@@ -476,7 +480,7 @@ export const leadsRouter = createTRPCRouter({
         console.log(err);
       }
     }),
-  getLeadFormData: protectedProcedure.query(async ({ ctx }) => {
+  getLeadFormData: publicProcedure.query(async ({ ctx }) => {
     try {
       const salesManagers = await ctx.prisma.user.findMany({
         where: {
@@ -507,7 +511,7 @@ export const leadsRouter = createTRPCRouter({
       console.log(err);
     }
   }),
-  updateStatus: protectedProcedure
+  updateStatus: publicProcedure
     .input(z.object({ id: z.string(), status: z.enum(statuses) }))
     .mutation(async ({ ctx, input }) => {
       try {

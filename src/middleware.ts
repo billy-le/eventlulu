@@ -17,4 +17,4 @@ export default withAuth(function middleware(req, event) {}, {
   },
 });
 
-export const config = { matcher: ["/admin"] };
+export const config = { matcher: ["/admin", "/profile"] };

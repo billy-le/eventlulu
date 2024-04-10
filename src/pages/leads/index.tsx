@@ -71,6 +71,7 @@ import { generateBody, generateMailto, generateSubject } from "~/utils/mailto";
 import { millify } from "millify";
 
 import type { DateRange } from "react-day-picker";
+import { useSession } from "next-auth/react";
 
 export type LeadsPageFilters = {
   eventTypes: string[];
@@ -81,6 +82,7 @@ export type LeadsPageFilters = {
 
 export default function LeadsPage() {
   const router = useRouter();
+  const { data: session } = useSession();
   const { toast } = useToast();
   const [filters, setFilters] = useState<LeadsPageFilters>(() => {
     const eventStatuses = Object.keys(EventStatus) as EventStatus[];
@@ -555,12 +557,14 @@ export default function LeadsPage() {
                             <Edit size="16" />
                           </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <AlertDialogTrigger className="flex w-full items-center justify-between">
-                            <div>Delete</div>
-                            <Delete size="16" className="text-red-400" />
-                          </AlertDialogTrigger>
-                        </DropdownMenuItem>
+                        {session?.user && (
+                          <DropdownMenuItem>
+                            <AlertDialogTrigger className="flex w-full items-center justify-between">
+                              <div>Delete</div>
+                              <Delete size="16" className="text-red-400" />
+                            </AlertDialogTrigger>
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuSub>
                           <DropdownMenuSubTrigger>
                             <span>Change Status</span>
@@ -615,7 +619,7 @@ export default function LeadsPage() {
                             </DropdownMenuSubContent>
                           </DropdownMenuPortal>
                         </DropdownMenuSub>
-                        {!lead.lastDateSent && (
+                        {session?.user && !lead.lastDateSent && (
                           <DropdownMenuItem>
                             <Button
                               variant="ghost"
@@ -669,43 +673,45 @@ export default function LeadsPage() {
                         {/* <DropdownMenuItem>Generate Lead Form PDF</DropdownMenuItem> */}
                       </DropdownMenuContent>
                     </DropdownMenu>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>
-                          Are you absolutely sure?
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action cannot be undone. This will permanently
-                          delete this lead.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          className="bg-red-500"
-                          onClick={() => {
-                            deleteLead.mutate(lead.id, {
-                              onSuccess: () => {
-                                toast({
-                                  title: "Success",
-                                  description: "Lead has been deleted",
-                                });
-                                refetchLeads();
-                              },
-                              onError: () => {
-                                toast({
-                                  title: "Failed",
-                                  description: "There was an error",
-                                  variant: "destructive",
-                                });
-                              },
-                            });
-                          }}
-                        >
-                          Continue
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
+                    {session?.user && (
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>
+                            Are you absolutely sure?
+                          </AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently
+                            delete this lead.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            className="bg-red-500"
+                            onClick={() => {
+                              deleteLead.mutate(lead.id, {
+                                onSuccess: () => {
+                                  toast({
+                                    title: "Success",
+                                    description: "Lead has been deleted",
+                                  });
+                                  refetchLeads();
+                                },
+                                onError: () => {
+                                  toast({
+                                    title: "Failed",
+                                    description: "There was an error",
+                                    variant: "destructive",
+                                  });
+                                },
+                              });
+                            }}
+                          >
+                            Continue
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    )}
                   </AlertDialog>
                 </div>
               );

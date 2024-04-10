@@ -1,6 +1,5 @@
 "use client";
 
-import { useSession } from "next-auth/react";
 import { DefaultLayout } from "~/layouts/default";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,10 +12,6 @@ import { RateTypesForm } from "~/ui/admin/RateTypesForm";
 import { InclusionsForm } from "~/ui/admin/InclusionsForm";
 
 export default function ProfilePage() {
-  const { data: session } = useSession();
-
-  if (!session?.user) return <div />;
-
   return (
     <DefaultLayout>
       <Tabs defaultValue="lead-types">

@@ -166,9 +166,9 @@ export default function HomePage() {
               <p className="text-4xl font-medium leading-relaxed xl:text-6xl xl:leading-normal">
                 Accelerate your{" "}
                 <span className="rounded bg-gradient-to-tr from-blue-300 to-indigo-400 px-4 text-white">
-                  lead
+                  event
                 </span>{" "}
-                generation with{" "}
+                planning with{" "}
                 <span className="px rounded bg-gradient-to-tr from-purple-300 to-indigo-400 px-4 text-white">
                   modern
                 </span>{" "}
@@ -254,6 +254,14 @@ export default function HomePage() {
           </ul>
         </section>
       </main>
+      <footer>
+        <p className="text-center text-xs text-neutral-400">
+          This is a demo app created by{" "}
+          <Link href="https://billyle.dev" className="text-neutral-700">
+            Billy Le
+          </Link>
+        </p>
+      </footer>
     </>
   );
 }

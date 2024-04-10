@@ -1,7 +1,7 @@
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
 export const salesManagersRouter = createTRPCRouter({
-  getSalesManagers: protectedProcedure.query(async ({ ctx }) => {
+  getSalesManagers: publicProcedure.query(async ({ ctx }) => {
     const salesManagers = await ctx.prisma.user.findMany({
       where: {
         roles: {

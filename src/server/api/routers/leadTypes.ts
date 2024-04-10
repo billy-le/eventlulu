@@ -1,8 +1,12 @@
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  publicProcedure,
+} from "~/server/api/trpc";
 import { z } from "zod";
 
 export const leadTypesRouter = createTRPCRouter({
-  getLeadTypes: protectedProcedure.query(({ ctx }) => {
+  publicProcedure: protectedProcedure.query(({ ctx }) => {
     return ctx.prisma.leadType.findMany({ orderBy: { name: "asc" } });
   }),
   createLeadType: protectedProcedure

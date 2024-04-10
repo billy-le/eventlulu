@@ -1,8 +1,12 @@
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  publicProcedure,
+} from "~/server/api/trpc";
 import { z } from "zod";
 
 export const eventTypesRouter = createTRPCRouter({
-  getEventTypes: protectedProcedure.query(({ ctx }) => {
+  getEventTypes: publicProcedure.query(({ ctx }) => {
     return ctx.prisma.eventType.findMany();
   }),
   createEventType: protectedProcedure

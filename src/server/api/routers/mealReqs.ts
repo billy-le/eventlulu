@@ -1,8 +1,12 @@
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  publicProcedure,
+} from "~/server/api/trpc";
 import { z } from "zod";
 
 export const mealReqsRouter = createTRPCRouter({
-  getMealReqs: protectedProcedure.query(({ ctx }) => {
+  getMealReqs: publicProcedure.query(({ ctx }) => {
     return ctx.prisma.mealReq.findMany();
   }),
   createMealReq: protectedProcedure

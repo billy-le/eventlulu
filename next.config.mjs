@@ -4,6 +4,7 @@
  */
 await import("./src/env.mjs");
 
+/** @type {import("next").NextConfig} */
 const config = {
   reactStrictMode: true,
   typescript: { ignoreBuildErrors: true },
@@ -12,6 +13,7 @@ const config = {
     locales: ["en"],
     defaultLocale: "en",
   },
+  output: "standalone",
 };
 
 export default config;

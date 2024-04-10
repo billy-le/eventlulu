@@ -1,4 +1,4 @@
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { z } from "zod";
 import {
   subWeeks,
@@ -20,7 +20,7 @@ function calcGrowthRate(previous: number, current: number) {
 }
 
 export const dashboardRouter = createTRPCRouter({
-  getDashboardStats: protectedProcedure
+  getDashboardStats: publicProcedure
     .input(
       z.object({
         from: z.date(),
@@ -247,7 +247,7 @@ export const dashboardRouter = createTRPCRouter({
         };
       }
     }),
-  getDashboardOverview: protectedProcedure
+  getDashboardOverview: publicProcedure
     .input(
       z.object({
         from: z.date().optional(),

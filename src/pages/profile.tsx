@@ -75,8 +75,6 @@ export default function ProfilePage() {
     );
   }
 
-  if (!session?.user) return <div />;
-
   return (
     <DefaultLayout>
       <Form {...form}>

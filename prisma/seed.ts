@@ -270,6 +270,7 @@ async function main() {
               lastDateSent: helpers.maybe(() => date.recent({ refDate: now }), {
                 probability: 0.5,
               }),
+              createdByUserId: user.id,
               onSiteDate: helpers.maybe(
                 () =>
                   date.soon({
@@ -297,7 +298,7 @@ async function main() {
                     .fill(null)
                     .map((_, index) => ({
                       date: datefns.addDays(startDate, index),
-                      updatedById: user.id,
+                      updatedByUserId: user.id,
                       clientFeedback: lorem.sentences(),
                       nextTraceDate: helpers.maybe(
                         () =>

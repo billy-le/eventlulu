@@ -1,8 +1,12 @@
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  publicProcedure,
+} from "~/server/api/trpc";
 import { z } from "zod";
 
 export const rateTypesRouter = createTRPCRouter({
-  getRateTypes: protectedProcedure.query(({ ctx }) => {
+  getRateTypes: publicProcedure.query(({ ctx }) => {
     return ctx.prisma.rateType.findMany();
   }),
   createRateType: protectedProcedure

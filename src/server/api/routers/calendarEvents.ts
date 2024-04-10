@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
 export const calendarEventsRouter = createTRPCRouter({
-  getCalendarEvents: protectedProcedure
+  getCalendarEvents: publicProcedure
     .input(
       z.object({
         startDate: z.date(),

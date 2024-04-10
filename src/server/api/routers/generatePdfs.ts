@@ -1,13 +1,17 @@
 import fs from "node:fs";
 import { PDFDocumentWithTables } from "~/utils/pdfDocumentWithTables";
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  publicProcedure,
+} from "~/server/api/trpc";
 import { format as dateFormat } from "date-fns";
 import { pipeline } from "node:stream/promises";
 import { titleCase } from "~/utils/stringHelpers";
 
 export const generatePdfRouter = createTRPCRouter({
-  generateProposalForm: protectedProcedure
+  generateProposalForm: publicProcedure
     .input(z.object({ leadId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const lead = await ctx.prisma.leadForm.findUnique({
