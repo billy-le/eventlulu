@@ -10,13 +10,13 @@ services:
         NEXT_PUBLIC_CLIENTVAR: "clientvar"
     working_dir: /app
     ports:
-      - "8000:8000"
+      - "8888:8888"
     environment:
       DATABASE_URL: postgresql://root:secret@db:5432/eventlulu?sslmode=disable
       DEFAULT_PASSWORD: default_password
       SALT_ROUNDS: "12"
       NEXTAUTH_SECRET: secret
-      NEXTAUTH_URL: localhost:8000/
+      NEXTAUTH_URL: localhost:8888/
     depends_on:
       - db
     command: "server.js"

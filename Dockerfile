@@ -58,7 +58,7 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/tsconfig.json ./
 
-EXPOSE 8000
-ENV PORT 8000
+EXPOSE 8888
+ENV PORT 8888
 
 CMD ["server.js"]
