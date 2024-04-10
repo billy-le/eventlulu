@@ -14,7 +14,6 @@ import { leadTypesRouter } from "./routers/leadTypes";
 import { eventTypesRouter } from "./routers/eventTypes";
 import { rateTypesRouter } from "./routers/rateTypes";
 import { dashboardRouter } from "./routers/dashboard";
-import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 import { generatePdfRouter } from "./routers/generatePdfs";
 
 /**

@@ -43,3 +43,4 @@ yarn-error.log*
 
 # generated pdfs
 public/proposals/*
+*.dump

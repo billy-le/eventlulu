@@ -4,7 +4,7 @@ import { Role } from "@prisma/client";
 // This is an example of how to read a JSON Web Token from an API route
 export default withAuth(function middleware(req, event) {}, {
   pages: {
-    signIn: "/login",
+    signIn: "/",
   },
   callbacks: {
     authorized: async ({ req, token }) => {
@@ -16,3 +16,5 @@ export default withAuth(function middleware(req, event) {}, {
     },
   },
 });
+
+export const config = { matcher: ["/admin"] };

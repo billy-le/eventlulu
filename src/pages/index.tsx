@@ -1,298 +1,259 @@
 "use client";
 
-import { api } from "~/utils/api";
-import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
+import Image from "next/image";
+import { Input } from "@/components/ui/input";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { signIn, useSession } from "next-auth/react";
+import { useRouter } from "next/router";
+import { useEffect } from "react";
+import { useToast } from "@/components/ui/use-toast";
+import { z } from "zod";
+import Head from "next/head";
+import {
+  ArrowRight,
+  LogIn,
+  StickyNote,
+  LineChart,
+  BetweenHorizontalStart,
+} from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import Link from "next/link";
 
-// components
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, CalendarDays, TrendingUp, Plus } from "lucide-react";
-import { DefaultLayout } from "~/layouts/default";
-import { RecentLeads } from "~/ui/RecentLeads";
-import { DateRangeData, DateRangeMode, modeWordMap } from "~/ui/DateRangeMode";
-import { Overview } from "~/ui/Overview";
+import eventRoomImg from "../assets/hero_image.jpeg";
 
-// helpers
-import { startOfMonth, endOfMonth } from "date-fns";
-import { millify } from "millify";
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string(),
+});
 
-// types
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Dashboard",
-  description: "Example dashboard app built using the components.",
-};
-
-function getGrowthDisplay(growth: number | null) {
-  if (growth === null) {
-    return {
-      isPositive: null,
-      growth: "no change",
-    };
-  }
-  const isPositive = growth > 0;
-  return {
-    isPositive,
-    growth: growth === 0 ? "0%" : isPositive ? `+${growth}%` : `${growth}%`,
-  };
-}
-
-export default function DashboardPage() {
-  const date = startOfMonth(new Date());
-  const [dateRange, setDateRange] = useState<DateRangeData>({
-    from: date,
-    to: endOfMonth(date),
-    mode: "monthly",
-  });
-  const [greeting, setGreeting] = useState("");
-  const { data: session } = useSession();
-
-  const {
-    data: dashboardStats = {
-      confirmedRevenue: 0,
-      eventsHappening: 0,
-      leadGenerationGrowth: 0,
-      leadsGenerated: 0,
-      potentialGrowth: 0,
-      potentialRevenue: 0,
-      revenueGrowth: 0,
-      eventsGrowth: 0,
-    },
-    isLoading,
-    isError,
-  } = api.dashboard.getDashboardStats.useQuery({
-    from: dateRange.from!,
-    to: dateRange.to!,
-    mode: dateRange.mode,
-  });
-  const { data: mostRecentLeads } = api.leads.getLeads.useQuery({
-    take: 8,
-    orderBy: [{ createDate: "desc" }],
-  });
-  const { data: overviewLeads } = api.dashboard.getDashboardOverview.useQuery({
-    from: dateRange.from,
-    to: dateRange.to,
-  });
+export default function HomePage() {
+  const router = useRouter();
+  const { toast } = useToast();
+  const { status } = useSession();
 
   useEffect(() => {
-    const hours = new Date().getHours();
-    let userName = session?.user?.name ?? "";
-    if (hours > 0 && hours < 12) {
-      setGreeting(`Good morning${userName ? `, ${userName}` : ""}`);
-    } else if (hours > 12 && hours < 18) {
-      setGreeting(`Good afternoon${userName ? `, ${userName}` : ""}`);
-    } else {
-      setGreeting(`Good evening${userName ? `, ${userName}` : ""}`);
+    if (status === "authenticated") {
+      router.push("/dashboard");
     }
-  }, [session]);
+  }, [status]);
 
-  const confirmedRevenueGrowth = getGrowthDisplay(dashboardStats.revenueGrowth);
-  const leadGenerationGrowth = getGrowthDisplay(
-    dashboardStats.leadGenerationGrowth
-  );
-  const potentialRevenueGrowth = getGrowthDisplay(
-    dashboardStats.potentialGrowth
-  );
-  const eventsGrowth = getGrowthDisplay(dashboardStats.eventsGrowth);
+  const form = useForm<z.infer<typeof loginSchema>>({
+    resolver: zodResolver(loginSchema),
+  });
+
+  function onSubmit(values: z.infer<typeof loginSchema>) {
+    signIn("credentials", {
+      email: values.email,
+      password: values.password,
+      redirect: false,
+    }).then((res) => {
+      if (res?.ok) {
+        router.push("/dashboard");
+      } else {
+        toast({
+          title: "Login Failed",
+          description: "Wrong email and password",
+          variant: "destructive",
+        });
+      }
+    });
+  }
 
   return (
-    <DefaultLayout>
-      <div className="flex-col md:flex">
-        <div className="flex-1 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-3xl font-bold tracking-tight">{greeting}</h2>
-            <DateRangeMode
-              dateRange={dateRange}
-              onDateChange={(dateRange) => {
-                if (dateRange) {
-                  setDateRange(dateRange);
-                }
-              }}
-            />
+    <>
+      <Head>
+        <meta name="description" content={"Log into EventLulu"} />
+        <link rel="icon" href="/favicon.ico" />
+        <link
+          rel="apple-touch-icon"
+          sizes="180x180"
+          href="/apple-touch-icon.png"
+        />
+        <link
+          rel="icon"
+          type="image/png"
+          sizes="32x32"
+          href="/favicon-32x32.png"
+        />
+        <link
+          rel="icon"
+          type="image/png"
+          sizes="16x16"
+          href="/favicon-16x16.png"
+        />
+        <link rel="manifest" href="/site.webmanifest" />
+        <title>Eventlulu</title>
+      </Head>
+      <header className="bg-white drop-shadow">
+        <nav className="container mx-auto flex items-center justify-between py-5">
+          <h1 className="inline-block bg-gradient-to-r from-purple-400 to-red-400 bg-clip-text text-2xl font-bold uppercase leading-relaxed text-transparent">
+            EventLulu
+          </h1>
+          <ul className="text-medium flex gap-4 text-xl">
+            <li>
+              <Popover>
+                <PopoverTrigger>
+                  <Button className="flex gap-2 font-bold md:text-lg">
+                    Login
+                    <LogIn />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent>
+                  <Form {...form}>
+                    <form
+                      className="space-y-4"
+                      onSubmit={form.handleSubmit(onSubmit)}
+                    >
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input type="email" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Password</FormLabel>
+                            <FormControl>
+                              <Input type="password" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormItem>
+                        <FormControl>
+                          <Button type="submit" className="ml-auto block">
+                            Sign In
+                          </Button>
+                        </FormControl>
+                      </FormItem>
+                    </form>
+                  </Form>
+                </PopoverContent>
+              </Popover>
+            </li>
+          </ul>
+        </nav>
+      </header>
+      <main className="space-y-20 py-10 xl:space-y-10">
+        <section className="container mx-auto ">
+          <div className="grid gap-20 md:grid-cols-5 xl:grid-cols-12">
+            <div className="space-y-8 md:col-span-3 xl:col-span-8">
+              <p className="text-4xl font-medium leading-relaxed xl:text-6xl xl:leading-normal">
+                Accelerate your{" "}
+                <span className="rounded bg-gradient-to-tr from-blue-300 to-indigo-400 px-4 text-white">
+                  lead
+                </span>{" "}
+                generation with{" "}
+                <span className="px rounded bg-gradient-to-tr from-purple-300 to-indigo-400 px-4 text-white">
+                  modern
+                </span>{" "}
+                tools.
+              </p>
+              <p className="max-w-lg text-gray-500 xl:text-lg">
+                Give an one-of-a-kind experience by tailoring every aspect of
+                your clients' events by using a fast and modern approach to
+                hotel event management.
+              </p>
+              <div className="flex justify-center md:justify-start">
+                <Link
+                  href="/dashboard"
+                  className="relative inline-flex h-12 w-full overflow-hidden rounded-full p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50 md:w-auto"
+                >
+                  <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2CBFF_0%,#393BB2_50%,#E2CBFF_100%)]" />
+                  <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-transparent px-8 py-1 text-xl font-medium text-white backdrop-blur-3xl">
+                    Try Now
+                    <ArrowRight size={28} />
+                  </span>
+                </Link>
+              </div>
+            </div>
+            <div className="md:col-span-2 xl:col-span-4">
+              <Image
+                src={eventRoomImg}
+                alt="prepared event room with tables and chairs in an elegant design"
+                loading="lazy"
+                className="max-w-full rounded object-cover"
+              />
+            </div>
           </div>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Confirmed Revenue
-                </CardTitle>
-                <span className="text-green-500">₱</span>
-              </CardHeader>
-              <CardContent>
-                <p className="text-xl font-bold">
-                  {millify(dashboardStats?.confirmedRevenue ?? 0)}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {!isLoading ? (
-                    <>
-                      {confirmedRevenueGrowth.isPositive == null
-                        ? ""
-                        : confirmedRevenueGrowth.isPositive
-                        ? "up"
-                        : "down"}{" "}
-                      <span
-                        className={
-                          confirmedRevenueGrowth.isPositive == null
-                            ? ""
-                            : confirmedRevenueGrowth.isPositive
-                            ? "text-green-500"
-                            : "text-red-400"
-                        }
-                      >
-                        {confirmedRevenueGrowth.growth}
-                      </span>{" "}
-                      since last {modeWordMap[dateRange.mode]}
-                    </>
-                  ) : (
-                    "-"
-                  )}
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Leads Generated
-                </CardTitle>
-                <Users size="16" className="text-blue-400" />
-              </CardHeader>
-              <CardContent>
-                <p className="text-xl font-bold">
-                  +{dashboardStats?.leadsGenerated ?? 0}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {!isLoading ? (
-                    <>
-                      {" "}
-                      {leadGenerationGrowth.isPositive === null
-                        ? ""
-                        : leadGenerationGrowth.isPositive
-                        ? "up"
-                        : "down"}{" "}
-                      <span
-                        className={
-                          leadGenerationGrowth.isPositive === null
-                            ? ""
-                            : leadGenerationGrowth.isPositive
-                            ? "text-green-500"
-                            : "text-red-400"
-                        }
-                      >
-                        {leadGenerationGrowth.growth}
-                      </span>{" "}
-                      since last {modeWordMap[dateRange.mode]}
-                    </>
-                  ) : (
-                    "-"
-                  )}
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Potential Sales
-                </CardTitle>
-                <TrendingUp size="16" className="text-purple-400" />
-              </CardHeader>
-              <CardContent>
-                <p className="text-xl font-bold">
-                  {millify(dashboardStats?.potentialRevenue ?? 0)}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {!isLoading ? (
-                    <>
-                      {potentialRevenueGrowth.isPositive === null
-                        ? ""
-                        : potentialRevenueGrowth.isPositive
-                        ? "up"
-                        : "down"}{" "}
-                      <span
-                        className={
-                          potentialRevenueGrowth.isPositive === null
-                            ? ""
-                            : potentialRevenueGrowth.isPositive
-                            ? "text-green-500"
-                            : "text-red-400"
-                        }
-                      >
-                        {potentialRevenueGrowth.growth}
-                      </span>{" "}
-                      since last {modeWordMap[dateRange.mode]}
-                    </>
-                  ) : (
-                    "-"
-                  )}
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Events Happening
-                </CardTitle>
-                <CalendarDays size="16" className="text-pink-400" />
-              </CardHeader>
-              <CardContent>
-                <p className="text-xl font-bold">
-                  {dashboardStats?.eventsHappening ?? 0}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {!isLoading ? (
-                    <>
-                      {eventsGrowth.isPositive === null
-                        ? ""
-                        : eventsGrowth.isPositive
-                        ? "up"
-                        : "down"}{" "}
-                      <span
-                        className={
-                          eventsGrowth.isPositive === null
-                            ? ""
-                            : eventsGrowth.isPositive
-                            ? "text-green-500"
-                            : "text-red-400"
-                        }
-                      >
-                        {eventsGrowth.growth}
-                      </span>{" "}
-                      since last {modeWordMap[dateRange.mode]}
-                    </>
-                  ) : (
-                    "-"
-                  )}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-            <Overview
-              className="col-span-4"
-              leads={overviewLeads ?? []}
-              dateRange={dateRange}
-            />
-            <Card className="col-span-3">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <CardTitle>Recent Leads</CardTitle>
-                  <Link
-                    href="/leads/create"
-                    className="flex items-center justify-between rounded-md bg-slate-900 px-2 py-1 text-sm text-slate-50"
-                  >
-                    <Plus size="12" className="mr-2" />
-                    New Lead
-                  </Link>
+        </section>
+        <section className="container mx-auto space-y-16 xl:space-y-10">
+          <h2 className="text-center text-4xl font-bold text-neutral-800">
+            Why use Eventlulu?
+          </h2>
+          <ul className="mx-auto flex max-w-lg flex-col justify-between gap-16 xl:max-w-full xl:flex-row xl:gap-10">
+            <li className="w-full">
+              <div className="flex gap-3">
+                <div className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-full bg-pink-300 text-white">
+                  <StickyNote />
                 </div>
-              </CardHeader>
-              <CardContent>
-                <RecentLeads leads={mostRecentLeads ?? []} />
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-    </DefaultLayout>
+                <div>
+                  <h3 className="mb-3 text-xl font-medium">Go Paperless</h3>
+                  <p className="text-sm text-neutral-500">
+                    Enter all your data digitally to reduce your paperwork and
+                    easily retrieve, modify, or delete them.
+                  </p>
+                </div>
+              </div>
+            </li>
+            <li className="w-full">
+              <div className="flex gap-3">
+                <div className="grid h-10 w-10  flex-shrink-0 place-items-center rounded-full bg-pink-300 text-white">
+                  <LineChart />
+                </div>
+                <div>
+                  <h3 className="mb-3 text-xl font-medium">
+                    Trends at a Glance
+                  </h3>
+                  <p className="text-sm text-neutral-500">
+                    Analyze your performance weekly, monthly, or annually
+                    through the use of data visualization.
+                  </p>
+                </div>
+              </div>
+            </li>
+            <li className="w-full">
+              <div className="flex gap-3">
+                <div className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-full bg-pink-300 text-white">
+                  <BetweenHorizontalStart />
+                </div>
+                <div>
+                  <h3 className="mb-3 text-xl font-medium">Accountability</h3>
+                  <p className="text-sm text-neutral-500">
+                    Quickly inventory your assets and services and make sure no
+                    part of your business is missing.
+                  </p>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </section>
+      </main>
+    </>
   );
 }

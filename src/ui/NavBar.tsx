@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
-import { Role } from "@prisma/client";
 import { LogOut, User, PencilRuler } from "lucide-react";
 import {
   DropdownMenu,
@@ -38,60 +37,62 @@ export function NavBar() {
                   Leads
                 </Link>
               </li>
-              <li>
-                <DropdownMenu>
-                  <DropdownMenuTrigger>
-                    <Button className="h-10 w-10 rounded-full bg-gradient-to-tr from-purple-400 to-pink-400 p-0">
-                      <User className="text-white" size="20" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-44">
-                    <DropdownMenuItem>
-                      <DropdownMenuLabel className="w-full p-0">
-                        <Link
-                          href="/profile"
-                          className="flex items-center justify-between"
-                        >
-                          Profile
-                          <User size="20" className="text-slate-400" />
-                        </Link>
-                      </DropdownMenuLabel>
-                    </DropdownMenuItem>
-                    {session?.user?.roles?.includes("admin") && (
-                      <>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>
-                          <DropdownMenuLabel className="w-full p-0">
-                            <Link
-                              href="/admin"
-                              className="flex items-center justify-between"
-                            >
-                              Admin
-                              <PencilRuler
-                                size="20"
-                                className="text-slate-400"
-                              />
-                            </Link>
-                          </DropdownMenuLabel>
-                        </DropdownMenuItem>
-                      </>
-                    )}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem>
-                      <Button
-                        variant="ghost"
-                        className={cn(
-                          "flex h-auto w-full items-center justify-between p-0"
-                        )}
-                        onClick={() => signOut({ callbackUrl: "/login" })}
-                      >
-                        Sign out
-                        <LogOut size="20" className="text-slate-400" />
+              {session?.user && (
+                <li>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger>
+                      <Button className="h-10 w-10 rounded-full bg-gradient-to-tr from-purple-400 to-pink-400 p-0">
+                        <User className="text-white" size="20" />
                       </Button>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </li>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-44">
+                      <DropdownMenuItem>
+                        <DropdownMenuLabel className="w-full p-0">
+                          <Link
+                            href="/profile"
+                            className="flex items-center justify-between"
+                          >
+                            Profile
+                            <User size="20" className="text-slate-400" />
+                          </Link>
+                        </DropdownMenuLabel>
+                      </DropdownMenuItem>
+                      {session?.user?.roles?.includes("admin") && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem>
+                            <DropdownMenuLabel className="w-full p-0">
+                              <Link
+                                href="/admin"
+                                className="flex items-center justify-between"
+                              >
+                                Admin
+                                <PencilRuler
+                                  size="20"
+                                  className="text-slate-400"
+                                />
+                              </Link>
+                            </DropdownMenuLabel>
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem>
+                        <Button
+                          variant="ghost"
+                          className={cn(
+                            "flex h-auto w-full items-center justify-between p-0"
+                          )}
+                          onClick={() => signOut({ callbackUrl: "/" })}
+                        >
+                          Sign out
+                          <LogOut size="20" className="text-slate-400" />
+                        </Button>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </li>
+              )}
             </ul>
           </div>
         </div>
