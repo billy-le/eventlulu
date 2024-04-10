@@ -56,6 +56,7 @@ COPY --from=builder /app/.next/standalone .
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/tsconfig.json ./
 
 EXPOSE 8888
 ENV PORT 8888
