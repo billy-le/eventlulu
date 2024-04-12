@@ -34,6 +34,7 @@ import {
 import Link from "next/link";
 
 import eventRoomImg from "../assets/hero_image.jpeg";
+import { WavyBackground } from "~/ui/WavyBackground";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -165,8 +166,15 @@ export default function HomePage() {
           </ul>
         </nav>
       </header>
-      <main className="space-y-20 py-10 xl:space-y-10">
-        <section className="container mx-auto ">
+
+      <main className="relative py-10">
+        <WavyBackground
+          containerClassName="absolute left-0 -top-20 -z-10"
+          backgroundFill="#fff"
+          waveWidth={100}
+          waveOpacity={0.5}
+        ></WavyBackground>
+        <section className="container mx-auto mb-20 xl:mb-10">
           <div className="grid gap-20 md:grid-cols-5 xl:grid-cols-12">
             <div className="space-y-8 md:col-span-3 xl:col-span-8">
               <p className="text-4xl font-medium leading-relaxed xl:text-6xl xl:leading-normal">
@@ -208,7 +216,7 @@ export default function HomePage() {
             </div>
           </div>
         </section>
-        <section className="container mx-auto space-y-16 xl:space-y-10">
+        <section className="container mx-auto mb-20 space-y-16 xl:mb-10 xl:space-y-10">
           <h2 className="text-center text-4xl font-bold text-neutral-800">
             Why use Eventlulu?
           </h2>

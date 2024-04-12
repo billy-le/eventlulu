@@ -55,6 +55,7 @@
     "react-hook-form": "^7.51.2",
     "recharts": "^2.12.4",
     "sharp": "^0.33.3",
+    "simplex-noise": "^4.0.1",
     "superjson": "^1.13.3",
     "tailwind-merge": "^1.14.0",
     "tailwindcss-animate": "^1.0.7",
