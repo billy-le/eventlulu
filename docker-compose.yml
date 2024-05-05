@@ -11,6 +11,8 @@ services:
     ports:
       - "8888:3000"
     environment:
+      PORT: "3000"
+      NODE_ENV: "production"
       DATABASE_URL: "${DATABASE_URL}"
       DEFAULT_PASSWORD: "${DEFAULT_PASSWORD}"
       SALT_ROUNDS: "${SALT_ROUNDS}"
