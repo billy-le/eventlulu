@@ -47,18 +47,20 @@ FROM --platform=linux/amd64 node:21-alpine3.19 AS runner
 WORKDIR /app
 
 ENV NODE_ENV production
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
 # ENV NEXT_TELEMETRY_DISABLED 1
 
-# COPY --from=builder /app/next.config.js .
+COPY --from=builder /app/next.config.mjs .
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone .
-COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone .
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/tsconfig.json ./
 
+USER nextjs
 EXPOSE 8888
 ENV PORT 8888
-
-CMD ["server.js"]
+CMD ["node","server.js"]
