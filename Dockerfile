@@ -62,5 +62,5 @@ COPY --from=builder /app/tsconfig.json ./
 
 USER nextjs
 EXPOSE 8888
-ENV PORT 8888
+ENV PORT 3000
 CMD ["node","server.js"]
